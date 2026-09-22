@@ -12,8 +12,9 @@ import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { I18nManager, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initPurchases } from '@/lib/purchases';
 import { useReminderSync } from '@/lib/useReminderSync';
-import { useHydrated } from '@/store/useStore';
+import { useHydrated, useStore } from '@/store/useStore';
 import { AppThemeProvider, useTheme } from '@/theme';
 
 // التطبيق عربي بالكامل: نفرض الاتجاه من اليمين لليسار.
@@ -34,6 +35,8 @@ export { ErrorBoundary } from 'expo-router';
 function Navigator() {
   const { colors, isDark } = useTheme();
   useReminderSync();
+  // حالة الاشتراك الحقيقية تأتي من المتجر (عند تفعيل RevenueCat) وتتحدث تلقائياً.
+  useEffect(() => initPurchases((status) => useStore.getState().setStoreSubscription(status)), []);
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(colors.bg).catch(() => {});
   }, [colors.bg]);

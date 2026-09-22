@@ -75,6 +75,9 @@ export type GpaState = { prevGpa: number; prevCredits: number; rows: GpaRow[] };
 export type Subscription = {
   plan: 'free' | PlanId;
   until: number | null;
+  /** store = اشتراك حقيقي عبر App Store / Google Play، sandbox = الدفع التجريبي. */
+  source?: 'store' | 'sandbox';
+  willRenew?: boolean;
 };
 export type Transaction = {
   id: string;
@@ -121,6 +124,7 @@ type Actions = {
   setGpa: (p: Partial<GpaState>) => void;
   activatePlan: (tx: Omit<Transaction, 'id' | 'at'>, months: number) => void;
   cancelSubscription: () => void;
+  setStoreSubscription: (s: { active: boolean; until: number | null; plan: PlanId | null; willRenew: boolean }) => void;
   loadSampleData: () => void;
   resetAll: () => void;
 };
@@ -240,11 +244,17 @@ export const useStore = create<State & Actions>()(
         const until = new Date(base);
         until.setMonth(until.getMonth() + months);
         set((s) => ({
-          subscription: { plan: tx.plan, until: until.getTime() },
+          subscription: { plan: tx.plan, until: until.getTime(), source: 'sandbox' },
           transactions: [{ ...tx, id: uid(), at: now }, ...s.transactions],
         }));
       },
       cancelSubscription: () => set({ subscription: { plan: 'free', until: null } }),
+      setStoreSubscription: ({ active, until, plan, willRenew }) =>
+        set({
+          subscription: active && plan
+            ? { plan, until: until ?? Date.now() + 365 * 86_400_000, source: 'store', willRenew }
+            : { plan: 'free', until: null, source: 'store' },
+        }),
 
       loadSampleData: () => {
         const today = new Date();
@@ -263,9 +273,20 @@ export const useStore = create<State & Actions>()(
           { id: uid(), courseId: c1, day: 2, start: 8 * 60, end: 9 * 60 + 40, room: 'مبنى 5 · قاعة 204', type: 'lecture' },
           { id: uid(), courseId: c2, day: 2, start: 11 * 60, end: 12 * 60 + 40, room: 'مبنى 3 · قاعة 110', type: 'lecture' },
           { id: uid(), courseId: c4, day: 4, start: 10 * 60, end: 11 * 60 + 40, room: 'مبنى 1 · قاعة 8', type: 'lecture' },
-          { id: uid(), courseId: c1, day: today.getDay(), start: 12 * 60, end: 13 * 60 + 30, room: 'مبنى 5 · قاعة 204', type: 'lecture' },
-          { id: uid(), courseId: c2, day: today.getDay(), start: 14 * 60, end: 15 * 60, room: 'مكتب 3-214', type: 'office' },
         ];
+        // حصتان إضافيتان اليوم حتى تظهر «الآن / التالية» في الرئيسية، في أول وقت لا يتعارض مع جدول اليوم.
+        const d = today.getDay();
+        const extras: Omit<Slot, 'id' | 'day' | 'start' | 'end'>[] = [
+          { courseId: c1, room: 'مبنى 5 · قاعة 204', type: 'lecture' },
+          { courseId: c2, room: 'مكتب 3-214', type: 'office' },
+        ];
+        let from = 8 * 60;
+        for (const x of extras) {
+          while (from + 90 <= 22 * 60 && slots.some((s) => s.day === d && s.start < from + 90 && from < s.end)) from += 30;
+          if (from + 90 > 22 * 60) break;
+          slots.push({ ...x, id: uid(), day: d, start: from, end: from + 90 });
+          from += 120;
+        }
         const k = (n: number) => toDateKey(addDays(today, n));
         const tasks: Task[] = [
           { id: uid(), title: 'واجب القوائم المترابطة', courseId: c1, type: 'assignment', due: k(1), priority: 3, notes: 'تسليم على البلاك بورد', done: false, createdAt: Date.now() },

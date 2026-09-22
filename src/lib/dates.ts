@@ -81,6 +81,6 @@ export function greeting(now = new Date()): string {
   const h = now.getHours();
   if (h < 5) return 'سهرة موفقة';
   if (h < 12) return 'صباح الخير';
-  if (h < 17) return 'مساء النور';
+  if (h < 15) return 'نهارك سعيد';
   return 'مساء الخير';
 }

@@ -23,7 +23,7 @@ export type Plan = {
 
 export const PLANS: Plan[] = [
   { id: 'monthly', title: 'شهري', price: 14.99, months: 1 },
-  { id: 'term', title: 'فصلي', price: 39.99, months: 4, badge: 'الأنسب للفصل', note: 'يعادل 10 ر.س شهرياً' },
+  { id: 'term', title: 'فصلي · 6 أشهر', price: 59.99, months: 6, badge: 'الأنسب للفصل', note: 'يعادل 10 ر.س شهرياً · وفّر 33%' },
   { id: 'yearly', title: 'سنوي', price: 99.99, months: 12, badge: 'وفّر 44%', note: 'يعادل 8.33 ر.س شهرياً' },
 ];
 

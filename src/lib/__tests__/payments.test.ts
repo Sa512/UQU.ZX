@@ -72,10 +72,10 @@ describe('saudi mobile', () => {
 
 describe('pricing', () => {
   it('splits VAT-inclusive prices', () => {
-    const r = vatBreakdown(39.99);
-    expect(r.base).toBe(34.77);
-    expect(r.vat).toBe(5.22);
-    expect(r.base + r.vat).toBeCloseTo(39.99);
+    const r = vatBreakdown(59.99);
+    expect(r.base).toBe(52.17);
+    expect(r.vat).toBe(7.82);
+    expect(r.base + r.vat).toBeCloseTo(59.99);
   });
 
   it('shows wallets only on their platform', () => {

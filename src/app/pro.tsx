@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -12,6 +12,7 @@ import { Pill } from '@/components/Rows';
 import { Screen } from '@/components/Screen';
 import { formatShortDate } from '@/lib/dates';
 import { METHOD_INFO, PLANS, type PlanId } from '@/lib/payments';
+import { buyPackage, loadStorePackages, manageSubscription, restorePurchases, storeBillingEnabled, type StorePackages } from '@/lib/purchases';
 import { FREE_LIMITS, isPro, useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -27,9 +28,47 @@ export default function Pro() {
   const sub = useStore((s) => s.subscription);
   const transactions = useStore((s) => s.transactions);
   const cancel = useStore((s) => s.cancelSubscription);
+  const setStoreSubscription = useStore((s) => s.setStoreSubscription);
   const [plan, setPlan] = useState<PlanId>('term');
+  const [packages, setPackages] = useState<StorePackages>({});
+  const [loadingStore, setLoadingStore] = useState(storeBillingEnabled);
+  const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
+  const [message, setMessage] = useState<string>();
   const active = isPro(sub);
   const selected = PLANS.find((p) => p.id === plan)!;
+  const priceLabel = (id: PlanId, fallback: number) => packages[id]?.product.priceString ?? `${fallback.toFixed(2)} ر.س`;
+
+  useEffect(() => {
+    if (!storeBillingEnabled) return;
+    loadStorePackages()
+      .then(setPackages)
+      .catch(() => setMessage('تعذّر تحميل الأسعار من المتجر. تحقق من اتصالك.'))
+      .finally(() => setLoadingStore(false));
+  }, []);
+
+  const subscribe = async () => {
+    setMessage(undefined);
+    if (!storeBillingEnabled) return router.push({ pathname: '/checkout', params: { plan } });
+    const pkg = packages[plan];
+    if (!pkg) return setMessage('هذه الخطة غير متاحة حالياً في المتجر.');
+    setBusy('buy');
+    const r = await buyPackage(pkg);
+    setBusy(null);
+    if (r.ok) {
+      setStoreSubscription(r.status);
+      haptic.success();
+    } else if (!r.cancelled) setMessage(r.message);
+  };
+
+  const restore = async () => {
+    setMessage(undefined);
+    setBusy('restore');
+    const r = await restorePurchases();
+    setBusy(null);
+    if (!r.ok) return setMessage(r.message);
+    setStoreSubscription(r.status);
+    setMessage(r.status.active ? 'تمت استعادة اشتراكك بنجاح ✓' : 'لا يوجد اشتراك سابق مرتبط بحسابك في المتجر.');
+  };
 
   return (
     <Screen
@@ -37,9 +76,18 @@ export default function Pro() {
       footer={
         active ? undefined : (
           <View style={{ gap: 6 }}>
-            <Button title={`متابعة الدفع · ${selected.price.toFixed(2)} ر.س`} size="lg" icon="lock-closed" onPress={() => router.push({ pathname: '/checkout', params: { plan } })} />
+            <Button
+              title={storeBillingEnabled ? `اشترك · ${priceLabel(plan, selected.price)}` : `متابعة الدفع · ${selected.price.toFixed(2)} ر.س`}
+              size="lg"
+              icon="lock-closed"
+              loading={busy === 'buy'}
+              disabled={loadingStore}
+              onPress={subscribe}
+            />
             <AppText variant="tiny" muted center>
-              الأسعار شاملة ضريبة القيمة المضافة 15% · دفع لمرة واحدة بلا تجديد تلقائي
+              {storeBillingEnabled
+                ? 'يتجدد تلقائياً ما لم يُلغَ قبل 24 ساعة من نهاية الفترة · يمكنك الإلغاء من إعدادات حسابك في المتجر'
+                : 'الأسعار شاملة ضريبة القيمة المضافة 15% · وضع تجريبي بلا خصم فعلي'}
             </AppText>
           </View>
         )
@@ -68,14 +116,22 @@ export default function Pro() {
         <Card style={{ gap: spacing.md, backgroundColor: colors.successSoft, borderColor: 'transparent' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
             <Ionicons name="checkmark-circle" size={24} color={colors.success} />
-            <AppText variant="h3">اشتراكك فعّال حتى {formatShortDate(new Date(sub.until))} {new Date(sub.until).getFullYear()}</AppText>
+            <AppText variant="h3" style={{ flex: 1 }}>
+              {sub.source === 'store' && sub.willRenew ? 'يتجدد اشتراكك في' : 'اشتراكك فعّال حتى'} {formatShortDate(new Date(sub.until))} {new Date(sub.until).getFullYear()}
+            </AppText>
           </View>
-          <Button title="تمديد الاشتراك" variant="secondary" onPress={() => router.push({ pathname: '/checkout', params: { plan: 'term' } })} />
-          <Button
-            title="إلغاء الاشتراك"
-            variant="ghost"
-            onPress={() => confirm('إلغاء الاشتراك؟', 'ستعود للخطة المجانية فوراً.', cancel, 'إلغاء الاشتراك')}
-          />
+          {sub.source === 'store' ? (
+            <Button title="إدارة الاشتراك أو إلغاؤه" variant="secondary" icon="settings-outline" onPress={() => manageSubscription().catch(() => {})} />
+          ) : (
+            <>
+              <Button title="تمديد الاشتراك" variant="secondary" onPress={() => router.push({ pathname: '/checkout', params: { plan: 'term' } })} />
+              <Button
+                title="إلغاء الاشتراك"
+                variant="ghost"
+                onPress={() => confirm('إلغاء الاشتراك؟', 'ستعود للخطة المجانية فوراً.', cancel, 'إلغاء الاشتراك')}
+              />
+            </>
+          )}
         </Card>
       ) : (
         <View style={{ gap: spacing.sm }} accessibilityRole="radiogroup">
@@ -112,22 +168,51 @@ export default function Pro() {
                     {p.note ?? `${p.months} شهر`}
                   </AppText>
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <AppText variant="h2">{p.price.toFixed(2)}</AppText>
-                  <AppText variant="tiny" muted>
-                    ر.س
-                  </AppText>
-                </View>
+                {storeBillingEnabled ? (
+                  loadingStore ? (
+                    <ActivityIndicator color={colors.primary} />
+                  ) : (
+                    <AppText variant="h3">{priceLabel(p.id, p.price)}</AppText>
+                  )
+                ) : (
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <AppText variant="h2">{p.price.toFixed(2)}</AppText>
+                    <AppText variant="tiny" muted>
+                      ر.س
+                    </AppText>
+                  </View>
+                )}
               </Pressable>
             );
           })}
         </View>
       )}
 
+      {message && (
+        <AppText variant="label" center color={message.includes('✓') ? colors.success : colors.danger}>
+          {message}
+        </AppText>
+      )}
+
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
         {(['applepay', 'mada', 'stcpay', 'card'] as const).map((m) => (
           <Pill key={m} label={METHOD_INFO[m].title} tone="muted" />
         ))}
+      </View>
+
+      {storeBillingEnabled && <Button title="استعادة المشتريات" variant="ghost" icon="refresh" loading={busy === 'restore'} onPress={restore} />}
+
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.lg }}>
+        <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })}>
+          <AppText variant="caption" color={colors.primary}>
+            شروط الاستخدام
+          </AppText>
+        </Pressable>
+        <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push({ pathname: '/legal', params: { doc: 'privacy' } })}>
+          <AppText variant="caption" color={colors.primary}>
+            سياسة الخصوصية
+          </AppText>
+        </Pressable>
       </View>
 
       {transactions.length > 0 && (

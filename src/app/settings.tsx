@@ -12,6 +12,7 @@ import { Stepper } from '@/components/Pickers';
 import { Toggle } from '@/components/Toggle';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
+import { APP_INFO } from '@/content/app';
 import { formatDuration } from '@/lib/dates';
 import type { GradeScale } from '@/lib/gpa';
 import { remindersSupported, sendTestReminder } from '@/lib/notifications';
@@ -159,6 +160,9 @@ export default function Settings() {
         </AppText>
         {!hasData && <Button title="تحميل جدول تجريبي" variant="secondary" icon="sparkles" onPress={loadSample} />}
         <Button title="الاشتراك والمدفوعات" variant="ghost" icon="diamond-outline" onPress={() => router.push('/pro')} />
+        <Button title="سياسة الخصوصية" variant="ghost" icon="shield-checkmark-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'privacy' } })} />
+        <Button title="شروط الاستخدام" variant="ghost" icon="document-text-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })} />
+        <Button title="تواصل مع الدعم" variant="ghost" icon="mail-outline" onPress={() => Linking.openURL(`mailto:${APP_INFO.supportEmail}?subject=${encodeURIComponent('دعم تطبيق مذاكر')}`)} />
         <Button
           title="حذف جميع البيانات"
           variant="danger"

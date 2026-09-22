@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { addDays, diffDays, formatDuration, formatMinutes, fromDateKey, relativeDue, toDateKey } from '../dates';
+import { addDays, diffDays, formatDuration, formatMinutes, fromDateKey, greeting, relativeDue, toDateKey } from '../dates';
 import { mastery, review } from '../srs';
 import { lastWeek, streak } from '../stats';
 
@@ -65,5 +65,13 @@ describe('stats', () => {
     expect(w).toHaveLength(7);
     expect(w[6].minutes).toBe(40);
     expect(w[0].minutes).toBe(0);
+  });
+});
+
+describe('greeting', () => {
+  it('matches the time of day', () => {
+    expect(greeting(new Date(2026, 0, 1, 9))).toBe('صباح الخير');
+    expect(greeting(new Date(2026, 0, 1, 12, 25))).toBe('نهارك سعيد');
+    expect(greeting(new Date(2026, 0, 1, 19))).toBe('مساء الخير');
   });
 });
