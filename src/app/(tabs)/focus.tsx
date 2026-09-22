@@ -10,7 +10,9 @@ import { CoursePicker } from '@/components/Pickers';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { formatClock, formatDuration, formatMinutes } from '@/lib/dates';
+import { cancelFocusEnd, scheduleFocusEnd } from '@/lib/notifications';
 import { minutesOn } from '@/lib/stats';
+import { ar, MINUTES } from '@/lib/plural';
 import { useNow } from '@/lib/useNow';
 import { useStore } from '@/store/useStore';
 import { spacing, useTheme } from '@/theme';
@@ -58,6 +60,7 @@ export default function Focus() {
 
   const complete = () => {
     endAt.current = null;
+    cancelFocusEnd();
     haptic.success();
     if (mode === 'focus') {
       flushFocus();
@@ -88,6 +91,7 @@ export default function Focus() {
   const start = () => {
     const secs = status === 'paused' ? left : total;
     endAt.current = Date.now() + secs * 1000;
+    scheduleFocusEnd(endAt.current, mode).catch(() => {});
     if (mode === 'focus') focusStartedAt.current = Date.now();
     setLeft(secs);
     setStatus('running');
@@ -95,11 +99,13 @@ export default function Focus() {
   const pause = () => {
     pauseFocusClock();
     endAt.current = null;
+    cancelFocusEnd();
     setStatus('paused');
   };
   const stop = () => {
     if (mode === 'focus') flushFocus();
     endAt.current = null;
+    cancelFocusEnd();
     setStatus('idle');
     setMode('focus');
   };
@@ -172,7 +178,7 @@ export default function Focus() {
           <SectionHeader title="مدة التركيز" />
           <ChipRow>
             {PRESETS.map((m) => (
-              <Chip key={m} label={`${m} دقيقة`} selected={settings.focusMin === m} onPress={() => update({ focusMin: m })} />
+              <Chip key={m} label={ar(m, MINUTES)} selected={settings.focusMin === m} onPress={() => update({ focusMin: m })} />
             ))}
           </ChipRow>
           {courses.length > 0 && (

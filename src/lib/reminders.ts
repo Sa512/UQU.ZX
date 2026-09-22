@@ -7,6 +7,7 @@
 import type { Course, Slot, Task } from '@/store/useStore';
 import { addDays, formatMinutes, fromDateKey } from './dates';
 import { SLOT_TYPES, TASK_TYPES } from './labels';
+import { ar, MINUTES } from './plural';
 
 export const MAX_SCHEDULED = 60;
 export const EVENING_HOUR = 20;
@@ -41,7 +42,7 @@ export function planReminders({ courses, slots, tasks, lectureLeadMin, now }: In
     }
     out.push({
       id: `slot-${s.id}`,
-      title: `${course.name} بعد ${lectureLeadMin} دقيقة`,
+      title: `${course.name} بعد ${ar(lectureLeadMin, MINUTES)}`,
       body: [`${SLOT_TYPES[s.type].label} الساعة ${formatMinutes(s.start)}`, s.room].filter(Boolean).join(' · '),
       trigger: { kind: 'weekly', weekday: day + 1, hour: Math.floor(at / 60), minute: at % 60 },
     });

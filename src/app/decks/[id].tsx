@@ -12,6 +12,7 @@ import { haptic } from '@/components/haptics';
 import { HeaderButton, Screen, SectionHeader } from '@/components/Screen';
 import { MAX_BOX } from '@/lib/srs';
 import { useNow } from '@/lib/useNow';
+import { ar, CARDS } from '@/lib/plural';
 import { useStore } from '@/store/useStore';
 import { spacing, useTheme } from '@/theme';
 
@@ -49,7 +50,7 @@ export default function DeckDetail() {
     <Screen
       back
       title={deck.title}
-      subtitle={`${deck.cards.length} بطاقات · ${due} للمراجعة`}
+      subtitle={`${ar(deck.cards.length, CARDS)} · ${due} للمراجعة`}
       right={
         <HeaderButton
           icon="trash-outline"
@@ -64,7 +65,7 @@ export default function DeckDetail() {
       }
     >
       <Button
-        title={due ? `راجع ${due} بطاقات الآن` : deck.cards.length ? 'مراجعة حرة لكل البطاقات' : 'أضف بطاقات للبدء'}
+        title={due ? `راجع ${ar(due, CARDS)} الآن` : deck.cards.length ? 'مراجعة حرة لكل البطاقات' : 'أضف بطاقات للبدء'}
         size="lg"
         icon="play"
         disabled={!deck.cards.length}

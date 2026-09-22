@@ -8,6 +8,7 @@ import { Field } from '@/components/Field';
 import { haptic } from '@/components/haptics';
 import { ColorPicker, Stepper } from '@/components/Pickers';
 import { Screen } from '@/components/Screen';
+import { ar, COURSES, HOURS } from '@/lib/plural';
 import { FREE_LIMITS, isPro, useStore } from '@/store/useStore';
 import { courseColors } from '@/theme';
 
@@ -66,7 +67,7 @@ export default function CourseForm() {
     >
       {limitReached && (
         <AppText muted>
-          الخطة المجانية تتيح {FREE_LIMITS.courses} مقررات. اشترك في برو لإضافة مقررات بلا حدود.
+          الخطة المجانية تتيح {ar(FREE_LIMITS.courses, COURSES)}. اشترك في برو لإضافة مقررات بلا حدود.
         </AppText>
       )}
       <Field label="اسم المقرر" placeholder="مثال: هياكل البيانات" value={name} onChangeText={(t) => { setName(t); setError(undefined); }} error={error} autoFocus={!existing} />
@@ -74,7 +75,7 @@ export default function CourseForm() {
       {role === 'student' && <Field label="أستاذ المقرر" placeholder="مثال: د. خالد" value={instructor} onChangeText={setInstructor} />}
       <View style={{ gap: 6 }}>
         <AppText variant="label">الساعات المعتمدة</AppText>
-        <Stepper value={credits} onChange={setCredits} min={1} max={6} format={(n) => `${n} ساعات`} />
+        <Stepper value={credits} onChange={setCredits} min={1} max={6} format={(n) => ar(n, HOURS)} />
       </View>
       <View style={{ gap: 10 }}>
         <AppText variant="label">لون المقرر</AppText>

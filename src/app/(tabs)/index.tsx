@@ -3,14 +3,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { weeklyMeetings } from '@/components/AbsenceCard';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ProgressRing } from '@/components/ProgressRing';
 import { SlotRow, TaskRow } from '@/components/Rows';
 import { Screen, SectionHeader } from '@/components/Screen';
+import { absenceStatus } from '@/lib/absence';
 import { formatDate, formatDuration, greeting } from '@/lib/dates';
 import { minutesOn, streak } from '@/lib/stats';
+import { ar, DAYS } from '@/lib/plural';
 import { remindersSupported } from '@/lib/notifications';
 import { useNow } from '@/lib/useNow';
 import { turnOnReminders } from '@/lib/useReminderSync';
@@ -65,6 +68,11 @@ export default function Home() {
   const days = streak(sessions, now);
   const dueCards = decks.reduce((a, d) => a + d.cards.filter((c) => c.due <= nowMs).length, 0);
   const openTasks = tasks.filter((t) => !t.done).length;
+  const courses = useStore((s) => s.courses);
+  const weeks = settings.semesterWeeks;
+  const atRisk = courses
+    .map((course) => ({ course, st: absenceStatus(course.absences ?? 0, weeklyMeetings(course.id, course.credits, slots), weeks) }))
+    .filter(({ st }) => st.level === 'danger' || st.level === 'barred');
   const firstName = settings.name.split(' ')[0] || (isProf ? 'دكتور' : 'بطل');
 
   return (
@@ -109,13 +117,13 @@ export default function Home() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 }}>
               <Ionicons name="flame" size={14} color="#FDBA74" />
               <AppText variant="tiny" color="#FFFFFF">
-                {days} {days === 1 ? 'يوم' : 'أيام'} متتالية
+                {days ? `متواصل منذ ${ar(days, DAYS)}` : 'ابدأ سلسلتك اليوم'}
               </AppText>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 }}>
               <Ionicons name="checkbox" size={14} color="#A7F3D0" />
               <AppText variant="tiny" color="#FFFFFF">
-                {openTasks} مهام مفتوحة
+                المهام المفتوحة: {openTasks}
               </AppText>
             </View>
           </View>
@@ -145,6 +153,25 @@ export default function Home() {
           </View>
         </Card>
       )}
+
+      {!isProf &&
+        atRisk.map(({ course, st }) => (
+          <Card
+            key={course.id}
+            onPress={() => router.push({ pathname: '/course/[id]', params: { id: course.id } })}
+            accessibilityLabel={`تنبيه غياب ${course.name}`}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.dangerSoft, borderColor: 'transparent' }}
+          >
+            <Ionicons name="warning" size={24} color={colors.danger} />
+            <View style={{ flex: 1 }}>
+              <AppText variant="h3">{st.level === 'barred' ? `تجاوزت حد الغياب في ${course.name}` : `اقتربت من الحرمان في ${course.name}`}</AppText>
+              <AppText variant="caption" muted>
+                غياب {course.absences ?? 0} من {st.allowed} مسموح
+              </AppText>
+            </View>
+            <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+          </Card>
+        ))}
 
       {/* محاضرات اليوم */}
       <SectionHeader title={isProf ? 'محاضراتك اليوم' : 'محاضرات اليوم'} action="الجدول" onAction={() => router.push('/schedule')} />

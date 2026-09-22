@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
+import { AbsenceCard } from '@/components/AbsenceCard';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -29,6 +30,7 @@ export default function CourseDetail() {
   const slots = useStore((s) => s.slots);
   const tasks = useStore((s) => s.tasks);
   const sessions = useStore((s) => s.sessions);
+  const role = useStore((s) => s.settings.role);
 
   if (!course) {
     return (
@@ -54,6 +56,8 @@ export default function CourseDetail() {
         <Stat label="حصص أسبوعياً" value={String(mySlots.length)} />
         <Stat label="وقت المذاكرة" value={formatDuration(studied)} />
       </View>
+
+      {role === 'student' && <AbsenceCard course={course} />}
 
       <SectionHeader title="المواعيد" action="إضافة" onAction={() => router.push('/slot/new')} />
       {mySlots.length === 0 ? (

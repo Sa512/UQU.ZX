@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { haptic } from '@/components/haptics';
 import { Screen } from '@/components/Screen';
+import { ar, CARDS } from '@/lib/plural';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -72,7 +73,7 @@ export default function Study() {
           </View>
           <AppText variant="title">أحسنت! 🎉</AppText>
           <AppText muted center>
-            راجعت {queue.length} بطاقات وأجبت على {correct} بشكل صحيح ({pct}%).{'\n'}البطاقات الصعبة ستعود إليك قريباً.
+            راجعت {ar(queue.length, CARDS)} وأجبت على {correct} بشكل صحيح ({pct}%).{'\n'}البطاقات الصعبة ستعود إليك قريباً.
           </AppText>
         </View>
         <Button title="العودة للمجموعة" onPress={() => router.back()} />

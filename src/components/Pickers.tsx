@@ -46,18 +46,80 @@ export function Stepper({ value, onChange, min = 0, max = 99, step = 1, format }
   );
 }
 
-/** اختيار الوقت بخطوات ١٥ دقيقة (من ٦ صباحاً حتى ١١ مساءً). */
-export function TimeStepper({ value, onChange }: { value: number; onChange: (n: number) => void }) {
-  return <Stepper value={value} onChange={onChange} min={6 * 60} max={23 * 60} step={15} format={formatMinutes} />;
+/** اختيار الوقت مباشرة: ساعة (٦ ص – ١١ م) ثم الدقائق بخطوات ١٥ دقيقة. */
+export function TimePicker({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+  const { colors } = useTheme();
+  const hour = Math.floor(value / 60);
+  const minute = value % 60;
+  const hours = Array.from({ length: 18 }, (_, i) => i + 6);
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <AppText variant="label">{label}</AppText>
+        <AppText variant="h3" color={colors.primary} accessibilityLiveRegion="polite">
+          {formatMinutes(value)}
+        </AppText>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+        {hours.map((h) => {
+          const active = h === hour;
+          const h12 = h % 12 === 0 ? 12 : h % 12;
+          return (
+            <Pressable
+              key={h}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={`${label} الساعة ${formatMinutes(h * 60)}`}
+              onPress={() => {
+                haptic.tap();
+                onChange(h * 60 + minute);
+              }}
+              style={{ width: 52, paddingVertical: 8, borderRadius: radius.md, alignItems: 'center', backgroundColor: active ? colors.fill : colors.surface, borderWidth: 1.5, borderColor: active ? colors.fill : colors.border }}
+            >
+              <AppText variant="h3" color={active ? '#FFFFFF' : colors.text}>
+                {h12}
+              </AppText>
+              <AppText variant="tiny" color={active ? '#FFFFFFCC' : colors.textMuted}>
+                {h < 12 ? 'ص' : 'م'}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      <View style={{ flexDirection: 'row', gap: 6 }}>
+        {[0, 15, 30, 45].map((m) => {
+          const active = m === minute;
+          return (
+            <Pressable
+              key={m}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={`${label} الدقيقة ${m}`}
+              onPress={() => {
+                haptic.tap();
+                onChange(hour * 60 + m);
+              }}
+              style={{ flex: 1, height: 36, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? colors.primarySoft : colors.surfaceAlt, borderWidth: active ? 1.5 : 0, borderColor: colors.primary }}
+            >
+              <AppText variant="label" color={active ? colors.primary : colors.text}>
+                :{String(m).padStart(2, '0')}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
 }
 
-/** شريط أيام أفقي لاختيار تاريخ خلال الشهرين القادمين. */
+/** شريط أيام أفقي لاختيار تاريخ خلال الأشهر الستة القادمة. */
 export function DateStrip({ value, onChange }: { value: string; onChange: (k: string) => void }) {
   const { colors } = useTheme();
   const sel = fromDateKey(value);
   const today = new Date();
   const first = sel < today ? sel : today;
-  const days = Array.from({ length: 60 }, (_, i) => addDays(first, i));
+  // ستة أشهر تكفي لتغطية الفصل الدراسي كاملاً بما فيه الاختبارات النهائية.
+  const days = Array.from({ length: 183 }, (_, i) => addDays(first, i));
   return (
     <View style={{ gap: 8 }}>
       <AppText variant="caption" muted>

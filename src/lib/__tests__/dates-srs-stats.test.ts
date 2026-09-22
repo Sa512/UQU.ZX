@@ -1,5 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { addDays, diffDays, formatDuration, formatMinutes, fromDateKey, greeting, relativeDue, toDateKey } from '../dates';
+import { absenceStatus } from '../absence';
+import { ar, COURSES, DAYS, MINUTES, TASKS } from '../plural';
 import { mastery, review } from '../srs';
 import { lastWeek, streak } from '../stats';
 
@@ -73,5 +75,37 @@ describe('greeting', () => {
     expect(greeting(new Date(2026, 0, 1, 9))).toBe('صباح الخير');
     expect(greeting(new Date(2026, 0, 1, 12, 25))).toBe('نهارك سعيد');
     expect(greeting(new Date(2026, 0, 1, 19))).toBe('مساء الخير');
+  });
+});
+
+describe('absenceStatus', () => {
+  it('allows up to 25% of the semester lectures', () => {
+    const s = absenceStatus(0, 3, 15); // 45 محاضرة
+    expect(s).toMatchObject({ total: 45, allowed: 11, remaining: 11, level: 'ok' });
+  });
+  it('escalates warn → danger → barred', () => {
+    expect(absenceStatus(6, 3, 15).level).toBe('warn');
+    expect(absenceStatus(10, 3, 15).level).toBe('danger');
+    expect(absenceStatus(11, 3, 15).level).toBe('danger');
+    expect(absenceStatus(12, 3, 15).level).toBe('barred');
+  });
+});
+
+describe('arabic plurals', () => {
+  it('follows number agreement rules', () => {
+    expect(ar(0, TASKS)).toBe('0 مهام');
+    expect(ar(1, TASKS)).toBe('مهمة واحدة');
+    expect(ar(2, DAYS)).toBe('يومين');
+    expect(ar(7, DAYS)).toBe('7 أيام');
+    expect(ar(15, MINUTES)).toBe('15 دقيقة');
+    expect(ar(30, MINUTES)).toBe('30 دقيقة');
+    expect(ar(5, MINUTES)).toBe('5 دقائق');
+    expect(ar(12, COURSES)).toBe('12 مقرراً');
+  });
+  it('reads due dates naturally', () => {
+    const now = new Date(2026, 8, 22, 15);
+    expect(relativeDue('2026-09-24', now).label).toBe('بعد يومين');
+    expect(relativeDue('2026-09-20', now).label).toBe('متأخر يومين');
+    expect(relativeDue('2026-09-21', now).label).toBe('متأخر يوم');
   });
 });

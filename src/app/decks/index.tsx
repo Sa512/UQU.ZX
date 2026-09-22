@@ -12,6 +12,7 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { mastery } from '@/lib/srs';
 import { useNow } from '@/lib/useNow';
+import { ar, CARDS, DECKS } from '@/lib/plural';
 import { FREE_LIMITS, isPro, useStore } from '@/store/useStore';
 import { spacing, useTheme } from '@/theme';
 
@@ -57,7 +58,7 @@ export default function Decks() {
                   {d.title}
                 </AppText>
                 <AppText variant="caption" muted>
-                  {d.cards.length} بطاقات{course ? ` · ${course.name}` : ''}
+                  {ar(d.cards.length, CARDS)}{course ? ` · ${course.name}` : ''}
                 </AppText>
                 {due > 0 && (
                   <AppText variant="tiny" color={colors.warning}>
@@ -75,7 +76,7 @@ export default function Decks() {
       <Card style={{ gap: spacing.md }}>
         {limit ? (
           <AppText variant="caption" muted>
-            الخطة المجانية تتيح {FREE_LIMITS.decks} مجموعات. اشترك في برو لمجموعات بلا حدود.
+            الخطة المجانية تتيح {ar(FREE_LIMITS.decks, DECKS)}. اشترك في برو لمجموعات بلا حدود.
           </AppText>
         ) : (
           <>

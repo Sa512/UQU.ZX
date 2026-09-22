@@ -8,7 +8,7 @@ import { confirm } from '@/components/confirm';
 import { EmptyState } from '@/components/EmptyState';
 import { Field } from '@/components/Field';
 import { haptic } from '@/components/haptics';
-import { CoursePicker, TimeStepper } from '@/components/Pickers';
+import { CoursePicker, TimePicker } from '@/components/Pickers';
 import { Screen } from '@/components/Screen';
 import { DAY_NAMES, formatDuration } from '@/lib/dates';
 import { SLOT_TYPES } from '@/lib/labels';
@@ -95,24 +95,24 @@ export default function SlotForm() {
           ))}
         </ChipRow>
       </View>
-      <View style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
-        <View style={{ gap: 6 }}>
-          <AppText variant="label">من</AppText>
-          <TimeStepper
-            value={start}
-            onChange={(v) => {
-              const len = end - start;
-              setStart(v);
-              setEnd(Math.min(23 * 60 + 45, v + Math.max(len, 15)));
-              setError(undefined);
-            }}
-          />
-        </View>
-        <View style={{ gap: 6 }}>
-          <AppText variant="label">إلى</AppText>
-          <TimeStepper value={end} onChange={(v) => { setEnd(v); setError(undefined); }} />
-        </View>
-      </View>
+      <TimePicker
+        label="من"
+        value={start}
+        onChange={(v) => {
+          const len = end - start;
+          setStart(v);
+          setEnd(Math.min(23 * 60 + 45, v + Math.max(len, 15)));
+          setError(undefined);
+        }}
+      />
+      <TimePicker
+        label="إلى"
+        value={end}
+        onChange={(v) => {
+          setEnd(v);
+          setError(undefined);
+        }}
+      />
       <AppText variant="caption" muted>
         المدة: {end > start ? formatDuration(end - start) : '—'}
       </AppText>

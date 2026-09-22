@@ -8,6 +8,7 @@ import { haptic } from '@/components/haptics';
 import { SlotRow } from '@/components/Rows';
 import { HeaderButton, Screen } from '@/components/Screen';
 import { DAY_NAMES, DAY_SHORT, formatDuration } from '@/lib/dates';
+import { ar, COURSES, SLOTS } from '@/lib/plural';
 import { useNow } from '@/lib/useNow';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
@@ -34,7 +35,7 @@ export default function Schedule() {
     <Screen
       inTabs
       title="الجدول الدراسي"
-      subtitle={`${courses.length} مقررات · ${slots.length} حصص أسبوعياً`}
+      subtitle={`${ar(courses.length, COURSES)} · ${ar(slots.length, SLOTS)} أسبوعياً`}
       right={
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <HeaderButton icon="library-outline" label="المقررات" onPress={() => router.push('/courses')} />
@@ -83,7 +84,7 @@ export default function Schedule() {
         </AppText>
         {list.length > 0 && (
           <AppText variant="caption" muted>
-            {list.length} حصص · {formatDuration(total)}
+            {ar(list.length, SLOTS)} · {formatDuration(total)}
           </AppText>
         )}
       </View>

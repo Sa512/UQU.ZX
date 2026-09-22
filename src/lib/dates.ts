@@ -1,3 +1,5 @@
+import { ar, DAYS } from './plural';
+
 /** أدوات التاريخ والوقت بالعربية. الأسبوع يبدأ الأحد كما في التقويم الجامعي السعودي. */
 
 export const DAY_NAMES = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -69,11 +71,11 @@ export function formatClock(seconds: number): string {
 /** وصف نسبي للموعد: «اليوم»، «غداً»، «بعد ٣ أيام»، «متأخر يومين». */
 export function relativeDue(dueKey: string, now = new Date()): { label: string; tone: 'danger' | 'warning' | 'info' | 'muted' } {
   const n = diffDays(now, fromDateKey(dueKey));
-  if (n < 0) return { label: n === -1 ? 'متأخر يوم' : `متأخر ${-n} أيام`, tone: 'danger' };
+  if (n < 0) return { label: `متأخر ${ar(-n, DAYS)}`, tone: 'danger' };
   if (n === 0) return { label: 'اليوم', tone: 'danger' };
   if (n === 1) return { label: 'غداً', tone: 'warning' };
-  if (n <= 3) return { label: `بعد ${n} أيام`, tone: 'warning' };
-  if (n <= 10) return { label: `بعد ${n} أيام`, tone: 'info' };
+  if (n <= 3) return { label: `بعد ${ar(n, DAYS)}`, tone: 'warning' };
+  if (n <= 10) return { label: `بعد ${ar(n, DAYS)}`, tone: 'info' };
   return { label: formatShortDate(fromDateKey(dueKey)), tone: 'muted' };
 }
 

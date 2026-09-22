@@ -40,10 +40,22 @@ export async function requestReminderPermission(): Promise<boolean> {
   return res.granted;
 }
 
-/** يلغي كل التذكيرات السابقة ويجدول القائمة الجديدة. */
+const FOCUS_ID = 'focus-end';
+
+/** يلغي تذكيرات المحاضرات والمهام فقط (ولا يمس تنبيه انتهاء جلسة المذاكرة). */
+async function cancelPlannedReminders() {
+  const all = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    all
+      .filter((n) => n.identifier !== FOCUS_ID)
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+  );
+}
+
+/** يلغي التذكيرات السابقة ويجدول القائمة الجديدة. */
 export async function applyReminders(reminders: Reminder[]): Promise<void> {
   if (!remindersSupported) return;
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await cancelPlannedReminders();
   if (!reminders.length) return;
   const perm = await Notifications.getPermissionsAsync();
   if (!perm.granted) return;
@@ -69,7 +81,33 @@ export async function applyReminders(reminders: Reminder[]): Promise<void> {
 
 export async function cancelAllReminders(): Promise<void> {
   if (!remindersSupported) return;
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await cancelPlannedReminders();
+}
+
+/** تنبيه عند انتهاء جلسة المذاكرة أو الاستراحة إذا كان التطبيق في الخلفية. */
+export async function scheduleFocusEnd(at: number, mode: 'focus' | 'break'): Promise<void> {
+  if (!remindersSupported) return;
+  const perm = await Notifications.getPermissionsAsync();
+  if (!perm.granted) return;
+  await ensureChannel();
+  await Notifications.scheduleNotificationAsync({
+    identifier: FOCUS_ID,
+    content: {
+      title: mode === 'focus' ? 'انتهت جلسة المذاكرة 🎉' : 'انتهت الاستراحة',
+      body: mode === 'focus' ? 'أحسنت! خذ استراحة قصيرة ثم عد للتركيز.' : 'جاهز لجولة تركيز جديدة؟',
+      sound: true,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: at,
+      channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
+    },
+  });
+}
+
+export async function cancelFocusEnd(): Promise<void> {
+  if (!remindersSupported) return;
+  await Notifications.cancelScheduledNotificationAsync(FOCUS_ID).catch(() => {});
 }
 
 /** تذكير تجريبي بعد ٥ ثوانٍ للتأكد من أن الإشعارات تعمل. */

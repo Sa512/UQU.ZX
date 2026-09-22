@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { courseColors } from '@/theme/colors';
 import { addDays, toDateKey } from '@/lib/dates';
+import type { BackupData } from '@/lib/backup';
 import type { Grade, GradeScale } from '@/lib/gpa';
 import { uid } from '@/lib/id';
 import type { PaymentMethod, PlanId } from '@/lib/payments';
@@ -28,6 +29,8 @@ export type Settings = {
   /** كم دقيقة قبل المحاضرة يصل التذكير. */
   lectureLeadMin: number;
   remindersPromptDismissed: boolean;
+  /** عدد أسابيع الفصل الدراسي (لحساب نسبة الغياب). */
+  semesterWeeks: number;
 };
 
 export type Course = {
@@ -37,6 +40,8 @@ export type Course = {
   color: string;
   credits: number;
   instructor: string;
+  /** عدد مرات الغياب المسجلة (للطالب). */
+  absences?: number;
 };
 
 export type SlotType = 'lecture' | 'lab' | 'office';
@@ -108,6 +113,7 @@ type Actions = {
   addCourse: (c: Omit<Course, 'id'>) => string;
   updateCourse: (id: string, p: Partial<Course>) => void;
   deleteCourse: (id: string) => void;
+  adjustAbsence: (id: string, delta: number) => void;
   addSlot: (s: Omit<Slot, 'id'>) => void;
   updateSlot: (id: string, p: Partial<Slot>) => void;
   deleteSlot: (id: string) => void;
@@ -126,6 +132,7 @@ type Actions = {
   cancelSubscription: () => void;
   setStoreSubscription: (s: { active: boolean; until: number | null; plan: PlanId | null; willRenew: boolean }) => void;
   loadSampleData: () => void;
+  restoreBackup: (d: BackupData) => void;
   resetAll: () => void;
 };
 
@@ -144,6 +151,7 @@ const defaultSettings: Settings = {
   remindersEnabled: false,
   lectureLeadMin: 15,
   remindersPromptDismissed: false,
+  semesterWeeks: 15,
 };
 
 const initialState: State = {
@@ -175,6 +183,10 @@ export const useStore = create<State & Actions>()(
       },
       updateCourse: (id, p) =>
         set((s) => ({ courses: s.courses.map((c) => (c.id === id ? { ...c, ...p } : c)) })),
+      adjustAbsence: (id, delta) =>
+        set((s) => ({
+          courses: s.courses.map((c) => (c.id === id ? { ...c, absences: Math.max(0, (c.absences ?? 0) + delta) } : c)),
+        })),
       deleteCourse: (id) =>
         set((s) => ({
           courses: s.courses.filter((c) => c.id !== id),
@@ -314,6 +326,20 @@ export const useStore = create<State & Actions>()(
         ];
         set({ courses, slots, tasks, sessions, decks });
       },
+
+      restoreBackup: (d) =>
+        set((s) => ({
+          settings: { ...defaultSettings, ...d.settings, onboarded: true },
+          courses: d.courses,
+          slots: d.slots,
+          tasks: d.tasks,
+          sessions: d.sessions,
+          decks: d.decks,
+          gpa: d.gpa,
+          // الاشتراك والمدفوعات تبقى كما هي على هذا الجهاز
+          subscription: s.subscription,
+          transactions: s.transactions,
+        })),
 
       resetAll: () => set({ ...initialState, settings: { ...defaultSettings } }),
     }),

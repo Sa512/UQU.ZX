@@ -7,6 +7,7 @@ import { IconBadge } from '@/components/IconBadge';
 import { Screen } from '@/components/Screen';
 import { formatShortDate } from '@/lib/dates';
 import { ROLE_LABEL } from '@/lib/labels';
+import { ar, COURSES, DECKS } from '@/lib/plural';
 import { isPro, useStore } from '@/store/useStore';
 import { spacing, useTheme } from '@/theme';
 
@@ -36,8 +37,8 @@ export default function More() {
   const isProf = settings.role === 'professor';
 
   const items: Item[] = [
-    { icon: 'library', title: 'المقررات', subtitle: `${courses} مقررات مسجلة`, color: '#4F46E5', href: '/courses' },
-    { icon: 'albums', title: isProf ? 'بنك الأسئلة' : 'بطاقات المراجعة', subtitle: `${decks} مجموعات · تكرار متباعد`, color: '#059669', href: '/decks' },
+    { icon: 'library', title: 'المقررات', subtitle: `${ar(courses, COURSES)} مسجلة`, color: '#4F46E5', href: '/courses' },
+    { icon: 'albums', title: isProf ? 'بنك الأسئلة' : 'بطاقات المراجعة', subtitle: `${ar(decks, DECKS)} · تكرار متباعد`, color: '#059669', href: '/decks' },
     { icon: 'calculator', title: 'حاسبة المعدل', subtitle: `نظام ${settings.gradeScale} نقاط`, color: '#D97706', href: '/gpa' },
     { icon: 'stats-chart', title: 'الإحصائيات', subtitle: 'تقدمك الأسبوعي', color: '#0284C7', href: '/stats' },
   ];

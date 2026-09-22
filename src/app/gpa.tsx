@@ -11,6 +11,7 @@ import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { cumulativeGpa, GRADE_INFO, GRADES, gpaRating, requiredTermGpa, round2, termGpa, type Grade, type GradeScale } from '@/lib/gpa';
 import { uid } from '@/lib/id';
+import { ar, HOURS } from '@/lib/plural';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -93,7 +94,7 @@ export default function Gpa() {
             {term.credits ? round2(term.gpa).toFixed(2) : '—'}
           </AppText>
           <AppText variant="tiny" color="rgba(255,255,255,0.8)">
-            {term.credits} ساعة
+            {ar(term.credits, HOURS)}
           </AppText>
         </View>
         <View style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.25)' }} />
@@ -155,7 +156,7 @@ export default function Gpa() {
             </Pressable>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' }}>
-            <Stepper value={r.credits} min={1} max={6} format={(n) => `${n} ساعات`} onChange={(n) => setRows(gpa.rows.map((x) => (x.id === r.id ? { ...x, credits: n } : x)))} />
+            <Stepper value={r.credits} min={1} max={6} format={(n) => ar(n, HOURS)} onChange={(n) => setRows(gpa.rows.map((x) => (x.id === r.id ? { ...x, credits: n } : x)))} />
             <AppText variant="caption" muted>
               {GRADE_INFO[r.grade].range} · {scale === 5 ? GRADE_INFO[r.grade].p5 : GRADE_INFO[r.grade].p4} نقطة
             </AppText>
@@ -183,7 +184,7 @@ export default function Gpa() {
                 ? `المعدل المستهدف لا يتجاوز ${scale}`
                 : need === null
                   ? 'لا يمكن الوصول لهذا المعدل في فصل واحد — وزّع الهدف على أكثر من فصل.'
-                  : `تحتاج معدلاً فصلياً ${round2(need!).toFixed(2)} على الأقل في ${nextCredits} ساعة.`}
+                  : `تحتاج معدلاً فصلياً ${round2(need!).toFixed(2)} على الأقل في ${ar(nextCredits, HOURS)}.`}
             </AppText>
           </View>
         )}

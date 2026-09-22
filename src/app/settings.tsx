@@ -13,10 +13,13 @@ import { Toggle } from '@/components/Toggle';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { APP_INFO } from '@/content/app';
+import { buildBackup } from '@/lib/backup';
+import { backupSupported, pickBackup, shareBackup } from '@/lib/backupIO';
 import { formatDuration } from '@/lib/dates';
 import type { GradeScale } from '@/lib/gpa';
 import { remindersSupported, sendTestReminder } from '@/lib/notifications';
 import { turnOnReminders } from '@/lib/useReminderSync';
+import { ar, MINUTES, WEEKS } from '@/lib/plural';
 import { useStore, type Role, type ThemePref } from '@/store/useStore';
 import { spacing, useTheme } from '@/theme';
 
@@ -31,6 +34,8 @@ export default function Settings() {
   const [university, setUniversity] = useState(settings.university);
   const [major, setMajor] = useState(settings.major);
   const [reminderMsg, setReminderMsg] = useState<string>();
+  const [backupMsg, setBackupMsg] = useState<string>();
+  const restoreBackup = useStore((s) => s.restoreBackup);
 
   const saveProfile = () => update({ name: name.trim() || settings.name, university: university.trim(), major: major.trim() });
 
@@ -106,7 +111,7 @@ export default function Settings() {
                 <AppText variant="label">قبل المحاضرة بـ</AppText>
                 <ChipRow>
                   {[5, 10, 15, 30, 60].map((m) => (
-                    <Chip key={m} label={m === 60 ? 'ساعة' : `${m} دقائق`} selected={settings.lectureLeadMin === m} onPress={() => update({ lectureLeadMin: m })} />
+                    <Chip key={m} label={m === 60 ? 'ساعة' : ar(m, MINUTES)} selected={settings.lectureLeadMin === m} onPress={() => update({ lectureLeadMin: m })} />
                   ))}
                 </ChipRow>
                 <Button
@@ -137,8 +142,15 @@ export default function Settings() {
           <Stepper value={settings.dailyGoalMin} onChange={(dailyGoalMin) => update({ dailyGoalMin })} min={15} max={600} step={15} format={formatDuration} />
         </View>
         <View style={{ gap: 6 }}>
+          <AppText variant="label">عدد أسابيع الفصل الدراسي</AppText>
+          <AppText variant="caption" muted>
+            يُستخدم لحساب نسبة الغياب المسموح (25%)
+          </AppText>
+          <Stepper value={settings.semesterWeeks} onChange={(semesterWeeks) => update({ semesterWeeks })} min={8} max={20} format={(n) => ar(n, WEEKS)} />
+        </View>
+        <View style={{ gap: 6 }}>
           <AppText variant="label">مدة الاستراحة</AppText>
-          <Stepper value={settings.breakMin} onChange={(breakMin) => update({ breakMin })} min={1} max={30} format={(n) => `${n} دقائق`} />
+          <Stepper value={settings.breakMin} onChange={(breakMin) => update({ breakMin })} min={1} max={30} format={(n) => ar(n, MINUTES)} />
         </View>
         <View style={{ gap: 6 }}>
           <AppText variant="label">نظام المعدل</AppText>
@@ -156,9 +168,49 @@ export default function Settings() {
       <SectionHeader title="البيانات والخصوصية" />
       <Card style={{ gap: spacing.md }}>
         <AppText variant="caption" muted>
-          بياناتك محفوظة على جهازك فقط ولا تُرسل لأي خادم.
+          بياناتك محفوظة على جهازك فقط ولا تُرسل لأي خادم. صدّر نسخة احتياطية قبل تغيير جوالك.
         </AppText>
         {!hasData && <Button title="تحميل جدول تجريبي" variant="secondary" icon="sparkles" onPress={loadSample} />}
+        {backupSupported && (
+          <>
+            <Button
+              title="تصدير نسخة احتياطية"
+              variant="secondary"
+              icon="cloud-upload-outline"
+              onPress={async () => {
+                const s = useStore.getState();
+                const r = await shareBackup(
+                  buildBackup({ settings: s.settings, courses: s.courses, slots: s.slots, tasks: s.tasks, sessions: s.sessions, decks: s.decks, gpa: s.gpa }),
+                );
+                setBackupMsg(r.ok ? undefined : r.message);
+              }}
+            />
+            <Button
+              title="استعادة من نسخة احتياطية"
+              variant="ghost"
+              icon="cloud-download-outline"
+              onPress={async () => {
+                const r = await pickBackup();
+                if (!r) return;
+                if (!r.ok) return setBackupMsg(r.message);
+                confirm(
+                  'استعادة النسخة؟',
+                  `سيتم استبدال بياناتك الحالية بـ: ${r.summary}.`,
+                  () => {
+                    restoreBackup(r.data);
+                    setBackupMsg('تمت استعادة بياناتك بنجاح ✓');
+                  },
+                  'استعادة',
+                );
+              }}
+            />
+            {backupMsg && (
+              <AppText variant="caption" color={backupMsg.includes('✓') ? colors.success : colors.danger}>
+                {backupMsg}
+              </AppText>
+            )}
+          </>
+        )}
         <Button title="الاشتراك والمدفوعات" variant="ghost" icon="diamond-outline" onPress={() => router.push('/pro')} />
         <Button title="سياسة الخصوصية" variant="ghost" icon="shield-checkmark-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'privacy' } })} />
         <Button title="شروط الاستخدام" variant="ghost" icon="document-text-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })} />
