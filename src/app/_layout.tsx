@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 import { I18nManager, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initPurchases } from '@/lib/purchases';
+import { ConfirmHost } from '@/components/ConfirmHost';
 import { useReminderSync } from '@/lib/useReminderSync';
 import { useHydrated, useStore } from '@/store/useStore';
 import { AppThemeProvider, useTheme } from '@/theme';
@@ -51,6 +52,7 @@ function Navigator() {
         <Stack.Screen name="task/new" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="pro" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
+      {Platform.OS === 'web' && <ConfirmHost />}
     </>
   );
 }
