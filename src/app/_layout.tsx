@@ -12,6 +12,7 @@ import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { I18nManager, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useReminderSync } from '@/lib/useReminderSync';
 import { useHydrated } from '@/store/useStore';
 import { AppThemeProvider, useTheme } from '@/theme';
 
@@ -32,6 +33,7 @@ export { ErrorBoundary } from 'expo-router';
 
 function Navigator() {
   const { colors, isDark } = useTheme();
+  useReminderSync();
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(colors.bg).catch(() => {});
   }, [colors.bg]);

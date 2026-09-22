@@ -46,6 +46,12 @@
           "imageWidth": 180,
           "backgroundColor": "#4F46E5"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4F46E5"
+        }
       ]
     ],
     "experiments": {

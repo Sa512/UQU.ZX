@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -10,7 +11,9 @@ import { SlotRow, TaskRow } from '@/components/Rows';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { formatDate, formatDuration, greeting } from '@/lib/dates';
 import { minutesOn, streak } from '@/lib/stats';
+import { remindersSupported } from '@/lib/notifications';
 import { useNow } from '@/lib/useNow';
+import { turnOnReminders } from '@/lib/useReminderSync';
 import { isPro, useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -38,6 +41,7 @@ function QuickAction({ icon, label, color, href }: { icon: IconName; label: stri
 export default function Home() {
   const { colors } = useTheme();
   const settings = useStore((s) => s.settings);
+  const updateSettings = useStore((s) => s.updateSettings);
   const slots = useStore((s) => s.slots);
   const tasks = useStore((s) => s.tasks);
   const sessions = useStore((s) => s.sessions);
@@ -125,6 +129,22 @@ export default function Home() {
         <QuickAction icon="albums" label={dueCards ? `بطاقات (${dueCards})` : 'البطاقات'} color="#10B981" href="/decks" />
         <QuickAction icon="calculator" label="المعدل" color="#F59E0B" href="/gpa" />
       </Card>
+
+      {remindersSupported && !settings.remindersEnabled && !settings.remindersPromptDismissed && (slots.length > 0 || tasks.length > 0) && (
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.infoSoft, borderColor: 'transparent' }}>
+          <Ionicons name="notifications" size={26} color={colors.info} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <AppText variant="h3">لا تفوّت أي موعد</AppText>
+            <AppText variant="caption" muted>
+              نذكّرك قبل المحاضرة وقبل التسليم والاختبار.
+            </AppText>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+              <Button title="فعّل التذكيرات" size="sm" onPress={() => turnOnReminders().then((ok) => !ok && updateSettings({ remindersPromptDismissed: true }))} />
+              <Button title="لاحقاً" size="sm" variant="ghost" onPress={() => updateSettings({ remindersPromptDismissed: true })} />
+            </View>
+          </View>
+        </Card>
+      )}
 
       {/* محاضرات اليوم */}
       <SectionHeader title={isProf ? 'محاضراتك اليوم' : 'محاضرات اليوم'} action="الجدول" onAction={() => router.push('/schedule')} />

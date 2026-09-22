@@ -24,6 +24,10 @@ export type Settings = {
   breakMin: number;
   haptics: boolean;
   onboarded: boolean;
+  remindersEnabled: boolean;
+  /** كم دقيقة قبل المحاضرة يصل التذكير. */
+  lectureLeadMin: number;
+  remindersPromptDismissed: boolean;
 };
 
 export type Course = {
@@ -133,6 +137,9 @@ const defaultSettings: Settings = {
   breakMin: 5,
   haptics: true,
   onboarded: false,
+  remindersEnabled: false,
+  lectureLeadMin: 15,
+  remindersPromptDismissed: false,
 };
 
 const initialState: State = {
@@ -293,6 +300,11 @@ export const useStore = create<State & Actions>()(
       name: 'mudhaker-store',
       version: 1,
       storage: createJSONStorage(() => AsyncStorage),
+      // دمج عميق للإعدادات حتى تأخذ الحقول الجديدة قيمها الافتراضية عند تحديث التطبيق.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<State>;
+        return { ...current, ...p, settings: { ...current.settings, ...p.settings } };
+      },
     },
   ),
 );
