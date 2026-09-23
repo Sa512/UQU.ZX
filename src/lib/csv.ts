@@ -6,8 +6,10 @@
 export function parseTable(text: string): string[][] {
   const clean = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n').trim();
   if (!clean) return [];
-  const first = clean.split('\n')[0];
-  const sep = first.includes('\t') ? '\t' : first.includes(';') && !first.includes(',') ? ';' : first.includes(',') ? ',' : '\t';
+  // الفاصل هو الأكثر ظهوراً في الأسطر (لا نعتمد على السطر الأول وحده؛ قد يكون مقدمة نصية)
+  const lines = clean.split('\n');
+  const score = (c: string) => lines.filter((l) => l.includes(c)).length;
+  const sep = (['\t', ',', ';'] as const).reduce((best, c) => (score(c) > score(best) ? c : best), '\t' as string);
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = '';

@@ -4,6 +4,7 @@
  */
 import type { Course, Deck, GpaState, Section, Session, Settings, Slot, Student, Task } from '@/store/useStore';
 import type { AttendanceRecord } from './attendance';
+import type { GradeItem, Scores } from './gradebook';
 import type { Assessment } from './grades';
 
 export const BACKUP_APP = 'mudhaker';
@@ -20,6 +21,8 @@ export type BackupData = {
   sections: Section[];
   students: Student[];
   attendance: AttendanceRecord[];
+  gradeItems: GradeItem[];
+  scores: Scores;
   gpa: GpaState;
 };
 
@@ -63,6 +66,8 @@ export function parseBackup(text: string): ParseResult {
     sections: isArr(d.sections) ? d.sections : [],
     students: isArr(d.students) ? d.students : [],
     attendance: isArr(d.attendance) ? d.attendance : [],
+    gradeItems: isArr(d.gradeItems) ? d.gradeItems : [],
+    scores: d.scores && typeof d.scores === 'object' && !isArr(d.scores) ? d.scores : {},
     gpa: d.gpa && isArr(d.gpa.rows) ? d.gpa : { prevGpa: 0, prevCredits: 0, rows: [] },
   };
   const summary = `${data.courses.length} مقرر، ${data.tasks.length} مهمة، ${data.decks.length} مجموعة بطاقات${data.students.length ? `، ${data.students.length} طالب` : ''}`;

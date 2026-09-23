@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import { radius, spacing, useTheme } from '@/theme';
 
-type Props = ViewProps & { onPress?: () => void; padded?: boolean; style?: StyleProp<ViewStyle>; accessibilityLabel?: string };
+type Props = ViewProps & { onPress?: () => void; padded?: boolean; style?: StyleProp<ViewStyle>; accessibilityLabel?: string; disabled?: boolean };
 
-export function Card({ onPress, padded = true, style, children, accessibilityLabel, ...rest }: Props) {
+export function Card({ onPress, padded = true, style, children, accessibilityLabel, disabled, ...rest }: Props) {
   const { colors, isDark } = useTheme();
   const base: ViewStyle = {
     backgroundColor: colors.surface,
@@ -27,6 +27,7 @@ export function Card({ onPress, padded = true, style, children, accessibilityLab
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         onPress={onPress}
+        disabled={disabled}
         style={({ pressed }) => [base, pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] }, style]}
         {...rest}
       >

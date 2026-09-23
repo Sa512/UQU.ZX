@@ -88,6 +88,11 @@ export default function SectionScreen() {
         <Button style={{ flex: 1 }} title="استيراد طلاب" icon="cloud-download-outline" variant="secondary" onPress={() => router.push({ pathname: '/roster-import', params: { sectionId: section.id } })} />
       </View>
 
+      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <Button style={{ flex: 1 }} size="sm" title="الدرجات" icon="ribbon-outline" variant="ghost" onPress={() => router.push({ pathname: '/gradebook/[id]', params: { id: section.id } })} />
+        <Button style={{ flex: 1 }} size="sm" title="المجموعات" icon="people-circle-outline" variant="ghost" onPress={() => router.push({ pathname: '/groups/[id]', params: { id: section.id } })} />
+      </View>
+
       {atRisk > 0 && (
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.dangerSoft, borderColor: 'transparent' }}>
           <Ionicons name="warning" size={22} color={colors.danger} />

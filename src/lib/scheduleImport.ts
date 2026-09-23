@@ -97,8 +97,11 @@ function typeOf(s: string): SlotType {
 export type ScheduleParse = { slots: ImportedSlot[]; skipped: number };
 
 export function parseSchedule(text: string): ScheduleParse {
-  const rows = parseTable(text);
-  if (!rows.length) return { slots: [], skipped: 0 };
+  const all = parseTable(text);
+  if (!all.length) return { slots: [], skipped: 0 };
+  // تجاهل أي أسطر نصية قبل صف العناوين (مثل رسالة مشاركة)
+  const headerAt = all.slice(0, 6).findIndex((r) => r.some((c) => H.days.test(c)) && r.some((c) => H.time.test(c) || H.start.test(c)));
+  const rows = headerAt > 0 ? all.slice(headerAt) : all;
   const header = rows[0];
   const col: Partial<Record<keyof typeof H, number>> = {};
   // الأكثر تحديداً أولاً حتى لا يلتقط «المقرر» عمود «رمز المقرر»

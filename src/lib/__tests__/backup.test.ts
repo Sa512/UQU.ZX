@@ -12,6 +12,8 @@ const data: BackupData = {
   sections: [],
   students: [],
   attendance: [],
+  gradeItems: [],
+  scores: {},
   gpa: { prevGpa: 4, prevCredits: 30, rows: [] },
 };
 

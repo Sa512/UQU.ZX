@@ -79,6 +79,14 @@ export function relativeDue(dueKey: string, now = new Date()): { label: string; 
   return { label: formatShortDate(fromDateKey(dueKey)), tone: 'muted' };
 }
 
+/** الاسم المختصر للتحية مع إبقاء اللقب: «د. سارة الحربي» ← «د. سارة». */
+export function shortName(full: string): string {
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '';
+  if (/^(د|أ|ا|م|أ\.د|ا\.د|د\.م)\.?$/.test(parts[0]) && parts[1]) return `${parts[0].replace(/\.?$/, '.')} ${parts[1]}`;
+  return parts[0];
+}
+
 export function greeting(now = new Date()): string {
   const h = now.getHours();
   if (h < 5) return 'سهرة موفقة';

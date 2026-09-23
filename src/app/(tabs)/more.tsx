@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
-import { View } from 'react-native';
+import { Share, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Card } from '@/components/Card';
 import { IconBadge } from '@/components/IconBadge';
 import { Screen } from '@/components/Screen';
 import { formatShortDate } from '@/lib/dates';
 import { shareApp } from '@/lib/growth';
+import { exportSchedule, SHARE_INTRO } from '@/lib/scheduleExport';
 import { ROLE_LABEL } from '@/lib/labels';
 import { ar, COURSES, DECKS } from '@/lib/plural';
 import { isPro, useStore } from '@/store/useStore';
@@ -34,6 +35,9 @@ export default function More() {
   const sub = useStore((s) => s.subscription);
   const courses = useStore((s) => s.courses.length);
   const decks = useStore((s) => s.decks.length);
+  const slots = useStore((s) => s.slots);
+  const allCourses = useStore((s) => s.courses);
+  const sections = useStore((s) => s.sections);
   const pro = isPro(sub);
   const isProf = settings.role === 'professor';
 
@@ -49,6 +53,7 @@ export default function More() {
   }
   items.push({ icon: 'cloud-download', title: 'استيراد الجدول', subtitle: 'من بوابة الجامعة أو Excel', color: '#7C3AED', href: '/schedule-import' });
   items.push({ icon: 'image', title: 'خلفية الجدول', subtitle: 'جدولك كخلفية للجوال', color: '#B45309', href: '/wallpaper' });
+  items.push({ icon: 'refresh-circle', title: 'فصل جديد', subtitle: 'اعتمد معدلك وجهّز الفصل القادم', color: '#0369A1', href: '/semester' });
 
   return (
     <Screen inTabs title="المزيد">
@@ -78,6 +83,22 @@ export default function More() {
           <Tile key={i.title} item={i} />
         ))}
       </View>
+
+      <Card
+        onPress={() => Share.share({ message: `${SHARE_INTRO}\n\n${exportSchedule(slots, allCourses, sections)}` }).catch(() => {})}
+        accessibilityLabel="مشاركة جدولي مع زميل"
+        style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, opacity: slots.length ? 1 : 0.5 }}
+        disabled={!slots.length}
+      >
+        <IconBadge name="swap-horizontal" color="#0F766E" />
+        <View style={{ flex: 1 }}>
+          <AppText variant="h3">شارك جدولك مع زميل</AppText>
+          <AppText variant="caption" muted>
+            يلصقه في «استيراد الجدول» ويصير عنده جاهز
+          </AppText>
+        </View>
+        <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+      </Card>
 
       <Card onPress={() => shareApp()} accessibilityLabel="شارك مذاكر مع زملائك" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <IconBadge name="share-social" color="#DB2777" />

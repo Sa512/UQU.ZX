@@ -8,6 +8,8 @@ import type { BackupData } from '@/lib/backup';
 import type { Grade, GradeScale } from '@/lib/gpa';
 import type { AttendanceRecord } from '@/lib/attendance';
 import type { Assessment } from '@/lib/grades';
+import { scoreKey, type GradeItem, type Scores } from '@/lib/gradebook';
+import { closeSemester } from '@/lib/semester';
 import type { RosterRow } from '@/lib/roster';
 import type { ImportedSlot } from '@/lib/scheduleImport';
 import { uid } from '@/lib/id';
@@ -121,6 +123,8 @@ type State = {
   sections: Section[];
   students: Student[];
   attendance: AttendanceRecord[];
+  gradeItems: GradeItem[];
+  scores: Scores;
   gpa: GpaState;
   subscription: Subscription;
   transactions: Transaction[];
@@ -155,6 +159,11 @@ type Actions = {
   deleteStudent: (id: string) => void;
   saveAttendance: (sectionId: string, date: string, absent: string[]) => void;
   importSchedule: (slots: ImportedSlot[], replace: boolean) => { courses: number; slots: number };
+  addGradeItem: (sectionId: string, name: string, outOf: number) => string;
+  deleteGradeItem: (id: string) => void;
+  setScores: (itemId: string, values: Record<string, number | null>) => void;
+  addTasks: (tasks: Omit<Task, 'id' | 'done' | 'createdAt'>[]) => void;
+  startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
   updateAssessment: (id: string, p: Partial<Assessment>) => void;
   deleteAssessment: (id: string) => void;
   activatePlan: (tx: Omit<Transaction, 'id' | 'at'>, months: number) => void;
@@ -196,6 +205,8 @@ const initialState: State = {
   sections: [],
   students: [],
   attendance: [],
+  gradeItems: [],
+  scores: {},
   gpa: { prevGpa: 0, prevCredits: 0, rows: [] },
   subscription: { plan: 'free', until: null },
   transactions: [],
@@ -233,6 +244,10 @@ export const useStore = create<State & Actions>()(
           sections: s.sections.filter((x) => x.courseId !== id),
           students: s.students.filter((x) => s.sections.some((q) => q.id === x.sectionId && q.courseId !== id)),
           attendance: s.attendance.filter((r) => s.sections.some((q) => q.id === r.sectionId && q.courseId !== id)),
+          gradeItems: s.gradeItems.filter((g) => s.sections.some((q) => q.id === g.sectionId && q.courseId !== id)),
+          scores: Object.fromEntries(
+            Object.entries(s.scores).filter(([k]) => s.gradeItems.some((g) => k.startsWith(`${g.id}:`) && s.sections.some((q) => q.id === g.sectionId && q.courseId !== id))),
+          ),
         })),
 
       addSlot: (x) => set((s) => ({ slots: [...s.slots, { ...x, id: uid() }] })),
@@ -299,6 +314,8 @@ export const useStore = create<State & Actions>()(
           sections: s.sections.filter((x) => x.id !== id),
           students: s.students.filter((x) => x.sectionId !== id),
           attendance: s.attendance.filter((x) => x.sectionId !== id),
+          gradeItems: s.gradeItems.filter((x) => x.sectionId !== id),
+          scores: Object.fromEntries(Object.entries(s.scores).filter(([k]) => s.gradeItems.some((g) => g.sectionId !== id && k.startsWith(`${g.id}:`)))),
           slots: s.slots.map((x) => (x.sectionId === id ? { ...x, sectionId: undefined } : x)),
         })),
       addStudents: (sectionId, rows) => {
@@ -323,6 +340,7 @@ export const useStore = create<State & Actions>()(
         set((s) => ({
           students: s.students.filter((x) => x.id !== id),
           attendance: s.attendance.map((r) => ({ ...r, absent: r.absent.filter((a) => a !== id) })),
+          scores: Object.fromEntries(Object.entries(s.scores).filter(([k]) => !k.endsWith(`:${id}`))),
         })),
       saveAttendance: (sectionId, date, absent) =>
         set((s) => {
@@ -369,6 +387,48 @@ export const useStore = create<State & Actions>()(
         set({ courses, sections, slots: replace ? newSlots : [...s.slots, ...newSlots] });
         return { courses: newCourses, slots: newSlots.length };
       },
+
+      addGradeItem: (sectionId, name, outOf) => {
+        const id = uid();
+        set((s) => ({ gradeItems: [...s.gradeItems, { id, sectionId, name: name.trim(), outOf }] }));
+        return id;
+      },
+      deleteGradeItem: (id) =>
+        set((s) => ({
+          gradeItems: s.gradeItems.filter((x) => x.id !== id),
+          scores: Object.fromEntries(Object.entries(s.scores).filter(([k]) => !k.startsWith(`${id}:`))),
+        })),
+      setScores: (itemId, values) =>
+        set((s) => {
+          const scores = { ...s.scores };
+          for (const [studentId, v] of Object.entries(values)) {
+            if (v === null || !Number.isFinite(v)) delete scores[scoreKey(itemId, studentId)];
+            else scores[scoreKey(itemId, studentId)] = v;
+          }
+          return { scores };
+        }),
+      addTasks: (list) =>
+        set((s) => ({ tasks: [...s.tasks, ...list.map((t) => ({ ...t, id: uid(), done: false, createdAt: Date.now() }))] })),
+      startNewSemester: ({ mergeGpa, clearSchedule, clearTasks, clearCourses }) =>
+        set((s) => {
+          const next: Partial<State> = {};
+          if (mergeGpa && s.gpa.rows.length) {
+            const r = closeSemester(s.gpa.prevGpa, s.gpa.prevCredits, s.gpa.rows, s.settings.gradeScale);
+            next.gpa = { prevGpa: r.prevGpa, prevCredits: r.prevCredits, rows: [] };
+          }
+          if (clearSchedule || clearCourses) next.slots = [];
+          if (clearTasks) next.tasks = [];
+          if (clearCourses) {
+            Object.assign(next, { courses: [], assessments: [], sections: [], students: [], attendance: [], gradeItems: [], scores: {} });
+            next.decks = s.decks.map((d) => ({ ...d, courseId: null }));
+            if (!clearTasks) next.tasks = s.tasks.map((t) => ({ ...t, courseId: null }));
+          } else {
+            // فصل جديد: يُصفّر الغياب ويُبقي المقررات
+            next.courses = s.courses.map((c) => ({ ...c, absences: 0 }));
+            next.attendance = [];
+          }
+          return next;
+        }),
 
       addAssessment: (a) => set((s) => ({ assessments: [...s.assessments, { ...a, id: uid() }] })),
       updateAssessment: (id, p) =>
@@ -465,6 +525,8 @@ export const useStore = create<State & Actions>()(
           sections: d.sections,
           students: d.students,
           attendance: d.attendance,
+          gradeItems: d.gradeItems,
+          scores: d.scores,
           gpa: d.gpa,
           // الاشتراك والمدفوعات تبقى كما هي على هذا الجهاز
           subscription: s.subscription,

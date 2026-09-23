@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { addDays, diffDays, formatDuration, formatMinutes, fromDateKey, greeting, relativeDue, toDateKey } from '../dates';
+import { addDays, diffDays, formatDuration, formatMinutes, fromDateKey, greeting, relativeDue, shortName, toDateKey } from '../dates';
 import { absenceStatus } from '../absence';
 import { ar, COURSES, DAYS, MINUTES, TASKS } from '../plural';
 import { mastery, review } from '../srs';
@@ -107,5 +107,15 @@ describe('arabic plurals', () => {
     expect(relativeDue('2026-09-24', now).label).toBe('بعد يومين');
     expect(relativeDue('2026-09-20', now).label).toBe('متأخر يومين');
     expect(relativeDue('2026-09-21', now).label).toBe('متأخر يوم');
+  });
+});
+
+describe('shortName', () => {
+  it('keeps academic titles with the first name', () => {
+    expect(shortName('د. سارة الحربي')).toBe('د. سارة');
+    expect(shortName('د سارة')).toBe('د. سارة');
+    expect(shortName('أ.د خالد العتيبي')).toBe('أ.د. خالد');
+    expect(shortName('عبدالله محمد')).toBe('عبدالله');
+    expect(shortName('  ')).toBe('');
   });
 });

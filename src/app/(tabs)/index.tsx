@@ -12,7 +12,7 @@ import { SlotRow, TaskRow } from '@/components/Rows';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { WHATS_NEW } from '@/content/whatsNew';
 import { absenceStatus } from '@/lib/absence';
-import { formatDate, formatDuration, greeting } from '@/lib/dates';
+import { diffDays, formatDate, formatDuration, fromDateKey, greeting, shortName } from '@/lib/dates';
 import { formatHijri } from '@/lib/hijri';
 import { minutesOn, streak } from '@/lib/stats';
 import { ar, DAYS } from '@/lib/plural';
@@ -77,7 +77,12 @@ export default function Home() {
     .map((course) => ({ course, st: absenceStatus(course.absences ?? 0, weeklyMeetings(course.id, course.credits, slots), weeks) }))
     .filter(({ st }) => st.level === 'danger' || st.level === 'barred');
   const hijri = formatHijri(now);
-  const firstName = settings.name.split(' ')[0] || (isProf ? 'دكتور' : 'بطل');
+  const nextExam = tasks
+    .filter((t) => !t.done && (t.type === 'exam' || t.type === 'quiz') && diffDays(now, fromDateKey(t.due)) >= 0 && diffDays(now, fromDateKey(t.due)) <= 21)
+    .sort((a, b) => a.due.localeCompare(b.due))[0];
+  const examIn = nextExam ? diffDays(now, fromDateKey(nextExam.due)) : 0;
+  const hasPlan = !!nextExam && tasks.some((t) => t.title.startsWith(`مراجعة ${nextExam.title} (`));
+  const firstName = shortName(settings.name) || (isProf ? 'دكتور' : 'بطل');
 
   return (
     <Screen inTabs contentStyle={{ paddingTop: spacing.sm }}>
@@ -197,6 +202,31 @@ export default function Home() {
             <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
           </Card>
         ))}
+
+      {!isProf && nextExam && (
+        <Card
+          onPress={() => router.push({ pathname: '/task/new', params: { id: nextExam.id } })}
+          accessibilityLabel={`أقرب اختبار ${nextExam.title}`}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.warningSoft, borderColor: 'transparent' }}
+        >
+          <View style={{ alignItems: 'center', minWidth: 56 }}>
+            <AppText variant="title" color={colors.warning}>
+              {examIn}
+            </AppText>
+            <AppText variant="tiny" color={colors.warning}>
+              {examIn === 0 ? 'اليوم' : examIn === 1 ? 'يوم' : examIn === 2 ? 'يومان' : examIn <= 10 ? 'أيام' : 'يوماً'}
+            </AppText>
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText variant="h3" numberOfLines={1}>
+              {examIn === 0 ? `اختبارك اليوم: ${nextExam.title}` : nextExam.title}
+            </AppText>
+            <AppText variant="caption" muted>
+              {examIn === 0 ? 'بالتوفيق! راجع بطاقاتك قبل الدخول' : hasPlan ? 'أقرب اختبار · خطة المراجعة في مهامك' : 'أقرب اختبار · اضغط لإنشاء خطة مراجعة'}
+            </AppText>
+          </View>
+        </Card>
+      )}
 
       {/* محاضرات اليوم */}
       <SectionHeader title={isProf ? 'محاضراتك اليوم' : 'محاضرات اليوم'} action="الجدول" onAction={() => router.push('/schedule')} />

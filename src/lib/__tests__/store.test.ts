@@ -46,3 +46,37 @@ describe('store: faculty features', () => {
     expect([s.sections.length, s.students.length, s.attendance.length]).toEqual([0, 0, 0]);
   });
 });
+
+describe('store: gradebook and new semester', () => {
+  beforeEach(() => useStore.getState().resetAll());
+
+  it('stores scores and cleans them up with the student, item and course', () => {
+    const st = useStore.getState();
+    const cid = st.addCourse({ name: 'م', code: '', color: '#000', credits: 3, instructor: '' });
+    const sid = st.addSection(cid, '1');
+    st.addStudents(sid, [{ name: 'أ', uniId: '1', email: '', phone: '' }, { name: 'ب', uniId: '2', email: '', phone: '' }]);
+    const [a, b] = useStore.getState().students;
+    const item = st.addGradeItem(sid, 'فصلي', 20);
+    st.setScores(item, { [a.id]: 18, [b.id]: 12 });
+    st.setScores(item, { [b.id]: null });
+    expect(Object.keys(useStore.getState().scores)).toEqual([`${item}:${a.id}`]);
+    st.deleteStudent(a.id);
+    expect(useStore.getState().scores).toEqual({});
+    st.setScores(item, { [b.id]: 15 });
+    st.deleteCourse(cid);
+    const s = useStore.getState();
+    expect([s.gradeItems.length, Object.keys(s.scores).length]).toEqual([0, 0]);
+  });
+
+  it('closes a semester into the cumulative GPA and resets absences', () => {
+    const st = useStore.getState();
+    st.addCourse({ name: 'م', code: '', color: '#000', credits: 3, instructor: '', absences: 4 });
+    st.setGpa({ prevGpa: 4, prevCredits: 60, rows: [{ id: 'r', name: 'م', credits: 15, grade: 'A+' }] });
+    st.addTasks([{ title: 't', courseId: null, type: 'exam', due: '2026-10-01', priority: 2, notes: '' }]);
+    st.startNewSemester({ mergeGpa: true, clearSchedule: true, clearTasks: true, clearCourses: false });
+    const s = useStore.getState();
+    expect(s.gpa).toEqual({ prevGpa: 4.2, prevCredits: 75, rows: [] });
+    expect(s.courses[0].absences).toBe(0);
+    expect(s.tasks).toHaveLength(0);
+  });
+});

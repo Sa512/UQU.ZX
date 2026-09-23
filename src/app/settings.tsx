@@ -180,7 +180,7 @@ export default function Settings() {
               onPress={async () => {
                 const s = useStore.getState();
                 const r = await shareBackup(
-                  buildBackup({ settings: s.settings, courses: s.courses, slots: s.slots, tasks: s.tasks, sessions: s.sessions, decks: s.decks, assessments: s.assessments, sections: s.sections, students: s.students, attendance: s.attendance, gpa: s.gpa }),
+                  buildBackup({ settings: s.settings, courses: s.courses, slots: s.slots, tasks: s.tasks, sessions: s.sessions, decks: s.decks, assessments: s.assessments, sections: s.sections, students: s.students, attendance: s.attendance, gradeItems: s.gradeItems, scores: s.scores, gpa: s.gpa }),
                 );
                 setBackupMsg(r.ok ? undefined : r.message);
               }}
