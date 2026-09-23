@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>مذاكر — دليل التطبيق</title>
+<style>
+/*FONTS*/
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #fff; }
+body { font-family: Plex, sans-serif; color: #0F172A; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: #F5F6FB; }
+.page:last-child { page-break-after: auto; break-after: auto; }
+
+/* ألوان الفصول */
+.indigo { --a: #4F46E5; --b: #7C3AED; --soft: #EEF2FF; --ink: #3730A3; }
+.emerald { --a: #047857; --b: #0F766E; --soft: #D1FAE5; --ink: #065F46; }
+.amber { --a: #B45309; --b: #EA580C; --soft: #FEF3C7; --ink: #92400E; }
+.rose { --a: #BE185D; --b: #DC2626; --soft: #FCE7F3; --ink: #9D174D; }
+.teal { --a: #0F766E; --b: #0369A1; --soft: #CCFBF1; --ink: #115E59; }
+.sky { --a: #0369A1; --b: #4F46E5; --soft: #E0F2FE; --ink: #075985; }
+.violet { --a: #7C3AED; --b: #BE185D; --soft: #EDE9FE; --ink: #5B21B6; }
+.orange { --a: #EA580C; --b: #B45309; --soft: #FFEDD5; --ink: #9A3412; }
+
+/* رأس الصفحة الملوّن */
+.band { height: 66mm; background: linear-gradient(135deg, var(--b), var(--a)); color: #fff; padding: 14mm 16mm 0; position: relative; }
+.band::after { content: ''; position: absolute; left: -30mm; bottom: -40mm; width: 110mm; height: 110mm; border-radius: 50%; background: rgba(255,255,255,0.08); }
+.band .kicker { font-size: 10.5pt; font-weight: 500; opacity: .85; letter-spacing: .02em; }
+.band h2 { font-size: 30pt; line-height: 1.25; font-weight: 700; margin-top: 2mm; }
+.band p { font-size: 12pt; line-height: 1.7; opacity: .92; max-width: 150mm; margin-top: 2mm; }
+.chapter { position: absolute; left: 16mm; top: 12mm; font-size: 44pt; font-weight: 700; opacity: .18; line-height: 1; }
+
+/* صف الشاشات */
+.phones { display: flex; justify-content: center; gap: 7mm; margin-top: -16mm; position: relative; z-index: 2; }
+.phone { width: 58mm; }
+.frame { background: #0F172A; border-radius: 7mm; padding: 1.6mm; box-shadow: 0 4mm 9mm rgba(15,23,42,.28); }
+.frame img { width: 100%; display: block; border-radius: 5.6mm; }
+.cap { text-align: center; margin-top: 3mm; font-size: 10.5pt; font-weight: 700; color: var(--ink); }
+.cap small { display: block; font-weight: 400; color: #5B6478; font-size: 8.8pt; margin-top: .6mm; line-height: 1.5; }
+
+/* الميزات */
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 8mm; padding: 8mm 16mm 0; }
+.feat { display: flex; gap: 3mm; align-items: flex-start; }
+.dot { flex: none; width: 7mm; height: 7mm; border-radius: 2.2mm; background: var(--soft); color: var(--a); font-weight: 700; font-size: 10pt; display: flex; align-items: center; justify-content: center; margin-top: .6mm; }
+.feat b { display: block; font-size: 11pt; color: #0F172A; }
+.feat span { font-size: 9.6pt; line-height: 1.6; color: #475569; }
+.foot { position: absolute; bottom: 8mm; left: 16mm; right: 16mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: #94A3B8; }
+.foot b { color: var(--a); }
+
+/* الغلاف */
+.cover { background: radial-gradient(120mm 120mm at 85% 12%, rgba(255,255,255,.18), transparent 70%), linear-gradient(160deg, #7C3AED 0%, #4F46E5 55%, #3730A3 100%); color: #fff; }
+.cover .top { padding: 22mm 18mm 0; display: flex; align-items: center; gap: 6mm; }
+.cover .top img { width: 26mm; height: 26mm; border-radius: 7mm; box-shadow: 0 4mm 10mm rgba(0,0,0,.25); }
+.cover h1 { font-size: 64pt; line-height: 1.1; font-weight: 700; }
+.cover .sub { padding: 0 18mm; font-size: 17pt; line-height: 1.6; margin-top: 6mm; opacity: .95; }
+.cover .tags { padding: 0 18mm; margin-top: 7mm; display: flex; gap: 3mm; flex-wrap: wrap; }
+.cover .tags span { background: rgba(255,255,255,.16); border-radius: 99px; padding: 1.6mm 5mm; font-size: 10.5pt; }
+.cover .fan { position: absolute; bottom: 14mm; left: 0; right: 0; display: flex; justify-content: center; gap: 4mm; }
+.cover .fan .phone { width: 62mm; }
+.cover .fan .phone:nth-child(1) { transform: rotate(7deg) translateY(10mm); }
+.cover .fan .phone:nth-child(3) { transform: rotate(-7deg) translateY(10mm); }
+.cover .fan .phone:nth-child(2) { transform: translateY(-6mm); }
+.cover .meta { position: absolute; top: 22mm; left: 18mm; text-align: left; font-size: 10pt; opacity: .85; line-height: 1.7; }
+
+/* صفحات النص */
+.body { padding: 10mm 16mm 0; }
+.lede { font-size: 12pt; line-height: 1.85; color: #334155; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-top: 6mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin-top: 6mm; }
+.card { background: #fff; border: .3mm solid #E3E6F0; border-radius: 5mm; padding: 5mm; }
+.card h3 { font-size: 12.5pt; margin-bottom: 1.5mm; color: var(--ink); }
+.card p, .card li { font-size: 9.8pt; line-height: 1.7; color: #475569; }
+.card ul { padding-right: 4.5mm; }
+.stat { background: #fff; border-radius: 5mm; padding: 5mm; border-top: 1.4mm solid var(--a); }
+.stat b { display: block; font-size: 26pt; line-height: 1.1; color: var(--a); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 9.5pt; color: #475569; line-height: 1.5; }
+.toc { margin-top: 6mm; }
+.toc div { display: flex; align-items: baseline; gap: 3mm; padding: 2.4mm 0; border-bottom: .3mm dashed #CBD5E1; font-size: 12pt; }
+.toc i { font-style: normal; width: 9mm; height: 9mm; border-radius: 2.5mm; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 10pt; flex: none; }
+.toc em { font-style: normal; margin-right: auto; color: #94A3B8; font-size: 10pt; }
+.split { display: flex; gap: 6mm; margin-top: 6mm; }
+.split > div { flex: 1; }
+.roleCard { border-radius: 6mm; padding: 7mm; color: #fff; }
+.roleCard h3 { font-size: 16pt; margin-bottom: 2mm; }
+.roleCard li { font-size: 10.2pt; line-height: 1.9; }
+.roleCard ul { padding-right: 5mm; }
+.timeline { margin-top: 5mm; position: relative; padding-right: 7mm; }
+.timeline::before { content: ''; position: absolute; right: 2mm; top: 2mm; bottom: 2mm; width: .8mm; background: var(--soft); }
+.tl { position: relative; margin-bottom: 4mm; }
+.tl::before { content: ''; position: absolute; right: -6.7mm; top: 1.6mm; width: 3.4mm; height: 3.4mm; border-radius: 50%; background: var(--a); border: .8mm solid #fff; box-shadow: 0 0 0 .3mm var(--a); }
+.tl b { font-size: 11.5pt; color: var(--ink); }
+.tl p { font-size: 9.8pt; line-height: 1.7; color: #475569; }
+.dark { background: #0B1020; color: #F1F5F9; }
+.dark .phones { margin-top: 10mm; gap: 5mm; }
+.dark .phone { width: 42mm; }
+.dark .frame { background: #27304D; }
+.dark .cap { color: #A5B4FC; }
+.pill { display: inline-block; padding: .8mm 3.5mm; border-radius: 99px; background: var(--soft); color: var(--ink); font-size: 9pt; font-weight: 500; margin: .8mm; }
+.check li { list-style: none; position: relative; padding-right: 6mm; }
+.check li::before { content: '✓'; position: absolute; right: 0; color: var(--a); font-weight: 700; }
+.back { background: linear-gradient(160deg, #3730A3, #7C3AED); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6mm; }
+.back img { width: 34mm; border-radius: 9mm; }
+.back h2 { font-size: 40pt; }
+.back p { font-size: 13pt; opacity: .92; line-height: 1.8; }
+.back .contact { margin-top: 6mm; background: rgba(255,255,255,.14); border-radius: 6mm; padding: 6mm 12mm; font-size: 12pt; line-height: 2; }
+</style>
+</head>
+<body>
+
+<!-- 1. الغلاف -->
+<section class="page cover">
+  <div class="meta">الإصدار 1.1<br>سبتمبر 2026</div>
+  <div class="top"><img src="{{icon}}" alt=""><h1>مذاكر</h1></div>
+  <p class="sub">رفيقك الجامعي للتنظيم والمذاكرة والتفوّق<br>للطالب وعضو هيئة التدريس — مصمّم لنظام الجامعات السعودية</p>
+  <div class="tags"><span>iPhone وAndroid</span><span>عربي بالكامل</span><span>معدل من 5 أو 4</span><span>حد الحرمان 25%</span><span>التحضير بالـ QR</span></div>
+  <div class="fan">
+    <div class="phone"><div class="frame"><img src="{{img:grades}}"></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:home}}"></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:schedule}}"></div></div>
+  </div>
+</section>
+
+<!-- 2. المحتويات -->
+<section class="page indigo">
+  <div class="body" style="padding-top:18mm">
+    <div class="kicker" style="color:#4F46E5;font-weight:700">دليل التطبيق</div>
+    <h2 style="font-size:28pt;margin:1mm 0 2mm">المحتويات</h2>
+    <p class="lede">كل صورة في هذا الدليل لقطة حقيقية من التطبيق وهو يعمل.</p>
+    <div class="toc">
+      <div><i style="background:#4F46E5">1</i>لماذا مذاكر؟<em>3</em></div>
+      <div><i style="background:#4F46E5">2</i>يومك الجامعي في لمحة<em>4</em></div>
+      <div><i style="background:#047857">3</i>المذاكرة الذكية<em>5</em></div>
+      <div><i style="background:#B45309">4</i>الدرجات والمعدل وخطة المراجعة<em>6</em></div>
+      <div><i style="background:#BE185D">5</i>الغياب والحرمان<em>7</em></div>
+      <div><i style="background:#0F766E">6</i>عضو هيئة التدريس: الشعب والتحضير<em>8</em></div>
+      <div><i style="background:#0F766E">7</i>عضو هيئة التدريس: الغياب والدرجات والمجموعات<em>9</em></div>
+      <div><i style="background:#0369A1">8</i>التحضير بالـ QR وحجز الساعات المكتبية<em>10</em></div>
+      <div><i style="background:#7C3AED">9</i>أدوات للجميع<em>11</em></div>
+      <div><i style="background:#1E293B">10</i>الوضع الداكن<em>12</em></div>
+      <div><i style="background:#EA580C">11</i>مذاكر برو والدفع<em>13</em></div>
+      <div><i style="background:#4F46E5">12</i>الخصوصية والأمان<em>14</em></div>
+      <div><i style="background:#047857">13</i>الجودة والاختبارات<em>15</em></div>
+      <div><i style="background:#BE185D">14</i>خطة التسويق والإطلاق<em>16</em></div>
+      <div><i style="background:#7C3AED">15</i>خارطة الطريق والخطوات القادمة<em>17</em></div>
+    </div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · دليل التطبيق</span><span>2</span></div>
+</section>
+
+<!-- 3. لماذا مذاكر -->
+<section class="page indigo">
+  <div class="band"><div class="chapter">01</div><div class="kicker">الفكرة</div><h2>لماذا مذاكر؟</h2><p>الجدول في صورة، والواجبات في قروب، والدرجات في بلاك بورد، والمعدل في موقع ثالث. مذاكر يجمعها في تطبيق عربي واحد يفهم نظام جامعاتنا.</p></div>
+  <div class="body">
+    <div class="grid3">
+      <div class="stat"><b>+1.7 مليون</b><span>طالب وطالبة في التعليم الجامعي بالمملكة</span></div>
+      <div class="stat"><b>35</b><span>شاشة في التطبيق للطالب والدكتور</span></div>
+      <div class="stat"><b>0</b><span>إعلانات أو أدوات تتبّع</span></div>
+    </div>
+    <div class="split">
+      <div class="roleCard" style="background:linear-gradient(135deg,#4F46E5,#7C3AED)">
+        <h3>🎓 للطالب</h3>
+        <ul><li>جدول المحاضرات مع تنبيه التعارض</li><li>الواجبات والاختبارات وتذكيرها</li><li>مؤقت مذاكرة وبطاقات مراجعة</li><li>الدرجات: كم تحتاج في النهائي؟</li><li>حاسبة المعدل من 5 أو 4</li><li>عدّاد الغياب قبل الحرمان</li><li>خطة مراجعة تلقائية قبل الاختبار</li><li>التحضير بالـ QR وحجز الساعات المكتبية</li></ul>
+      </div>
+      <div class="roleCard" style="background:linear-gradient(135deg,#0F766E,#0369A1)">
+        <h3>👨‍🏫 لعضو هيئة التدريس</h3>
+        <ul><li>الشعب وقوائم الطلاب من Excel بلصقة</li><li>التحضير اليدوي أو بالـ QR</li><li>كشف الغياب والحرمان</li><li>رصد الدرجات والتقديرات</li><li>المجموعات والاختيار العشوائي</li><li>نشر الساعات المكتبية للحجز</li><li>مراسلة الشعبة كاملة</li><li>التصدير إلى Excel</li></ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:6mm"><h3>مصمّم لنظام الجامعات السعودية</h3><p>معدل من 5 أو 4 بتقديرات اللائحة، حد الحرمان 25% من المحاضرات، التاريخ الهجري بتقويم أم القرى، الأسبوع يبدأ الأحد، واستيراد الجدول بالاختصارات المعروفة (ح ن ث ر خ).</p></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · لماذا مذاكر؟</span><span>3</span></div>
+</section>
+
+<!-- 4. يومك -->
+<section class="page indigo">
+  <div class="band"><div class="chapter">02</div><div class="kicker">للطالب</div><h2>يومك الجامعي في لمحة</h2><p>تفتح التطبيق فترى المحاضرة الحالية والتالية، ومواعيدك القادمة، وتقدّم مذاكرتك اليوم.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:home}}"></div><div class="cap">الرئيسية<small>المحاضرة الآن والتالية</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:schedule}}"></div><div class="cap">الجدول<small>محاضرات ومعامل وساعات مكتبية</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:tasks}}"></div><div class="cap">المهام<small>مرتبة حسب الموعد</small></div></div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="dot">✓</div><div><b>تنبيه التعارض</b><span>يخبرك إذا تداخلت محاضرتان في الوقت نفسه.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>تذكيرات بدون إنترنت</b><span>قبل المحاضرة، ومساء قبل التسليم وصباحه، وقبل الاختبار بثلاثة أيام.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>التاريخ الهجري</b><span>بتقويم أم القرى في أعلى الرئيسية.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>متأخرة · اليوم · هذا الأسبوع</b><span>لا يفوتك واجب ولا اختبار.</span></div></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · يومك الجامعي</span><span>4</span></div>
+</section>
+
+<!-- 5. المذاكرة الذكية -->
+<section class="page emerald">
+  <div class="band"><div class="chapter">03</div><div class="kicker">للطالب</div><h2>المذاكرة الذكية</h2><p>ذاكر بتركيز، وراجع بالتكرار المتباعد، وتابع تقدّمك الأسبوعي.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:focus}}"></div><div class="cap">مؤقت بومودورو<small>يحسب وقتك لكل مقرر</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:study}}"></div><div class="cap">بطاقات المراجعة<small>الصعبة تعود إليك أكثر</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:stats}}"></div><div class="cap">الإحصائيات<small>أسبوعك بالأرقام</small></div></div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="dot">✓</div><div><b>هدف يومي وأيام متتالية</b><span>تحفيز يومي يبني عادة المذاكرة.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>تنبيه نهاية الجلسة</b><span>حتى لو كان التطبيق في الخلفية.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>صناديق لايتنر الخمسة</b><span>تكرار متباعد يثبّت المعلومة قبل الاختبار.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>بنك أسئلة للدكتور</b><span>نفس البطاقات بوضع عضو هيئة التدريس.</span></div></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · المذاكرة الذكية</span><span>5</span></div>
+</section>
+
+<!-- 6. الدرجات -->
+<section class="page amber">
+  <div class="band"><div class="chapter">04</div><div class="kicker">للطالب</div><h2>كم تحتاج في النهائي؟</h2><p>سجّل درجات الفصليات والواجبات، ويقول لك مذاكر ما تحتاجه لكل تقدير، ويحسب معدلك ويجهّز خطة المراجعة.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:grades}}"></div><div class="cap">درجات المقرر<small>A تحتاج 35.5 من 40</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:gpa}}"></div><div class="cap">حاسبة المعدل<small>فصلي وتراكمي، من 5 أو 4</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:examPlan}}"></div><div class="cap">خطة المراجعة<small>جلسات متباعدة قبل الاختبار</small></div></div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="dot">✓</div><div><b>تقديرات اللائحة</b><span>A+ إلى F بنقاط نظام 5 و4 ومدى الدرجات.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>المعدل المستهدف</b><span>يحسب المعدل الفصلي اللازم للوصول لهدفك.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>مراجعة قبل 10، 7، 5، 3، 2، 1 أيام</b><span>تُضاف لمهامك تلقائياً عند إضافة الاختبار.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>بدء فصل جديد</b><span>يعتمد معدل الفصل في التراكمي تلقائياً.</span></div></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · الدرجات والمعدل</span><span>6</span></div>
+</section>
+
+<!-- 7. الغياب -->
+<section class="page rose">
+  <div class="band"><div class="chapter">05</div><div class="kicker">للطالب</div><h2>لا تنحرم هالفصل</h2><p>سجّل غيابك بضغطة، ويحسب مذاكر ما تبقّى لك قبل حد الـ 25%، وينبهك قبل فوات الأوان.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:absCourse}}"></div><div class="cap">عدّاد الغياب<small>متبقٍ لك غياب واحد</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:absHome}}"></div><div class="cap">تنبيه في الرئيسية<small>قبل الوصول للحد</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:examHome}}"></div><div class="cap">عدّاد الاختبار<small>باقي 12 يوماً</small></div></div>
+  </div>
+  <div class="body">
+    <div class="card"><h3>كيف يُحسب؟</h3><p>عدد لقاءات المقرر أسبوعياً × عدد أسابيع الفصل = محاضرات الفصل، والحد المسموح 25% منها. مثال: لقاءان × 15 أسبوعاً = 30 محاضرة، فالمسموح 7 غيابات، ويبدأ التحذير عند تجاوز نصفها.</p></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · الغياب والحرمان</span><span>7</span></div>
+</section>
+
+<!-- 8. الدكتور 1 -->
+<section class="page teal">
+  <div class="band"><div class="chapter">06</div><div class="kicker">لعضو هيئة التدريس</div><h2>شعبك وطلابك في جيبك</h2><p>انسخ كشف الشعبة من Excel أو النظام الأكاديمي والصقه، وحضّر في ثوانٍ.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:sections}}"></div><div class="cap">الشعب<small>مجمّعة حسب المقرر</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:roster}}"></div><div class="cap">استيراد الطلاب<small>بلصقة واحدة من Excel</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:attendance}}"></div><div class="cap">التحضير<small>اضغط على الغائب فقط</small></div></div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="dot">✓</div><div><b>يتعرّف على الأعمدة</b><span>الاسم والرقم الجامعي والبريد ولو بدون عناوين.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>أرقام عربية أو إنجليزية</b><span>ويتجاهل الطالب المكرر تلقائياً.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>تعديل أي تحضير سابق</b><span>من سجل التحضير في الشعبة.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>مراسلة الشعبة كاملة</b><span>ببريد واحد لكل الطلاب.</span></div></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · الشعب والتحضير</span><span>8</span></div>
+</section>
+
+<!-- 9. الدكتور 2 -->
+<section class="page teal">
+  <div class="band"><div class="chapter">07</div><div class="kicker">لعضو هيئة التدريس</div><h2>الغياب والدرجات والمجموعات</h2><p>كشف الحرمان جاهز، والدرجات مرصودة، والمجموعات مقسّمة — وكلها تُصدّر إلى Excel.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:absence}}"></div><div class="cap">كشف الغياب<small>منتظم · تنبيه · إنذار · محروم</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:gradebook}}"></div><div class="cap">رصد الدرجات<small>المجاميع وتوزيع التقديرات</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:groups}}"></div><div class="cap">المجموعات<small>عشوائية ومتوازنة</small></div></div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="dot">✓</div><div><b>لصق الدرجات من Excel</b><span>يطابقها بالرقم الجامعي أو الاسم ويرفض ما يتجاوز الحد.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>إحصاءات كل تقييم</b><span>المتوسط والأعلى والأدنى وعدد المرصود.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>اختيار طالب عشوائي</b><span>للمشاركة في المحاضرة.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>ملفات Excel بالعربية</b><span>ترميز صحيح يفتح مباشرة في Excel.</span></div></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · الغياب والدرجات</span><span>9</span></div>
+</section>
+
+<!-- 10. QR والحجز -->
+<section class="page sky">
+  <div class="band"><div class="chapter">08</div><div class="kicker">للطالب والدكتور</div><h2>التحضير بالـ QR والحجز</h2><p>رمز يتجدد كل 15 ثانية يحضّر به الطلاب أنفسهم، وحجز الساعات المكتبية برمز الدكتور.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:qr}}"></div><div class="cap">شاشة الدكتور<small>العدّاد يتحدث مباشرة</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:book}}"></div><div class="cap">حجز الطالب<small>مواعيد أسبوعين قادمين</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:profBook}}"></div><div class="cap">حجوزات الدكتور<small>برمز من 6 خانات</small></div></div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="dot">✓</div><div><b>ضد الغش</b><span>الصورة المرسلة لغائب تنتهي خلال ثوانٍ، وكل جوال يحضّر مرة، ولا يتكرر الرقم الجامعي.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>تسجيل تلقائي</b><span>عند الإنهاء يُسجَّل الحضور والغياب في الشعبة.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>بدون تعارض</b><span>لا يُحجز الموعد مرتين، وحجزان قادمان كحد أقصى لكل طالب.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>تذكير قبل الموعد</b><span>بنصف ساعة، والخصوصية محفوظة بين الطلاب.</span></div></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · التحضير بالـ QR والحجز</span><span>10</span></div>
+</section>
+
+<!-- 11. أدوات للجميع -->
+<section class="page violet">
+  <div class="band"><div class="chapter">09</div><div class="kicker">للجميع</div><h2>أدوات توفّر وقتك</h2><p>استورد جدولك من بوابة الجامعة، واحفظه خلفية لجوالك، وابدأ فصلك الجديد بضغطة.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:importSch}}"></div><div class="cap">استيراد الجدول<small>انسخ من البوابة والصق</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:wallpaper}}"></div><div class="cap">خلفية الجدول<small>بدقة 1290×2796</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:semester}}"></div><div class="cap">فصل جديد<small>يعتمد معدلك تلقائياً</small></div></div>
+  </div>
+  <div class="features">
+    <div class="feat"><div class="dot">✓</div><div><b>يفهم صيغ الجدول</b><span>الأيام بالأسماء أو الاختصارات، والأوقات ص/م أو 24 ساعة.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>شارك جدولك مع زميل</b><span>يلصقه في التطبيق فيصير عنده جاهزاً.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>نسخ احتياطي</b><span>انقل بياناتك إلى جوالك الجديد.</span></div></div>
+    <div class="feat"><div class="dot">✓</div><div><b>ثلاثة ألوان للخلفية</b><span>بنفسجي، ليلي، فاتح.</span></div></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · أدوات للجميع</span><span>11</span></div>
+</section>
+
+<!-- 12. الوضع الداكن -->
+<section class="page dark indigo">
+  <div class="body" style="padding-top:18mm">
+    <div class="kicker" style="color:#A5B4FC;font-weight:700">10 · التصميم</div>
+    <h2 style="font-size:30pt;color:#fff;margin-top:1mm">مريح في الليل أيضاً</h2>
+    <p class="lede" style="color:#CBD5E1">وضع داكن كامل يتبع إعداد جوالك، بألوان مختبرة لتباين WCAG AA، وخط IBM Plex Sans Arabic، واتجاه من اليمين لليسار في كل شاشة.</p>
+  </div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:dHome}}"></div><div class="cap">الرئيسية</div></div>
+    <div class="phone"><div class="frame"><img src="{{img:dSchedule}}"></div><div class="cap">الجدول</div></div>
+    <div class="phone"><div class="frame"><img src="{{img:dFocus}}"></div><div class="cap">المؤقت</div></div>
+    <div class="phone"><div class="frame"><img src="{{img:dGrades}}"></div><div class="cap">الدرجات</div></div>
+  </div>
+  <div class="body">
+    <div class="grid3">
+      <div class="card" style="background:#141A2E;border-color:#27304D"><h3 style="color:#A5B4FC">≥ 4.5:1</h3><p style="color:#CBD5E1">تباين النصوص على الأزرار والألوان</p></div>
+      <div class="card" style="background:#141A2E;border-color:#27304D"><h3 style="color:#A5B4FC">44pt / 48dp</h3><p style="color:#CBD5E1">مساحات لمس بمعايير Apple وGoogle</p></div>
+      <div class="card" style="background:#141A2E;border-color:#27304D"><h3 style="color:#A5B4FC">قارئ الشاشة</h3><p style="color:#CBD5E1">أوصاف صوتية لكل زر وحقل</p></div>
+    </div>
+  </div>
+  <div class="foot"><span><b style="color:#A5B4FC">مذاكر</b> · الوضع الداكن</span><span>12</span></div>
+</section>
+
+<!-- 13. برو -->
+<section class="page orange">
+  <div class="band"><div class="chapter">11</div><div class="kicker">الاشتراك</div><h2>مذاكر برو</h2><p>الأساسيات مجانية ومفيدة فعلاً. برو يفتح المقررات والبطاقات بلا حدود وتحليل المذاكرة، والدفع عبر متجري Apple وGoogle.</p></div>
+  <div class="phones">
+    <div class="phone"><div class="frame"><img src="{{img:pro}}"></div><div class="cap">الخطط<small>شهري · 6 أشهر · سنوي</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:checkout}}"></div><div class="cap">الدفع<small>مدى، Apple Pay، STC Pay</small></div></div>
+    <div class="phone"><div class="frame"><img src="{{img:success}}"></div><div class="cap">تم الدفع<small>تفعيل فوري</small></div></div>
+  </div>
+  <div class="body">
+    <div class="grid3">
+      <div class="stat"><b>14.99</b><span>ر.س شهرياً</span></div>
+      <div class="stat"><b>59.99</b><span>ر.س لـ 6 أشهر · تجربة 7 أيام</span></div>
+      <div class="stat"><b>99.99</b><span>ر.س سنوياً · وفّر 44%</span></div>
+    </div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · مذاكر برو</span><span>13</span></div>
+</section>
+
+<!-- 14. الخصوصية -->
+<section class="page indigo">
+  <div class="band"><div class="chapter">12</div><div class="kicker">الثقة</div><h2>الخصوصية والأمان</h2><p>بدون تسجيل دخول، بدون إعلانات، وبدون تتبّع. بياناتك في جوالك، والخادم لا يستقبل إلا الحد الأدنى عند استخدام الحجز أو التحضير بالـ QR.</p></div>
+  <div class="body">
+    <div class="grid2">
+      <div class="card"><h3>على جهازك فقط</h3><ul class="check"><li>الجدول والمهام والدرجات والمعدل</li><li>جلسات المذاكرة والبطاقات</li><li>قوائم الطلاب وسجلات الحضور لدى الدكتور</li><li>النسخ الاحتياطي يُحفظ حيث تختار أنت</li></ul></div>
+      <div class="card"><h3>على الخادم عند الحاجة</h3><ul class="check"><li>الاسم والرقم الجامعي ووقت الحجز أو التحضير</li><li>لا بريد ولا كلمة مرور — معرّف مجهول للجهاز</li><li>لا يراها إلا الدكتور صاحب الصفحة</li><li>تُحذف تلقائياً: التحضير 30 يوماً، الحجوزات 90 يوماً</li></ul></div>
+      <div class="card"><h3>حماية قاعدة البيانات</h3><p>كل جدول محمي بقواعد صلاحيات (RLS)، والكتابة الحساسة تمر فقط عبر دوال تتحقق من كل شرط: صحة الموعد، التعارض، صلاحية رمز QR، ومنع التكرار والانتحال.</p></div>
+      <div class="card"><h3>المدفوعات</h3><p>عبر Apple وGoogle مباشرة، ولا تصلنا بيانات البطاقة. RevenueCat يتحقق من الاشتراك بمعرّف مجهول.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · الخصوصية والأمان</span><span>14</span></div>
+</section>
+
+<!-- 15. الجودة -->
+<section class="page emerald">
+  <div class="band"><div class="chapter">13</div><div class="kicker">الجودة</div><h2>مختبر قبل أن يصلك</h2><p>كل ميزة لها اختبارات آلية، وكل شاشة جُرّبت في المتصفح بالوضعين الفاتح والداكن.</p></div>
+  <div class="body">
+    <div class="grid3">
+      <div class="stat"><b>91</b><span>اختباراً آلياً للتطبيق — كلها ناجحة</span></div>
+      <div class="stat"><b>36</b><span>فحصاً لقاعدة البيانات والصلاحيات على PostgreSQL 16</span></div>
+      <div class="stat"><b>9 / 9</b><span>تخريبات متعمدة للقاعدة كشفتها الاختبارات</span></div>
+      <div class="stat"><b>35</b><span>شاشة مجرّبة بالتدفق الكامل</span></div>
+      <div class="stat"><b>0</b><span>أخطاء في فحص الأنواع وESLint</span></div>
+      <div class="stat"><b>~9,700</b><span>سطر من الكود بـ TypeScript</span></div>
+    </div>
+    <div class="card" style="margin-top:6mm"><h3>أخطاء اكتُشفت وأُصلحت أثناء البناء</h3><ul class="check"><li>ثغرة كانت تسمح بالتحضير برمز خاطئ في أول ثوانٍ من الجلسة</li><li>محاضرة 6 صباحاً كانت تُقرأ 6 مساءً عند مشاركة الجدول</li><li>صياغة الأعداد بالعربية: «بعد يومين» بدل «بعد 2 أيام»</li><li>تباين الأزرار في الوضع الداكن ومساحات اللمس الصغيرة</li><li>خلفية الجدول كانت ستُحفظ مشوشة — تُرسم الآن بالدقة الكاملة</li></ul></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · الجودة والاختبارات</span><span>15</span></div>
+</section>
+
+<!-- 16. التسويق -->
+<section class="page rose">
+  <div class="band"><div class="chapter">14</div><div class="kicker">النمو</div><h2>خطة التسويق والإطلاق</h2><p>نبدأ من جامعة أم القرى، ونتوسع مع التقويم الدراسي: بداية الفصل، قبل الفصليات، وقبل النهائيات.</p></div>
+  <div class="body">
+    <div class="grid3" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat"><b>10,000</b><span>تحميل في 90 يوماً</span></div>
+      <div class="stat"><b>30%</b><span>يعودون في اليوم السابع</span></div>
+      <div class="stat"><b>4.6</b><span>تقييم المتجر أو أعلى</span></div>
+      <div class="stat"><b>3%</b><span>من النشطين في برو</span></div>
+    </div>
+    <div class="timeline">
+      <div class="tl"><b>المرحلة 0 · أسبوعان قبل الإطلاق</b><p>فتح حسابات «مذاكر» على المنصات، ومن 20 إلى 30 مختبراً من كليات مختلفة، 10 مقاطع قصيرة، شراكة مع نادٍ طلابي.</p></div>
+      <div class="tl"><b>المرحلة 1 · أسبوع الإطلاق</b><p>رسالة القروبات عبر المختبرين، ثريد القصة على X، مقطع يومي على تيك توك وسناب.</p></div>
+      <div class="tl"><b>المرحلة 2 · الأسابيع 2–12</b><p>سفير لكل كلية، حملات «كم تحتاج في النهائي؟» و«كم غياب باقي لك؟» و«خطة مراجعة 14 يوماً».</p></div>
+      <div class="tl"><b>المرحلة 3 · الفصل التالي</b><p>جامعات منطقة مكة ثم الرياض والشرقية، وعرض «ابدأ الفصل بجدول جاهز».</p></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>القنوات</h3><ul><li>تيك توك وسناب: مقاطع «حيلة في 15 ثانية»</li><li>X: ثريدات قبل الفصليات والنهائيات</li><li>قروبات الواتساب عبر السفراء</li><li>الأندية الطلابية وعمادة شؤون الطلاب</li></ul></div>
+      <div class="card"><h3>رسائل الحملات</h3><ul><li>«كم تحتاج في النهائي عشان A؟»</li><li>«كم غياب باقي لك قبل الحرمان؟»</li><li>«جدولك خلفية جوالك في دقيقة»</li><li>«دكتور؟ حضّر شعبتك بالـ QR»</li></ul></div>
+    </div>
+    <div class="card" style="margin-top:5mm"><h3>تنبيه نظامي</h3><p>أي مؤثر يُكافأ عن محتوى ترويجي يحتاج رخصة «موثوق» من الهيئة العامة لتنظيم الإعلام، ويُفصح عن الإعلان.</p></div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · التسويق والإطلاق</span><span>16</span></div>
+</section>
+
+<!-- 17. خارطة الطريق -->
+<section class="page violet">
+  <div class="band"><div class="chapter">15</div><div class="kicker">القادم</div><h2>خارطة الطريق</h2><p>ما أُنجز، وما بقي لإطلاق التطبيق في المتجرين، وما نخطط له بعد ذلك.</p></div>
+  <div class="body">
+    <div class="grid2">
+      <div class="card"><h3>✅ جاهز</h3><ul class="check"><li>التطبيق كامل لـ iOS وAndroid</li><li>الدفع عبر المتجرين (RevenueCat)</li><li>الخادم وقاعدة البيانات مختبرة</li><li>سياسة الخصوصية وشروط الاستخدام</li><li>صور المتجر ونص الوصف</li><li>خطة التسويق ومحتواها</li></ul></div>
+      <div class="card"><h3>🔑 يحتاج حساباتك</h3><ul class="check"><li>Apple Developer وGoogle Play</li><li>Expo للبناء السحابي</li><li>RevenueCat للاشتراكات</li><li>Supabase للحجز والتحضير بالـ QR</li><li>البناء، التجربة على TestFlight، ثم الإرسال</li></ul></div>
+      <div class="card"><h3>🚀 الإصدار 1.2</h3><ul class="check"><li>ويدجت الشاشة الرئيسية</li><li>مراقبة الأعطال</li><li>ربط تقويم الجوال</li></ul></div>
+      <div class="card"><h3>🌍 لاحقاً</h3><ul class="check"><li>النسخة الإنجليزية ودعم الآيباد</li><li>حساب اختياري ومزامنة بين الأجهزة</li><li>تكامل رسمي مع أنظمة الجامعة</li></ul></div>
+    </div>
+  </div>
+  <div class="foot"><span><b>مذاكر</b> · خارطة الطريق</span><span>17</span></div>
+</section>
+
+<!-- 18. الغلاف الخلفي -->
+<section class="page back">
+  <img src="{{icon}}" alt="">
+  <h2>مذاكر</h2>
+  <p>رفيقك الجامعي للتنظيم والمذاكرة والتفوّق</p>
+  <div class="contact">asd1911147@gmail.com<br><span dir="ltr">0557668524</span><br><span dir="ltr">sa512.github.io/UQU.ZX</span></div>
+</section>
+
+</body>
+</html>
