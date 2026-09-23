@@ -156,9 +156,9 @@ def polish(x):
         A = 10 ** (gain_db / 40); w = 2 * np.pi * f0 / sr; al = np.sin(w) / (2 * q)
         b = [1 + al * A, -2 * np.cos(w), 1 - al * A]; a = [1 + al / A, -2 * np.cos(w), 1 - al / A]
         return sg.lfilter(b, a, x)
-    x = peq(x, 160, 2.0, 0.8)    # دفء
+    x = peq(x, 140, -2.0, 0.8)   # أخف في القرار (صوت أصغر سناً)
     x = peq(x, 380, -3.0, 1.2)   # أقل «صندوقية»
-    x = peq(x, 3200, 3.5, 0.9)   # وضوح
+    x = peq(x, 3000, 3.0, 0.9)   # وضوح
     x = peq(x, 7000, -2.5, 2.0)  # تخفيف السين
     # ضاغط بسيط
     envl = np.sqrt(sg.lfilter([0.002], [1, -0.998], x ** 2) + 1e-12)
@@ -167,7 +167,7 @@ def polish(x):
     x = x * gain
     # غرفة قصيرة جداً
     room = np.zeros_like(x)
-    for dms, g in ((23, 0.10), (41, 0.07), (67, 0.045)):
+    for dms, g in ((19, 0.06), (37, 0.04)):
         k = int(dms / 1000 * sr); room[k:] += x[:-k] * g
     x = x + lp(room, 4000)
     return x / (np.max(np.abs(x)) + 1e-9)
@@ -180,11 +180,14 @@ def make_tts(model_dir):
         model=M + '.onnx', tokens=os.path.join(model_dir, 'tokens.txt'), data_dir=os.path.join(model_dir, 'espeak-ng-data'),
         noise_scale=0.5, noise_scale_w=0.6), num_threads=4))  # أوضح إعداد حسب اختبار التعرّف على الكلام
     tts = sherpa_onnx.OfflineTts(cfg)
+    # صوت أصغر سناً: نرفع الطبقة 3 أنصاف نغمة (من ~108 إلى ~128 هرتز).
+    # نولّد الكلام أبطأ بنفس النسبة ثم نعيد أخذ العينات، فتبقى السرعة طبيعية بلا تشويه تمطيط.
+    PITCH = 2 ** (3 / 12); SPEED = 1.1
     def say(text):
-        a = tts.generate(text, sid=0, speed=1.08)
+        a = tts.generate(text, sid=0, speed=SPEED / PITCH)
         x = np.asarray(a.samples, dtype=np.float64)
-        # تحويل 22050 → 44100 بالاستيفاء الخطي
-        x = np.interp(np.arange(0, len(x), a.sample_rate / SR), np.arange(len(x)), x)
+        # تحويل 22050 → 44100 مع رفع الطبقة
+        x = np.interp(np.arange(0, len(x), PITCH * a.sample_rate / SR), np.arange(len(x)), x)
         return polish(x / (np.max(np.abs(x)) + 1e-9))
     return say
 
