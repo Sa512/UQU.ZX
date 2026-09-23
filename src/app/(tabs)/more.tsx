@@ -49,7 +49,12 @@ export default function More() {
   ];
   if (isProf) {
     items.unshift({ icon: 'people', title: 'الشعب والطلاب', subtitle: 'التحضير والغياب والتواصل', color: '#DB2777', href: '/sections' });
+    items.splice(1, 0, { icon: 'calendar-clear', title: 'حجز الساعات المكتبية', subtitle: 'طلابك يحجزون بأنفسهم', color: '#0F766E', href: '/office-hours' });
     items.push({ icon: 'time', title: 'ساعات مكتبية', subtitle: 'أضف موعداً للطلاب', color: '#0F766E', href: { pathname: '/slot/new', params: { type: 'office' } } });
+  }
+  if (!isProf) {
+    items.splice(1, 0, { icon: 'qr-code', title: 'التحضير بالـ QR', subtitle: 'امسح رمز الدكتور', color: '#DB2777', href: '/checkin' });
+    items.splice(2, 0, { icon: 'calendar-clear', title: 'حجز ساعة مكتبية', subtitle: 'احجز موعدك مع الدكتور', color: '#0F766E', href: '/book' });
   }
   items.push({ icon: 'cloud-download', title: 'استيراد الجدول', subtitle: 'من بوابة الجامعة أو Excel', color: '#7C3AED', href: '/schedule-import' });
   items.push({ icon: 'image', title: 'خلفية الجدول', subtitle: 'جدولك كخلفية للجوال', color: '#B45309', href: '/wallpaper' });

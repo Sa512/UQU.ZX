@@ -55,6 +55,7 @@ function Navigator() {
         <Stack.Screen name="roster-import" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="schedule-import" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="attendance/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="checkin-host/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
       {Platform.OS === 'web' && <ConfirmHost />}
     </>

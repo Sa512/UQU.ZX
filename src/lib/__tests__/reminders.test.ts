@@ -53,3 +53,14 @@ describe('planReminders', () => {
     expect([...dates].sort((a, b) => a - b)).toEqual(dates);
   });
 });
+
+describe('booking reminders', () => {
+  it('reminds 30 minutes before an office-hours booking', () => {
+    const r = planReminders({ courses: [], slots: [], tasks: [], lectureLeadMin: 15, now, bookings: [
+      { id: 'b1', host: 'د. سارة', startsAt: '2026-09-28T10:00:00+03:00', location: 'مكتب 3', status: 'booked' },
+      { id: 'b2', host: 'د. سارة', startsAt: '2026-09-29T10:00:00+03:00', location: '', status: 'cancelled' },
+    ] });
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ id: 'booking-b1', title: 'موعدك مع د. سارة بعد 30 دقيقة', trigger: { kind: 'date', date: new Date('2026-09-28T09:30:00+03:00').getTime() } });
+  });
+});

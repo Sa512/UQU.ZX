@@ -54,6 +54,25 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
 
 بمجرد وجود المفاتيح يتحول التطبيق تلقائياً من الدفع التجريبي إلى الدفع الحقيقي عبر المتجر.
 
+## 5.5) الخادم: حجز الساعات المكتبية والتحضير بالـ QR (15 دقيقة)
+
+بدون هذه الخطوة تعمل الميزتان بوضع تجريبي على جهاز واحد فقط.
+
+1. أنشئ مشروعاً في https://supabase.com (الخطة المجانية تكفي للبداية).
+   - **المنطقة:** اختر الأقرب للمملكة. بيانات الطلاب (الاسم والرقم الجامعي) بيانات شخصية؛ راجع مع جامعتك متطلبات نظام حماية البيانات الشخصية لنقلها خارج المملكة.
+2. Authentication ← Sign In / Providers ← فعّل **Anonymous Sign-Ins** (ويُفضّل تفعيل CAPTCHA لاحقاً للحد من الإساءة).
+3. SQL Editor ← الصق محتوى `supabase/migrations/20260923000000_cloud.sql` ← Run.
+4. التنظيف التلقائي: Database ← Extensions ← فعّل `pg_cron`، ثم نفّذ:
+   ```sql
+   select cron.schedule('mudhaker-cleanup', '0 3 * * *', 'select public.cleanup_old_data()');
+   ```
+5. Project Settings ← API: انسخ **Project URL** و**anon public key** وضعهما في EAS:
+   ```bash
+   npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_URL --value "https://xxxx.supabase.co" --environment production --visibility plaintext
+   npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "eyJ..." --environment production --visibility plaintext
+   ```
+   (مفتاح anon عام بطبيعته؛ الحماية في قواعد RLS والدوال المختبرة في `supabase/tests`.)
+
 ## 6) البناء والتجربة ثم الإرسال
 
 ```bash
@@ -73,5 +92,8 @@ npx eas-cli@latest submit --platform android   # يرفع إلى Internal testin
 - [ ] الإعدادات ← تفعيل التذكيرات ← «أرسل تذكيراً تجريبياً» (يصل خلال 5 ثوانٍ)
 - [ ] حصة بعد 20 دقيقة ← يصل تذكيرها قبلها بالمدة المختارة
 - [ ] مذاكر برو: الأسعار تظهر من المتجر، الشراء بحساب Sandbox، ثم «استعادة المشتريات»
+- [ ] الحجز: الدكتور ينشر ساعاته ← طالب من جوال آخر يحجز بالرمز ← يظهر الحجز عند الدكتور
+- [ ] التحضير بالـ QR: الدكتور يعرض الرمز ← 3 طلاب يمسحون من جوالاتهم ← الإنهاء يسجّل الحضور والغياب
+- [ ] صورة الرمز المرسلة بعد دقيقة تُرفض («انتهت صلاحية الرمز»)
 - [ ] الوضع الداكن (من إعدادات الجوال)
 - [ ] إغلاق التطبيق وفتحه: البيانات محفوظة

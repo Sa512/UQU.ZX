@@ -33,6 +33,7 @@ export default function Settings() {
   const [name, setName] = useState(settings.name);
   const [university, setUniversity] = useState(settings.university);
   const [major, setMajor] = useState(settings.major);
+  const [uniIdText, setUniIdText] = useState(settings.uniId);
   const [reminderMsg, setReminderMsg] = useState<string>();
   const [backupMsg, setBackupMsg] = useState<string>();
   const restoreBackup = useStore((s) => s.restoreBackup);
@@ -45,6 +46,9 @@ export default function Settings() {
       <Card style={{ gap: spacing.md }}>
         <Field label="الاسم" value={name} onChangeText={setName} onBlur={saveProfile} onEndEditing={saveProfile} />
         <Field label="الجامعة" value={university} onChangeText={setUniversity} onBlur={saveProfile} onEndEditing={saveProfile} />
+        {settings.role === 'student' && (
+          <Field label="الرقم الجامعي" value={uniIdText} onChangeText={setUniIdText} onBlur={() => update({ uniId: uniIdText.replace(/\D/g, '') })} onEndEditing={() => update({ uniId: uniIdText.replace(/\D/g, '') })} keyboardType="number-pad" hint="يُستخدم للتحضير بالـ QR وحجز الساعات المكتبية" ltr />
+        )}
         <Field label={settings.role === 'student' ? 'التخصص' : 'القسم'} value={major} onChangeText={setMajor} onBlur={saveProfile} onEndEditing={saveProfile} />
         <View style={{ gap: 6 }}>
           <AppText variant="label">الدور</AppText>

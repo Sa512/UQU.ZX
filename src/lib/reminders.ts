@@ -20,6 +20,7 @@ export type ReminderTrigger =
 export type Reminder = { id: string; title: string; body: string; trigger: ReminderTrigger };
 
 type Input = {
+  bookings?: { id: string; host: string; startsAt: string; location: string; status: string }[];
   courses: Course[];
   slots: Slot[];
   tasks: Task[];
@@ -27,7 +28,7 @@ type Input = {
   now: number;
 };
 
-export function planReminders({ courses, slots, tasks, lectureLeadMin, now }: Input): Reminder[] {
+export function planReminders({ courses, slots, tasks, lectureLeadMin, now, bookings = [] }: Input): Reminder[] {
   const byId = new Map(courses.map((c) => [c.id, c]));
   const out: Reminder[] = [];
 
@@ -63,6 +64,12 @@ export function planReminders({ courses, slots, tasks, lectureLeadMin, now }: In
     if (t.type === 'exam') candidates.unshift(['exam3', at(addDays(due, -3), EVENING_HOUR), `بعد 3 أيام: ${t.title} — ابدأ المراجعة`]);
     for (const [key, date, title] of candidates) {
       if (date > now) dated.push({ id: `task-${t.id}-${key}`, title, body, trigger: { kind: 'date', date } });
+    }
+  }
+  for (const b of bookings) {
+    const at = new Date(b.startsAt).getTime() - 30 * 60_000;
+    if (b.status === 'booked' && at > now) {
+      dated.push({ id: `booking-${b.id}`, title: `موعدك مع ${b.host} بعد 30 دقيقة`, body: b.location || 'الساعات المكتبية', trigger: { kind: 'date', date: at } });
     }
   }
   dated.sort((a, b) => (a.trigger as { date: number }).date - (b.trigger as { date: number }).date);

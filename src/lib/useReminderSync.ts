@@ -20,6 +20,7 @@ export function useReminderSync() {
                   courses: s.courses,
                   slots: s.slots,
                   tasks: s.tasks,
+                  bookings: s.myBookings,
                   lectureLeadMin: s.settings.lectureLeadMin,
                   now: Date.now(),
                 }),
@@ -38,6 +39,7 @@ export function useReminderSync() {
       if (
         state.slots !== prev.slots ||
         state.tasks !== prev.tasks ||
+        state.myBookings !== prev.myBookings ||
         state.courses !== prev.courses ||
         state.settings.remindersEnabled !== prev.settings.remindersEnabled ||
         state.settings.lectureLeadMin !== prev.settings.lectureLeadMin

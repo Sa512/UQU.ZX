@@ -60,6 +60,15 @@
           "photosPermission": false,
           "savePhotosPermission": "يحتاج مذاكر إذنك لحفظ خلفية الجدول في صورك."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "يستخدم مذاكر الكاميرا لمسح رمز التحضير أو رمز حجز الساعات المكتبية.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
       ]
     ],
     "experiments": {

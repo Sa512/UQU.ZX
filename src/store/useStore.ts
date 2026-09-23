@@ -41,6 +41,8 @@ export type Settings = {
   reviewAskedAt: number | null;
   /** آخر إصدار رأى المستخدم «ما الجديد» فيه. */
   lastSeenVersion: string;
+  /** الرقم الجامعي للطالب (للحجز والتحضير). */
+  uniId: string;
 };
 
 export type Course = {
@@ -85,6 +87,11 @@ export type Task = {
 export type Section = { id: string; courseId: string; code: string };
 export type Student = { id: string; sectionId: string; name: string; uniId: string; email: string; phone: string };
 
+/** صفحة الساعات المكتبية المنشورة للدكتور. */
+export type OfficePage = { id: string; code: string; title: string; slotMinutes: number; open: boolean };
+/** حجز الطالب محفوظ محلياً للعرض والتذكير دون اتصال. */
+export type MyBooking = { id: string; code: string; title: string; host: string; startsAt: string; location: string; status: 'booked' | 'cancelled' };
+
 export type Session = { id: string; courseId: string | null; minutes: number; at: number };
 
 export type Card = { id: string; front: string; back: string; box: number; due: number };
@@ -125,6 +132,8 @@ type State = {
   attendance: AttendanceRecord[];
   gradeItems: GradeItem[];
   scores: Scores;
+  officePage: OfficePage | null;
+  myBookings: MyBooking[];
   gpa: GpaState;
   subscription: Subscription;
   transactions: Transaction[];
@@ -163,6 +172,9 @@ type Actions = {
   deleteGradeItem: (id: string) => void;
   setScores: (itemId: string, values: Record<string, number | null>) => void;
   addTasks: (tasks: Omit<Task, 'id' | 'done' | 'createdAt'>[]) => void;
+  setOfficePage: (p: OfficePage | null) => void;
+  saveMyBooking: (b: MyBooking) => void;
+  setBookingStatus: (id: string, status: MyBooking['status']) => void;
   startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
   updateAssessment: (id: string, p: Partial<Assessment>) => void;
   deleteAssessment: (id: string) => void;
@@ -192,6 +204,7 @@ const defaultSettings: Settings = {
   semesterWeeks: 15,
   reviewAskedAt: null,
   lastSeenVersion: '1.0.0',
+  uniId: '',
 };
 
 const initialState: State = {
@@ -207,6 +220,8 @@ const initialState: State = {
   attendance: [],
   gradeItems: [],
   scores: {},
+  officePage: null,
+  myBookings: [],
   gpa: { prevGpa: 0, prevCredits: 0, rows: [] },
   subscription: { plan: 'free', until: null },
   transactions: [],
@@ -407,6 +422,9 @@ export const useStore = create<State & Actions>()(
           }
           return { scores };
         }),
+      setOfficePage: (p) => set({ officePage: p }),
+      saveMyBooking: (b) => set((s) => ({ myBookings: [...s.myBookings.filter((x) => x.id !== b.id), b].sort((a, c) => a.startsAt.localeCompare(c.startsAt)) })),
+      setBookingStatus: (id, status) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, status } : x)) })),
       addTasks: (list) =>
         set((s) => ({ tasks: [...s.tasks, ...list.map((t) => ({ ...t, id: uid(), done: false, createdAt: Date.now() }))] })),
       startNewSemester: ({ mergeGpa, clearSchedule, clearTasks, clearCourses }) =>
