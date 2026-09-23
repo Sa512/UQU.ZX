@@ -105,7 +105,7 @@ function timeline(focus) {
     await p.setContent(page(v), { waitUntil: 'load' });
     await p.evaluate(() => document.fonts.ready);
     await p.evaluate(timeline, v.focus);
-    const out = path.join(__dirname, v.id + '.mp4');
+    const out = path.join(__dirname, 'silent', v.id + '.mp4'); fs.mkdirSync(path.dirname(out), { recursive: true });
     const ff = spawn(FFMPEG, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
       '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-shortest',
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '64k', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
