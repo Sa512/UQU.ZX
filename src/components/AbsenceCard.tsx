@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { absenceStatus, type AbsenceLevel } from '@/lib/absence';
-import { ABSENCES, ar } from '@/lib/plural';
+import { ABSENCES, ar, LECTURES } from '@/lib/plural';
 import { useStore, type Course } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
 import { AppText } from './AppText';
@@ -65,7 +65,7 @@ export function AbsenceCard({ course }: { course: Course }) {
         <Button style={{ flex: 1 }} title="تراجع" variant="ghost" icon="remove" disabled={!absences} onPress={() => adjust(course.id, -1)} />
       </View>
       <AppText variant="tiny" muted>
-        محسوب على {ar(st.total, { one: 'محاضرة واحدة', two: 'محاضرتين', few: 'محاضرات', many: 'محاضرة' })} في الفصل (يمكن تعديل عدد الأسابيع من الإعدادات).
+        محسوب على {ar(st.total, LECTURES)} في الفصل (يمكن تعديل عدد الأسابيع من الإعدادات).
       </AppText>
     </Card>
   );

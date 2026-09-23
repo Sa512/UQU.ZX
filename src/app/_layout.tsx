@@ -51,6 +51,10 @@ function Navigator() {
         <Stack.Screen name="slot/new" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="task/new" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="pro" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="student" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="roster-import" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="schedule-import" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="attendance/[id]" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
       {Platform.OS === 'web' && <ConfirmHost />}
     </>

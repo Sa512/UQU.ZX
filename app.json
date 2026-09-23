@@ -53,7 +53,14 @@
           "color": "#4F46E5"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "يحتاج مذاكر إذنك لحفظ خلفية الجدول في صورك."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

@@ -23,7 +23,10 @@ export default function SlotForm() {
   const slots = useStore((s) => s.slots);
   const { addSlot, updateSlot, deleteSlot } = useStore.getState();
 
-  const [courseId, setCourseId] = useState<string | null>(existing?.courseId ?? courses[0]?.id ?? null);
+  const [courseId, setCourseId] = useState<string | null>(existing ? existing.courseId || null : params.type === 'office' ? null : (courses[0]?.id ?? null));
+  const [sectionId, setSectionId] = useState<string | null>(existing?.sectionId ?? null);
+  const allSections = useStore((s) => s.sections);
+  const courseSections = allSections.filter((x) => x.courseId === courseId);
   const [day, setDay] = useState(existing?.day ?? (params.day ? Number(params.day) : new Date().getDay()));
   const [type, setType] = useState<SlotType>(existing?.type ?? (params.type && params.type in SLOT_TYPES ? params.type : 'lecture'));
   const [start, setStart] = useState(existing?.start ?? 8 * 60);
@@ -31,7 +34,7 @@ export default function SlotForm() {
   const [room, setRoom] = useState(existing?.room ?? '');
   const [error, setError] = useState<string>();
 
-  if (!courses.length) {
+  if (!courses.length && type !== 'office') {
     return (
       <Screen close title="حصة جديدة">
         <EmptyState icon="library-outline" title="أضف مقرراً أولاً" message="الحصص مرتبطة بالمقررات." action={{ title: 'إضافة مقرر', onPress: () => router.replace('/course/new') }} />
@@ -43,9 +46,9 @@ export default function SlotForm() {
   const clashCourse = clash && courses.find((c) => c.id === clash.courseId);
 
   const save = () => {
-    if (!courseId) return setError('اختر المقرر');
+    if (!courseId && type !== 'office') return setError('اختر المقرر');
     if (end <= start) return setError('وقت النهاية يجب أن يكون بعد البداية');
-    const data = { courseId, day, type, start, end, room: room.trim() };
+    const data = { courseId: courseId ?? '', sectionId: sectionId ?? undefined, day, type, start, end, room: room.trim() };
     if (existing) updateSlot(existing.id, data);
     else addSlot(data);
     haptic.success();
@@ -77,7 +80,15 @@ export default function SlotForm() {
     >
       <View style={{ gap: 8 }}>
         <AppText variant="label">المقرر</AppText>
-        <CoursePicker value={courseId} onChange={setCourseId} allowNone={false} />
+        <CoursePicker value={courseId} onChange={(v) => { setCourseId(v); setSectionId(null); }} allowNone={type === 'office'} />
+        {courseSections.length > 0 && (
+          <ChipRow>
+            <Chip label="كل الشعب" selected={sectionId === null} onPress={() => setSectionId(null)} />
+            {courseSections.map((x) => (
+              <Chip key={x.id} label={`شعبة ${x.code}`} selected={sectionId === x.id} onPress={() => setSectionId(x.id)} />
+            ))}
+          </ChipRow>
+        )}
       </View>
       <View style={{ gap: 8 }}>
         <AppText variant="label">النوع</AppText>

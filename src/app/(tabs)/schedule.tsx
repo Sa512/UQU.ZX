@@ -94,7 +94,7 @@ export default function Schedule() {
           <EmptyState
             icon="calendar-clear-outline"
             title={courses.length ? 'لا حصص في هذا اليوم' : 'ابدأ بإضافة مقرراتك'}
-            message={courses.length ? 'أضف محاضرة أو معملاً أو ساعة مكتبية.' : 'أضف مقرراً أولاً ثم رتّب مواعيد محاضراته.'}
+            message={courses.length ? 'أضف محاضرة أو معملاً أو ساعة مكتبية.' : 'أضف مقرراً، أو استورد جدولك كاملاً من بوابة الجامعة من «المزيد ← استيراد الجدول».'}
             action={{ title: courses.length ? 'إضافة حصة' : 'إضافة مقرر', onPress: add }}
           />
         </Card>

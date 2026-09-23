@@ -114,13 +114,15 @@ export function TimePicker({ value, onChange, label }: { value: number; onChange
 }
 
 /** شريط أيام أفقي لاختيار تاريخ خلال الأشهر الستة القادمة. */
-export function DateStrip({ value, onChange }: { value: string; onChange: (k: string) => void }) {
+export function DateStrip({ value, onChange, past }: { value: string; onChange: (k: string) => void; past?: boolean }) {
   const { colors } = useTheme();
   const sel = fromDateKey(value);
   const today = new Date();
   const first = sel < today ? sel : today;
-  // ستة أشهر تكفي لتغطية الفصل الدراسي كاملاً بما فيه الاختبارات النهائية.
-  const days = Array.from({ length: 183 }, (_, i) => addDays(first, i));
+  // ستة أشهر تكفي لتغطية الفصل الدراسي كاملاً. في وضع past: آخر ١٢٠ يوماً حتى اليوم (الأحدث أولاً).
+  const days = past
+    ? Array.from({ length: 120 }, (_, i) => addDays(today, -i))
+    : Array.from({ length: 183 }, (_, i) => addDays(first, i));
   return (
     <View style={{ gap: 8 }}>
       <AppText variant="caption" muted>

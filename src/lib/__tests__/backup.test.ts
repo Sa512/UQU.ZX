@@ -9,6 +9,9 @@ const data: BackupData = {
   sessions: [],
   decks: [],
   assessments: [{ id: 'a1', courseId: 'c1', name: 'فصلي', outOf: 20, got: 18 }],
+  sections: [],
+  students: [],
+  attendance: [],
   gpa: { prevGpa: 4, prevCredits: 30, rows: [] },
 };
 

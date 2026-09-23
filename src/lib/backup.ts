@@ -2,7 +2,8 @@
  * النسخ الاحتياطي: ملف JSON يحفظه المستخدم (iCloud / Drive / واتساب) ويستعيده على جهاز جديد.
  * لا يشمل الاشتراك — الاشتراك مرتبط بحساب المتجر ويُستعاد بزر «استعادة المشتريات».
  */
-import type { Course, Deck, GpaState, Session, Settings, Slot, Task } from '@/store/useStore';
+import type { Course, Deck, GpaState, Section, Session, Settings, Slot, Student, Task } from '@/store/useStore';
+import type { AttendanceRecord } from './attendance';
 import type { Assessment } from './grades';
 
 export const BACKUP_APP = 'mudhaker';
@@ -16,6 +17,9 @@ export type BackupData = {
   sessions: Session[];
   decks: Deck[];
   assessments: Assessment[];
+  sections: Section[];
+  students: Student[];
+  attendance: AttendanceRecord[];
   gpa: GpaState;
 };
 
@@ -56,8 +60,11 @@ export function parseBackup(text: string): ParseResult {
     sessions: d.sessions,
     decks: d.decks,
     assessments: isArr(d.assessments) ? d.assessments : [],
+    sections: isArr(d.sections) ? d.sections : [],
+    students: isArr(d.students) ? d.students : [],
+    attendance: isArr(d.attendance) ? d.attendance : [],
     gpa: d.gpa && isArr(d.gpa.rows) ? d.gpa : { prevGpa: 0, prevCredits: 0, rows: [] },
   };
-  const summary = `${data.courses.length} مقرر، ${data.tasks.length} مهمة، ${data.decks.length} مجموعة بطاقات`;
+  const summary = `${data.courses.length} مقرر، ${data.tasks.length} مهمة، ${data.decks.length} مجموعة بطاقات${data.students.length ? `، ${data.students.length} طالب` : ''}`;
   return { ok: true, data, summary };
 }

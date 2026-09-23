@@ -61,6 +61,7 @@ export default function Home() {
   const todaySlots = slots.filter((s) => s.day === weekday).sort((a, b) => a.start - b.start);
   const current = todaySlots.find((s) => s.start <= nowMin && s.end > nowMin);
   const next = todaySlots.find((s) => s.start > nowMin);
+  const attendSlot = [current, next].find((s) => s && s.type !== 'office' && s.sectionId);
   const upcoming = tasks
     .filter((t) => !t.done)
     .sort((a, b) => a.due.localeCompare(b.due) || b.priority - a.priority)
@@ -219,6 +220,13 @@ export default function Home() {
             .map((s) => (
               <SlotRow key={s.id} slot={s} highlight={s === current ? 'now' : s === next ? 'next' : undefined} />
             ))}
+          {isProf && attendSlot?.sectionId && (
+            <Button
+              title={`تحضير ${current === attendSlot ? 'المحاضرة الحالية' : 'المحاضرة التالية'}`}
+              icon="checkmark-done"
+              onPress={() => router.push({ pathname: '/attendance/[id]', params: { id: attendSlot.sectionId! } })}
+            />
+          )}
           {todaySlots.every((s) => s.end <= nowMin) && (
             <Card>
               <AppText variant="label" muted center>

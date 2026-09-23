@@ -23,4 +23,7 @@ export const DECKS: Forms = { one: 'مجموعة واحدة', two: 'مجموعت
 export const HOURS: Forms = { one: 'ساعة واحدة', two: 'ساعتين', few: 'ساعات', many: 'ساعة' };
 export const MINUTES: Forms = { one: 'دقيقة واحدة', two: 'دقيقتين', few: 'دقائق', many: 'دقيقة' };
 export const WEEKS: Forms = { one: 'أسبوع واحد', two: 'أسبوعين', few: 'أسابيع', many: 'أسبوعاً' };
+export const STUDENTS: Forms = { one: 'طالب واحد', two: 'طالبين', few: 'طلاب', many: 'طالباً' };
+export const LECTURES: Forms = { one: 'محاضرة واحدة', two: 'محاضرتين', few: 'محاضرات', many: 'محاضرة' };
+export const MEETINGS: Forms = { one: 'لقاء واحد', two: 'لقاءين', few: 'لقاءات', many: 'لقاءً' };
 export const ABSENCES: Forms = { one: 'غياب واحد', two: 'غيابين', few: 'غيابات', many: 'غياباً' };

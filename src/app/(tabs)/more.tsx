@@ -43,7 +43,12 @@ export default function More() {
     { icon: 'calculator', title: 'حاسبة المعدل', subtitle: `نظام ${settings.gradeScale} نقاط`, color: '#D97706', href: '/gpa' },
     { icon: 'stats-chart', title: 'الإحصائيات', subtitle: 'تقدمك الأسبوعي', color: '#0284C7', href: '/stats' },
   ];
-  if (isProf) items.push({ icon: 'people', title: 'ساعات مكتبية', subtitle: 'أضف موعداً للطلاب', color: '#DB2777', href: { pathname: '/slot/new', params: { type: 'office' } } });
+  if (isProf) {
+    items.unshift({ icon: 'people', title: 'الشعب والطلاب', subtitle: 'التحضير والغياب والتواصل', color: '#DB2777', href: '/sections' });
+    items.push({ icon: 'time', title: 'ساعات مكتبية', subtitle: 'أضف موعداً للطلاب', color: '#0F766E', href: { pathname: '/slot/new', params: { type: 'office' } } });
+  }
+  items.push({ icon: 'cloud-download', title: 'استيراد الجدول', subtitle: 'من بوابة الجامعة أو Excel', color: '#7C3AED', href: '/schedule-import' });
+  items.push({ icon: 'image', title: 'خلفية الجدول', subtitle: 'جدولك كخلفية للجوال', color: '#B45309', href: '/wallpaper' });
 
   return (
     <Screen inTabs title="المزيد">

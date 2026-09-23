@@ -86,6 +86,7 @@ export function TaskRow({ task }: { task: Task }) {
 export function SlotRow({ slot, highlight }: { slot: Slot; highlight?: 'now' | 'next' }) {
   const { colors } = useTheme();
   const course = useStore((s) => s.courses.find((c) => c.id === slot.courseId));
+  const section = useStore((s) => (slot.sectionId ? s.sections.find((x) => x.id === slot.sectionId) : undefined));
   const accent = course?.color ?? colors.primary;
   return (
     <Pressable
@@ -113,7 +114,7 @@ export function SlotRow({ slot, highlight }: { slot: Slot; highlight?: 'now' | '
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: accent }} />
           <AppText variant="h3" numberOfLines={1} style={{ flex: 1 }}>
-            {course?.name ?? 'مقرر محذوف'}
+            {course?.name ?? (slot.type === 'office' ? 'ساعات مكتبية' : 'مقرر محذوف')}
           </AppText>
           {highlight === 'now' && <Pill label="الآن" tone="success" />}
           {highlight === 'next' && <Pill label="التالية" tone="info" />}
@@ -123,6 +124,7 @@ export function SlotRow({ slot, highlight }: { slot: Slot; highlight?: 'now' | '
           <AppText variant="caption" muted>
             {SLOT_TYPES[slot.type].label}
             {course?.code ? ` · ${course.code}` : ''}
+            {section ? ` · شعبة ${section.code}` : ''}
           </AppText>
         </View>
         {!!slot.room && (

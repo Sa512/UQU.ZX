@@ -6,7 +6,10 @@ import { courseColors } from '@/theme/colors';
 import { addDays, toDateKey } from '@/lib/dates';
 import type { BackupData } from '@/lib/backup';
 import type { Grade, GradeScale } from '@/lib/gpa';
+import type { AttendanceRecord } from '@/lib/attendance';
 import type { Assessment } from '@/lib/grades';
+import type { RosterRow } from '@/lib/roster';
+import type { ImportedSlot } from '@/lib/scheduleImport';
 import { uid } from '@/lib/id';
 import type { PaymentMethod, PlanId } from '@/lib/payments';
 import { review } from '@/lib/srs';
@@ -52,7 +55,9 @@ export type Course = {
 export type SlotType = 'lecture' | 'lab' | 'office';
 export type Slot = {
   id: string;
+  /** '' للساعات المكتبية غير المرتبطة بمقرر. */
   courseId: string;
+  sectionId?: string;
   day: number; // 0 = الأحد
   start: number; // دقائق منذ منتصف الليل
   end: number;
@@ -73,6 +78,10 @@ export type Task = {
   createdAt: number;
   doneAt?: number;
 };
+
+/** شعبة لعضو هيئة التدريس. */
+export type Section = { id: string; courseId: string; code: string };
+export type Student = { id: string; sectionId: string; name: string; uniId: string; email: string; phone: string };
 
 export type Session = { id: string; courseId: string | null; minutes: number; at: number };
 
@@ -109,6 +118,9 @@ type State = {
   sessions: Session[];
   decks: Deck[];
   assessments: Assessment[];
+  sections: Section[];
+  students: Student[];
+  attendance: AttendanceRecord[];
   gpa: GpaState;
   subscription: Subscription;
   transactions: Transaction[];
@@ -135,6 +147,14 @@ type Actions = {
   reviewCard: (deckId: string, cardId: string, correct: boolean) => void;
   setGpa: (p: Partial<GpaState>) => void;
   addAssessment: (a: Omit<Assessment, 'id'>) => void;
+  addSection: (courseId: string, code: string) => string;
+  updateSection: (id: string, p: Partial<Section>) => void;
+  deleteSection: (id: string) => void;
+  addStudents: (sectionId: string, rows: RosterRow[]) => { added: number; skipped: number };
+  updateStudent: (id: string, p: Partial<Student>) => void;
+  deleteStudent: (id: string) => void;
+  saveAttendance: (sectionId: string, date: string, absent: string[]) => void;
+  importSchedule: (slots: ImportedSlot[], replace: boolean) => { courses: number; slots: number };
   updateAssessment: (id: string, p: Partial<Assessment>) => void;
   deleteAssessment: (id: string) => void;
   activatePlan: (tx: Omit<Transaction, 'id' | 'at'>, months: number) => void;
@@ -173,6 +193,9 @@ const initialState: State = {
   sessions: [],
   decks: [],
   assessments: [],
+  sections: [],
+  students: [],
+  attendance: [],
   gpa: { prevGpa: 0, prevCredits: 0, rows: [] },
   subscription: { plan: 'free', until: null },
   transactions: [],
@@ -207,6 +230,9 @@ export const useStore = create<State & Actions>()(
           sessions: s.sessions.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)),
           decks: s.decks.map((d) => (d.courseId === id ? { ...d, courseId: null } : d)),
           assessments: s.assessments.filter((a) => a.courseId !== id),
+          sections: s.sections.filter((x) => x.courseId !== id),
+          students: s.students.filter((x) => s.sections.some((q) => q.id === x.sectionId && q.courseId !== id)),
+          attendance: s.attendance.filter((r) => s.sections.some((q) => q.id === r.sectionId && q.courseId !== id)),
         })),
 
       addSlot: (x) => set((s) => ({ slots: [...s.slots, { ...x, id: uid() }] })),
@@ -261,6 +287,88 @@ export const useStore = create<State & Actions>()(
         })),
 
       setGpa: (p) => set((s) => ({ gpa: { ...s.gpa, ...p } })),
+
+      addSection: (courseId, code) => {
+        const id = uid();
+        set((s) => ({ sections: [...s.sections, { id, courseId, code: code.trim() }] }));
+        return id;
+      },
+      updateSection: (id, p) => set((s) => ({ sections: s.sections.map((x) => (x.id === id ? { ...x, ...p } : x)) })),
+      deleteSection: (id) =>
+        set((s) => ({
+          sections: s.sections.filter((x) => x.id !== id),
+          students: s.students.filter((x) => x.sectionId !== id),
+          attendance: s.attendance.filter((x) => x.sectionId !== id),
+          slots: s.slots.map((x) => (x.sectionId === id ? { ...x, sectionId: undefined } : x)),
+        })),
+      addStudents: (sectionId, rows) => {
+        const existing = get().students.filter((x) => x.sectionId === sectionId);
+        const keys = new Set(existing.flatMap((x) => [x.uniId, x.email].filter(Boolean)));
+        const fresh: Student[] = [];
+        let skipped = 0;
+        for (const r of rows) {
+          const k = [r.uniId, r.email].filter(Boolean);
+          if (k.some((x) => keys.has(x))) {
+            skipped++;
+            continue;
+          }
+          k.forEach((x) => keys.add(x));
+          fresh.push({ id: uid(), sectionId, ...r });
+        }
+        set((s) => ({ students: [...s.students, ...fresh] }));
+        return { added: fresh.length, skipped };
+      },
+      updateStudent: (id, p) => set((s) => ({ students: s.students.map((x) => (x.id === id ? { ...x, ...p } : x)) })),
+      deleteStudent: (id) =>
+        set((s) => ({
+          students: s.students.filter((x) => x.id !== id),
+          attendance: s.attendance.map((r) => ({ ...r, absent: r.absent.filter((a) => a !== id) })),
+        })),
+      saveAttendance: (sectionId, date, absent) =>
+        set((s) => {
+          const found = s.attendance.find((r) => r.sectionId === sectionId && r.date === date);
+          return {
+            attendance: found
+              ? s.attendance.map((r) => (r === found ? { ...r, absent } : r))
+              : [...s.attendance, { id: uid(), sectionId, date, absent }],
+          };
+        }),
+      importSchedule: (imported, replace) => {
+        const s = get();
+        const courses = [...s.courses];
+        const sections = [...s.sections];
+        const norm = (x: string) => x.replace(/\s+/g, '').toLowerCase();
+        let newCourses = 0;
+        const courseFor = (code: string, name: string) => {
+          if (!code && !name) return '';
+          const hit = courses.find((c) => (code && norm(c.code) === norm(code)) || norm(c.name) === norm(name) || (code && norm(c.name) === norm(code)));
+          if (hit) return hit.id;
+          const looksLikeCode = /[A-Za-z]+\s*\d/.test(code) && code !== name;
+          const c: Course = {
+            id: uid(),
+            name: name || code,
+            code: looksLikeCode ? code.toUpperCase() : '',
+            color: courseColors[courses.length % courseColors.length],
+            credits: 3,
+            instructor: '',
+          };
+          courses.push(c);
+          newCourses++;
+          return c.id;
+        };
+        const newSlots: Slot[] = imported.map((x) => {
+          const courseId = courseFor(x.course, x.courseName);
+          let sectionId: string | undefined;
+          if (x.section && courseId) {
+            const sec = sections.find((q) => q.courseId === courseId && q.code === x.section) ?? { id: uid(), courseId, code: x.section };
+            if (!sections.includes(sec)) sections.push(sec);
+            sectionId = sec.id;
+          }
+          return { id: uid(), courseId, sectionId, day: x.day, start: x.start, end: x.end, room: x.room, type: x.type };
+        });
+        set({ courses, sections, slots: replace ? newSlots : [...s.slots, ...newSlots] });
+        return { courses: newCourses, slots: newSlots.length };
+      },
 
       addAssessment: (a) => set((s) => ({ assessments: [...s.assessments, { ...a, id: uid() }] })),
       updateAssessment: (id, p) =>
@@ -354,6 +462,9 @@ export const useStore = create<State & Actions>()(
           sessions: d.sessions,
           decks: d.decks,
           assessments: d.assessments,
+          sections: d.sections,
+          students: d.students,
+          attendance: d.attendance,
           gpa: d.gpa,
           // الاشتراك والمدفوعات تبقى كما هي على هذا الجهاز
           subscription: s.subscription,

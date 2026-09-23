@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { AbsenceCard } from '@/components/AbsenceCard';
+import { AddSection, SectionList } from '@/components/Sections';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -34,6 +35,7 @@ export default function CourseDetail() {
   const sessions = useStore((s) => s.sessions);
   const role = useStore((s) => s.settings.role);
   const assessments = useStore((s) => s.assessments);
+  const hasSections = useStore((s) => s.sections.some((x) => x.courseId === id));
   const { colors } = useTheme();
 
   if (!course) {
@@ -75,6 +77,14 @@ export default function CourseDetail() {
         </Card>
       )}
       {role === 'student' && <AbsenceCard course={course} />}
+
+      {role === 'professor' && (
+        <>
+          <SectionHeader title="الشعب والطلاب" />
+          {hasSections && <SectionList courseId={course.id} />}
+          <AddSection courseId={course.id} />
+        </>
+      )}
 
       <SectionHeader title="المواعيد" action="إضافة" onAction={() => router.push('/slot/new')} />
       {mySlots.length === 0 ? (

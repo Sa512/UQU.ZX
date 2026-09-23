@@ -33,7 +33,8 @@ export function planReminders({ courses, slots, tasks, lectureLeadMin, now }: In
 
   for (const s of slots) {
     const course = byId.get(s.courseId);
-    if (!course) continue;
+    if (!course && s.type !== 'office') continue;
+    const label = course?.name ?? 'ساعاتك المكتبية';
     let at = s.start - lectureLeadMin;
     let day = s.day;
     if (at < 0) {
@@ -42,7 +43,7 @@ export function planReminders({ courses, slots, tasks, lectureLeadMin, now }: In
     }
     out.push({
       id: `slot-${s.id}`,
-      title: `${course.name} بعد ${ar(lectureLeadMin, MINUTES)}`,
+      title: `${label} بعد ${ar(lectureLeadMin, MINUTES)}`,
       body: [`${SLOT_TYPES[s.type].label} الساعة ${formatMinutes(s.start)}`, s.room].filter(Boolean).join(' · '),
       trigger: { kind: 'weekly', weekday: day + 1, hour: Math.floor(at / 60), minute: at % 60 },
     });
