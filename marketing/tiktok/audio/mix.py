@@ -272,8 +272,15 @@ VOICES = {
     'C': dict(label='شاب صغير خفيف', pitch=5, speed=1.22, ns=0.6),
     'D': dict(label='مذيع سريع', pitch=1, speed=1.25, ns=0.55),
     'E': dict(label='صوت طالب نشيط', pitch=4, speed=1.3, ns=0.7),
+    # أصوات بأعمار مختلفة عبر مرمّز WORLD: طبقة (f0) وحجم الحنجرة (formant) وتعبيرية النغمة (expr) كلٌّ على حدة
+    'OLD':  dict(label='شايب حكيم', speed=1.0, ns=0.6, world=dict(f0=0.84, formant=0.94, expr=0.9, breath=0.18, trem=0.025)),
+    'MID':  dict(label='رجل أربعيني واثق', speed=1.12, ns=0.6, world=dict(f0=0.97, formant=0.98, expr=1.25)),
+    'TRL':  dict(label='مذيع سينمائي', speed=0.98, ns=0.55, world=dict(f0=0.78, formant=0.92, expr=1.15), room=True),
+    'YNG':  dict(label='شاب عشريني حماسي', speed=1.2, ns=0.667, world=dict(f0=1.2, formant=1.05, expr=1.45)),
+    'TEEN': dict(label='طالب صغير', speed=1.2, ns=0.667, world=dict(f0=1.42, formant=1.1, expr=1.4)),
+    'FEM':  dict(label='صوت نسائي', speed=1.12, ns=0.6, world=dict(f0=1.78, formant=1.17, expr=1.3)),
 }
-DEFAULT_VOICE = 'B'
+DEFAULT_VOICE = 'YNG'
 
 def make_tts(model_dir, voice=DEFAULT_VOICE):
     import sherpa_onnx
@@ -284,18 +291,47 @@ def make_tts(model_dir, voice=DEFAULT_VOICE):
         noise_scale=v['ns'], noise_scale_w=0.6), num_threads=4))
     tts = sherpa_onnx.OfflineTts(cfg)
     # نرفع الطبقة بتوليد الكلام أبطأ بنفس النسبة ثم إعادة أخذ العينات، فتبقى السرعة المطلوبة بلا تشويه تمطيط.
-    PITCH = 2 ** (v['pitch'] / 12); SPEED = v['speed']
+    PITCH = 2 ** (v.get('pitch', 0) / 12); SPEED = v['speed']
     def say(text):
         a = tts.generate(text, sid=0, speed=SPEED / PITCH)
         x = np.asarray(a.samples, dtype=np.float64)
+        if 'world' in v: x = world_convert(x, a.sample_rate, **v['world'])
         x = np.interp(np.arange(0, len(x), PITCH * a.sample_rate / SR), np.arange(len(x)), x)
-        return polish(x / (np.max(np.abs(x)) + 1e-9))
+        x = polish(x / (np.max(np.abs(x)) + 1e-9))
+        if v.get('room'):  # صدى أعمق لصوت المذيع
+            wet = np.zeros_like(x)
+            for dms, g in ((31, .12), (53, .09), (89, .06), (131, .04)):
+                k = int(dms / 1000 * SR); wet[k:] += x[:-k] * g
+            x = x + lp(wet, 3000); x /= np.max(np.abs(x)) + 1e-9
+        return x
     return say
+
+def world_convert(x, sr, f0=1.0, formant=1.0, expr=1.0, breath=0.0, trem=0.0):
+    """تحويل الصوت بمرمّز WORLD: f0 يغيّر الطبقة، formant يغيّر «حجم» الصوت (عمر/جنس)،
+    expr يوسّع مدى النغمة (أداء أكثر حيوية)، breath يضيف بحّة، trem رعشة خفيفة (للصوت الكبير)."""
+    import pyworld as pw
+    x = np.ascontiguousarray(x, dtype=np.float64)
+    F0, t = pw.harvest(x, sr, f0_floor=60, f0_ceil=400, frame_period=5.0)
+    sp = pw.cheaptrick(x, F0, t, sr); ap = pw.d4c(x, F0, t, sr)
+    v = F0 > 0
+    if v.any():
+        lf = np.log(F0[v]); m = lf.mean()
+        F0n = np.zeros_like(F0); F0n[v] = np.exp(m + expr * (lf - m)) * f0
+        if trem: F0n[v] *= 1 + trem * np.sin(2 * np.pi * 5.5 * t[v])
+    else:
+        F0n = F0
+    if formant != 1.0:  # تمديد الغلاف الطيفي على محور التردد
+        bins = np.arange(sp.shape[1]); src = np.clip(bins / formant, 0, sp.shape[1] - 1)
+        sp = np.stack([np.interp(src, bins, row) for row in sp])
+    if breath: ap = np.clip(ap + breath * (1 - ap), 0, 1)
+    y = pw.synthesize(F0n, sp, ap, sr, frame_period=5.0)
+    return y / (np.max(np.abs(y)) + 1e-9)
 
 def samples(model_dir, out_dir):
     """يولّد نموذجاً قصيراً لكل صوت (نفس الجملة) للمقارنة."""
     text = 'بَاقِي النِّهَائِيّ مِنْ أَرْبَعِين. كَمْ تَحْتَاج عَشَان تْجِيب إِيه؟ تَحْتَاج خَمْسَةً وَثَلَاثِينَ وَنِصْف. مُذَاكِر، رَفِيقُكَ الجَامِعِي.'
-    for k in VOICES:
+    only = [a.split('=')[1] for a in sys.argv if a.startswith('--only=')]
+    for k in (only[0].split(',') if only else VOICES):
         x = make_tts(model_dir, k)(text) * 0.8
         x = np.concatenate([np.zeros(int(0.2 * SR)), x, np.zeros(int(0.3 * SR))])
         path = os.path.join(out_dir, f'voice-{k}.wav'); sf.write(path, np.stack([x, x], 1).astype(np.float32), SR); print(path)
