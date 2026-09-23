@@ -3,6 +3,7 @@
  * لا يشمل الاشتراك — الاشتراك مرتبط بحساب المتجر ويُستعاد بزر «استعادة المشتريات».
  */
 import type { Course, Deck, GpaState, Session, Settings, Slot, Task } from '@/store/useStore';
+import type { Assessment } from './grades';
 
 export const BACKUP_APP = 'mudhaker';
 export const BACKUP_VERSION = 1;
@@ -14,6 +15,7 @@ export type BackupData = {
   tasks: Task[];
   sessions: Session[];
   decks: Deck[];
+  assessments: Assessment[];
   gpa: GpaState;
 };
 
@@ -53,6 +55,7 @@ export function parseBackup(text: string): ParseResult {
     tasks: d.tasks,
     sessions: d.sessions,
     decks: d.decks,
+    assessments: isArr(d.assessments) ? d.assessments : [],
     gpa: d.gpa && isArr(d.gpa.rows) ? d.gpa : { prevGpa: 0, prevCredits: 0, rows: [] },
   };
   const summary = `${data.courses.length} مقرر، ${data.tasks.length} مهمة، ${data.decks.length} مجموعة بطاقات`;

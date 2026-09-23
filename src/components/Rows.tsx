@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { formatMinutes, relativeDue } from '@/lib/dates';
+import { maybeAskReview } from '@/lib/growth';
 import { SLOT_TYPES, TASK_TYPES } from '@/lib/labels';
 import { useStore, type Slot, type Task } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
@@ -59,6 +60,7 @@ export function TaskRow({ task }: { task: Task }) {
           if (task.done) haptic.tap();
           else haptic.success();
           toggle(task.id);
+          if (!task.done) maybeAskReview();
         }}
       >
         <Ionicons name={task.done ? 'checkmark-circle' : 'ellipse-outline'} size={28} color={task.done ? colors.success : colors.border} />

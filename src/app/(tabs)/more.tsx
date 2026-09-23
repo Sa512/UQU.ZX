@@ -6,6 +6,7 @@ import { Card } from '@/components/Card';
 import { IconBadge } from '@/components/IconBadge';
 import { Screen } from '@/components/Screen';
 import { formatShortDate } from '@/lib/dates';
+import { shareApp } from '@/lib/growth';
 import { ROLE_LABEL } from '@/lib/labels';
 import { ar, COURSES, DECKS } from '@/lib/plural';
 import { isPro, useStore } from '@/store/useStore';
@@ -72,6 +73,17 @@ export default function More() {
           <Tile key={i.title} item={i} />
         ))}
       </View>
+
+      <Card onPress={() => shareApp()} accessibilityLabel="شارك مذاكر مع زملائك" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <IconBadge name="share-social" color="#DB2777" />
+        <View style={{ flex: 1 }}>
+          <AppText variant="h3">شارك مذاكر مع زملائك</AppText>
+          <AppText variant="caption" muted>
+            أرسل التطبيق لقروب الدفعة أو لصديقك
+          </AppText>
+        </View>
+        <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+      </Card>
 
       <Card onPress={() => router.push('/pro')} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: pro ? colors.successSoft : colors.primarySoft, borderColor: 'transparent' }}>
         <IconBadge name="diamond" color={pro ? colors.success : colors.primary} bg={colors.surface} />

@@ -6,6 +6,7 @@ import { courseColors } from '@/theme/colors';
 import { addDays, toDateKey } from '@/lib/dates';
 import type { BackupData } from '@/lib/backup';
 import type { Grade, GradeScale } from '@/lib/gpa';
+import type { Assessment } from '@/lib/grades';
 import { uid } from '@/lib/id';
 import type { PaymentMethod, PlanId } from '@/lib/payments';
 import { review } from '@/lib/srs';
@@ -31,6 +32,10 @@ export type Settings = {
   remindersPromptDismissed: boolean;
   /** عدد أسابيع الفصل الدراسي (لحساب نسبة الغياب). */
   semesterWeeks: number;
+  /** آخر مرة طُلب فيها تقييم التطبيق. */
+  reviewAskedAt: number | null;
+  /** آخر إصدار رأى المستخدم «ما الجديد» فيه. */
+  lastSeenVersion: string;
 };
 
 export type Course = {
@@ -103,6 +108,7 @@ type State = {
   tasks: Task[];
   sessions: Session[];
   decks: Deck[];
+  assessments: Assessment[];
   gpa: GpaState;
   subscription: Subscription;
   transactions: Transaction[];
@@ -128,6 +134,9 @@ type Actions = {
   deleteCard: (deckId: string, cardId: string) => void;
   reviewCard: (deckId: string, cardId: string, correct: boolean) => void;
   setGpa: (p: Partial<GpaState>) => void;
+  addAssessment: (a: Omit<Assessment, 'id'>) => void;
+  updateAssessment: (id: string, p: Partial<Assessment>) => void;
+  deleteAssessment: (id: string) => void;
   activatePlan: (tx: Omit<Transaction, 'id' | 'at'>, months: number) => void;
   cancelSubscription: () => void;
   setStoreSubscription: (s: { active: boolean; until: number | null; plan: PlanId | null; willRenew: boolean }) => void;
@@ -152,6 +161,8 @@ const defaultSettings: Settings = {
   lectureLeadMin: 15,
   remindersPromptDismissed: false,
   semesterWeeks: 15,
+  reviewAskedAt: null,
+  lastSeenVersion: '1.0.0',
 };
 
 const initialState: State = {
@@ -161,6 +172,7 @@ const initialState: State = {
   tasks: [],
   sessions: [],
   decks: [],
+  assessments: [],
   gpa: { prevGpa: 0, prevCredits: 0, rows: [] },
   subscription: { plan: 'free', until: null },
   transactions: [],
@@ -194,6 +206,7 @@ export const useStore = create<State & Actions>()(
           tasks: s.tasks.map((t) => (t.courseId === id ? { ...t, courseId: null } : t)),
           sessions: s.sessions.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)),
           decks: s.decks.map((d) => (d.courseId === id ? { ...d, courseId: null } : d)),
+          assessments: s.assessments.filter((a) => a.courseId !== id),
         })),
 
       addSlot: (x) => set((s) => ({ slots: [...s.slots, { ...x, id: uid() }] })),
@@ -248,6 +261,11 @@ export const useStore = create<State & Actions>()(
         })),
 
       setGpa: (p) => set((s) => ({ gpa: { ...s.gpa, ...p } })),
+
+      addAssessment: (a) => set((s) => ({ assessments: [...s.assessments, { ...a, id: uid() }] })),
+      updateAssessment: (id, p) =>
+        set((s) => ({ assessments: s.assessments.map((a) => (a.id === id ? { ...a, ...p } : a)) })),
+      deleteAssessment: (id) => set((s) => ({ assessments: s.assessments.filter((a) => a.id !== id) })),
 
       activatePlan: (tx, months) => {
         const now = Date.now();
@@ -335,6 +353,7 @@ export const useStore = create<State & Actions>()(
           tasks: d.tasks,
           sessions: d.sessions,
           decks: d.decks,
+          assessments: d.assessments,
           gpa: d.gpa,
           // الاشتراك والمدفوعات تبقى كما هي على هذا الجهاز
           subscription: s.subscription,

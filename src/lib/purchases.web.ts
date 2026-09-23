@@ -11,4 +11,5 @@ export const initPurchases = (_onStatus: (s: StoreStatus) => void): (() => void)
 export const loadStorePackages = async (): Promise<StorePackages> => ({});
 export const buyPackage = async (_pkg: unknown): Promise<StoreResult> => ({ ok: false, cancelled: false, message: 'غير متاح على الويب' });
 export const restorePurchases = async (): Promise<StoreResult> => ({ ok: false, cancelled: false, message: 'غير متاح على الويب' });
+export const freeTrialDays = (_pkg: unknown): number | null => null;
 export const manageSubscription = async (): Promise<void> => {};

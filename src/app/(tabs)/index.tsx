@@ -10,8 +10,10 @@ import { EmptyState } from '@/components/EmptyState';
 import { ProgressRing } from '@/components/ProgressRing';
 import { SlotRow, TaskRow } from '@/components/Rows';
 import { Screen, SectionHeader } from '@/components/Screen';
+import { WHATS_NEW } from '@/content/whatsNew';
 import { absenceStatus } from '@/lib/absence';
 import { formatDate, formatDuration, greeting } from '@/lib/dates';
+import { formatHijri } from '@/lib/hijri';
 import { minutesOn, streak } from '@/lib/stats';
 import { ar, DAYS } from '@/lib/plural';
 import { remindersSupported } from '@/lib/notifications';
@@ -73,6 +75,7 @@ export default function Home() {
   const atRisk = courses
     .map((course) => ({ course, st: absenceStatus(course.absences ?? 0, weeklyMeetings(course.id, course.credits, slots), weeks) }))
     .filter(({ st }) => st.level === 'danger' || st.level === 'barred');
+  const hijri = formatHijri(now);
   const firstName = settings.name.split(' ')[0] || (isProf ? 'دكتور' : 'بطل');
 
   return (
@@ -80,8 +83,9 @@ export default function Home() {
       {/* الترحيب */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flex: 1 }}>
-          <AppText variant="caption" muted>
+          <AppText variant="caption" muted numberOfLines={1}>
             {formatDate(now)}
+            {hijri ? ` · ${hijri}` : ''}
           </AppText>
           <AppText variant="title" numberOfLines={1}>
             {greeting(now)}، {firstName} 👋
@@ -137,6 +141,26 @@ export default function Home() {
         <QuickAction icon="albums" label={dueCards ? `بطاقات (${dueCards})` : 'البطاقات'} color="#10B981" href="/decks" />
         <QuickAction icon="calculator" label="المعدل" color="#F59E0B" href="/gpa" />
       </Card>
+
+      {settings.lastSeenVersion !== WHATS_NEW.version && (
+        <Card style={{ gap: spacing.sm, borderColor: colors.primary + '55', backgroundColor: colors.primarySoft }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Ionicons name="gift" size={22} color={colors.primary} />
+            <AppText variant="h3" style={{ flex: 1 }}>
+              جديد في الإصدار {WHATS_NEW.version}
+            </AppText>
+          </View>
+          {WHATS_NEW.items.map((t) => (
+            <View key={t} style={{ flexDirection: 'row', gap: 8 }}>
+              <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
+              <AppText variant="caption" style={{ flex: 1 }}>
+                {t}
+              </AppText>
+            </View>
+          ))}
+          <Button title="تمام" size="sm" onPress={() => updateSettings({ lastSeenVersion: WHATS_NEW.version })} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+        </Card>
+      )}
 
       {remindersSupported && !settings.remindersEnabled && !settings.remindersPromptDismissed && (slots.length > 0 || tasks.length > 0) && (
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.infoSoft, borderColor: 'transparent' }}>

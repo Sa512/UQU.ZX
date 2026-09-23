@@ -8,6 +8,7 @@ const data: BackupData = {
   tasks: [],
   sessions: [],
   decks: [],
+  assessments: [{ id: 'a1', courseId: 'c1', name: 'فصلي', outOf: 20, got: 18 }],
   gpa: { prevGpa: 4, prevCredits: 30, rows: [] },
 };
 
@@ -19,6 +20,7 @@ describe('backup', () => {
       expect(r.data.courses[0].absences).toBe(2);
       expect(r.data.settings.name).toBe('ريم');
       expect(r.summary).toContain('1 مقرر');
+      expect(r.data.assessments).toHaveLength(1);
     }
   });
 

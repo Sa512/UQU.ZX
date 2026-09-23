@@ -10,6 +10,7 @@ import { Stepper } from '@/components/Pickers';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { cumulativeGpa, GRADE_INFO, GRADES, gpaRating, requiredTermGpa, round2, termGpa, type Grade, type GradeScale } from '@/lib/gpa';
+import { summarize } from '@/lib/grades';
 import { uid } from '@/lib/id';
 import { ar, HOURS } from '@/lib/plural';
 import { useStore } from '@/store/useStore';
@@ -32,6 +33,7 @@ function GradePicker({ value, onChange }: { value: Grade; onChange: (g: Grade) =
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             accessibilityLabel={`تقدير ${g}`}
+            hitSlop={{ top: 6, bottom: 6 }}
             onPress={() => {
               haptic.tap();
               onChange(g);
@@ -55,6 +57,7 @@ export default function Gpa() {
   const gpa = useStore((s) => s.gpa);
   const setGpa = useStore((s) => s.setGpa);
   const courses = useStore((s) => s.courses);
+  const assessments = useStore((s) => s.assessments);
   const [prevGpaText, setPrevGpaText] = useState(gpa.prevGpa ? String(gpa.prevGpa) : '');
   const [prevCreditsText, setPrevCreditsText] = useState(gpa.prevCredits ? String(gpa.prevCredits) : '');
   const [target, setTarget] = useState('');
@@ -70,8 +73,16 @@ export default function Gpa() {
   const gpaError = num(prevGpaText) > scale ? `المعدل لا يتجاوز ${scale}` : undefined;
 
   const setRows = (rows: typeof gpa.rows) => setGpa({ rows });
+  // يستخدم التقدير المتوقع من شاشة الدرجات إن وُجد
   const importCourses = () =>
-    setRows(courses.map((c) => ({ id: uid(), name: c.name, credits: c.credits, grade: 'A' as Grade })));
+    setRows(
+      courses.map((c) => ({
+        id: uid(),
+        name: c.name,
+        credits: c.credits,
+        grade: summarize(assessments.filter((a) => a.courseId === c.id)).projected ?? ('A' as Grade),
+      })),
+    );
 
   return (
     <Screen back title="حاسبة المعدل" subtitle="وفق لائحة الجامعات السعودية">

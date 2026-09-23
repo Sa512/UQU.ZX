@@ -19,9 +19,9 @@ function RoundBtn({ icon, onPress, label, disabled }: { icon: keyof typeof Ionic
         onPress();
       }}
       style={({ pressed }) => ({
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: colors.primarySoft,
         alignItems: 'center',
         justifyContent: 'center',
@@ -95,6 +95,7 @@ export function TimePicker({ value, onChange, label }: { value: number; onChange
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               accessibilityLabel={`${label} الدقيقة ${m}`}
+              hitSlop={{ top: 6, bottom: 6 }}
               onPress={() => {
                 haptic.tap();
                 onChange(hour * 60 + m);

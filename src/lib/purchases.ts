@@ -90,6 +90,20 @@ export async function restorePurchases(): Promise<StoreResult> {
   }
 }
 
+const UNIT_DAYS: Record<string, number> = { DAY: 1, WEEK: 7, MONTH: 30, YEAR: 365 };
+
+/** مدة التجربة المجانية بالأيام إن كانت الخطة تتضمنها (Apple: introPrice، Google: freePhase). */
+export function freeTrialDays(pkg: PurchasesPackage | undefined): number | null {
+  if (!pkg) return null;
+  const p = pkg.product;
+  if (p.introPrice && p.introPrice.price === 0) {
+    return p.introPrice.periodNumberOfUnits * (UNIT_DAYS[p.introPrice.periodUnit] ?? 0) * Math.max(1, p.introPrice.cycles) || null;
+  }
+  const free = p.defaultOption?.freePhase;
+  if (free) return free.billingPeriod.value * (UNIT_DAYS[free.billingPeriod.unit] ?? 0) || null;
+  return null;
+}
+
 export async function manageSubscription(): Promise<void> {
   await Purchases.showManageSubscriptions();
 }

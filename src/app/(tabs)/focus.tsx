@@ -11,6 +11,7 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { formatClock, formatDuration, formatMinutes } from '@/lib/dates';
 import { cancelFocusEnd, scheduleFocusEnd } from '@/lib/notifications';
+import { maybeAskReview } from '@/lib/growth';
 import { minutesOn } from '@/lib/stats';
 import { ar, MINUTES } from '@/lib/plural';
 import { useNow } from '@/lib/useNow';
@@ -64,6 +65,7 @@ export default function Focus() {
     haptic.success();
     if (mode === 'focus') {
       flushFocus();
+      maybeAskReview();
       setRounds((r) => r + 1);
       setMode('break');
     } else {

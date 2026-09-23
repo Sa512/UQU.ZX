@@ -12,7 +12,8 @@ import { Pill } from '@/components/Rows';
 import { Screen } from '@/components/Screen';
 import { formatShortDate } from '@/lib/dates';
 import { METHOD_INFO, PLANS, type PlanId } from '@/lib/payments';
-import { buyPackage, loadStorePackages, manageSubscription, restorePurchases, storeBillingEnabled, type StorePackages } from '@/lib/purchases';
+import { ar, DAYS } from '@/lib/plural';
+import { buyPackage, freeTrialDays, loadStorePackages, manageSubscription, restorePurchases, storeBillingEnabled, type StorePackages } from '@/lib/purchases';
 import { FREE_LIMITS, isPro, useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -36,6 +37,7 @@ export default function Pro() {
   const [message, setMessage] = useState<string>();
   const active = isPro(sub);
   const selected = PLANS.find((p) => p.id === plan)!;
+  const trial = storeBillingEnabled ? freeTrialDays(packages[plan]) : null;
   const priceLabel = (id: PlanId, fallback: number) => packages[id]?.product.priceString ?? `${fallback.toFixed(2)} ر.س`;
 
   useEffect(() => {
@@ -77,7 +79,13 @@ export default function Pro() {
         active ? undefined : (
           <View style={{ gap: 6 }}>
             <Button
-              title={storeBillingEnabled ? `اشترك · ${priceLabel(plan, selected.price)}` : `متابعة الدفع · ${selected.price.toFixed(2)} ر.س`}
+              title={
+                trial
+                  ? `ابدأ تجربة مجانية · ${ar(trial, DAYS)}`
+                  : storeBillingEnabled
+                    ? `اشترك · ${priceLabel(plan, selected.price)}`
+                    : `متابعة الدفع · ${selected.price.toFixed(2)} ر.س`
+              }
               size="lg"
               icon="lock-closed"
               loading={busy === 'buy'}
@@ -85,7 +93,9 @@ export default function Pro() {
               onPress={subscribe}
             />
             <AppText variant="tiny" muted center>
-              {storeBillingEnabled
+              {trial
+                ? `مجاناً لمدة ${ar(trial, DAYS)} ثم ${priceLabel(plan, selected.price)} لكل ${selected.months === 12 ? 'سنة' : selected.months === 6 ? '6 أشهر' : 'شهر'}، ويتجدد تلقائياً ما لم يُلغَ قبل 24 ساعة من نهاية الفترة`
+                : storeBillingEnabled
                 ? 'يتجدد تلقائياً ما لم يُلغَ قبل 24 ساعة من نهاية الفترة · يمكنك الإلغاء من إعدادات حسابك في المتجر'
                 : 'الأسعار شاملة ضريبة القيمة المضافة 15% · وضع تجريبي بلا خصم فعلي'}
             </AppText>
@@ -163,6 +173,7 @@ export default function Pro() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <AppText variant="h3">{p.title}</AppText>
                     {p.badge && <Pill label={p.badge} tone="success" />}
+                    {storeBillingEnabled && freeTrialDays(packages[p.id]) && <Pill label={`${ar(freeTrialDays(packages[p.id])!, DAYS)} مجاناً`} tone="info" />}
                   </View>
                   <AppText variant="caption" muted>
                     {p.note ?? `${p.months} شهر`}

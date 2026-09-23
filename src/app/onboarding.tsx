@@ -9,6 +9,7 @@ import { Button } from '@/components/Button';
 import { Field } from '@/components/Field';
 import { haptic } from '@/components/haptics';
 import { Segmented } from '@/components/Segmented';
+import { WHATS_NEW } from '@/content/whatsNew';
 import type { GradeScale } from '@/lib/gpa';
 import { useStore, type Role } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
@@ -75,7 +76,7 @@ export default function Onboarding() {
   const [nameError, setNameError] = useState<string>();
 
   const finish = (withSample: boolean) => {
-    update({ role, name: name.trim(), university: university.trim(), major: major.trim(), gradeScale: scale, onboarded: true });
+    update({ role, name: name.trim(), university: university.trim(), major: major.trim(), gradeScale: scale, onboarded: true, lastSeenVersion: WHATS_NEW.version });
     if (withSample) loadSample();
     haptic.success();
     router.replace('/');

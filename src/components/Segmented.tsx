@@ -29,7 +29,7 @@ export function Segmented<T extends string | number>({ options, value, onChange 
             }}
             style={{
               flex: 1,
-              height: 38,
+              height: 40,
               borderRadius: radius.sm,
               alignItems: 'center',
               justifyContent: 'center',

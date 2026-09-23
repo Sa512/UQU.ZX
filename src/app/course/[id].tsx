@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { AbsenceCard } from '@/components/AbsenceCard';
@@ -8,8 +9,9 @@ import { EmptyState } from '@/components/EmptyState';
 import { SlotRow, TaskRow } from '@/components/Rows';
 import { HeaderButton, Screen, SectionHeader } from '@/components/Screen';
 import { DAY_NAMES, formatDuration } from '@/lib/dates';
+import { summarize } from '@/lib/grades';
 import { useStore } from '@/store/useStore';
-import { radius, spacing } from '@/theme';
+import { radius, spacing, useTheme } from '@/theme';
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -31,6 +33,8 @@ export default function CourseDetail() {
   const tasks = useStore((s) => s.tasks);
   const sessions = useStore((s) => s.sessions);
   const role = useStore((s) => s.settings.role);
+  const assessments = useStore((s) => s.assessments);
+  const { colors } = useTheme();
 
   if (!course) {
     return (
@@ -42,6 +46,7 @@ export default function CourseDetail() {
 
   const mySlots = slots.filter((s) => s.courseId === id).sort((a, b) => a.day - b.day || a.start - b.start);
   const myTasks = tasks.filter((t) => t.courseId === id).sort((a, b) => Number(a.done) - Number(b.done) || a.due.localeCompare(b.due));
+  const grades = summarize(assessments.filter((a) => a.courseId === id));
   const studied = sessions.filter((s) => s.courseId === id).reduce((a, s) => a + s.minutes, 0);
 
   return (
@@ -57,6 +62,18 @@ export default function CourseDetail() {
         <Stat label="وقت المذاكرة" value={formatDuration(studied)} />
       </View>
 
+      {role === 'student' && (
+        <Card onPress={() => router.push({ pathname: '/grades/[id]', params: { id: course.id } })} accessibilityLabel="الدرجات" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <Ionicons name="ribbon-outline" size={26} color={course.color} />
+          <View style={{ flex: 1 }}>
+            <AppText variant="h3">الدرجات</AppText>
+            <AppText variant="caption" muted>
+              {grades.pct === null ? 'تتبّع درجاتك واعرف ما تحتاجه في النهائي' : `${grades.earned} من ${grades.graded} · المتوقع ${grades.projected}`}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+        </Card>
+      )}
       {role === 'student' && <AbsenceCard course={course} />}
 
       <SectionHeader title="المواعيد" action="إضافة" onAction={() => router.push('/slot/new')} />

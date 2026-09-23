@@ -20,6 +20,7 @@ export function Chip({ label, selected, onPress, color, icon }: Props) {
       accessibilityRole="button"
       accessibilityState={{ selected: !!selected }}
       accessibilityLabel={label}
+      hitSlop={{ top: 5, bottom: 5 }}
       onPress={() => {
         haptic.tap();
         onPress?.();
@@ -29,7 +30,7 @@ export function Chip({ label, selected, onPress, color, icon }: Props) {
         alignItems: 'center',
         gap: 6,
         paddingHorizontal: 14,
-        height: 38,
+        height: 40,
         borderRadius: radius.pill,
         borderWidth: 1.5,
         borderColor: selected ? accent : colors.border,
