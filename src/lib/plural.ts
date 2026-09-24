@@ -27,3 +27,14 @@ export const STUDENTS: Forms = { one: 'طالب واحد', two: 'طالبين', 
 export const LECTURES: Forms = { one: 'محاضرة واحدة', two: 'محاضرتين', few: 'محاضرات', many: 'محاضرة' };
 export const MEETINGS: Forms = { one: 'لقاء واحد', two: 'لقاءين', few: 'لقاءات', many: 'لقاءً' };
 export const ABSENCES: Forms = { one: 'غياب واحد', two: 'غيابين', few: 'غيابات', many: 'غياباً' };
+export const SESSIONS_F: Forms = { one: 'جلسة واحدة', two: 'جلستين', few: 'جلسات', many: 'جلسة' };
+
+/** المعدود وحده بعد رقم معروض بخط كبير: ١ «غياب»، ٢ «غيابين»، ٣–١٠ «غيابات»، ١١+ «غياباً»، ٠ «غيابات». */
+export function unit(n: number, f: Forms): string {
+  const abs = Math.abs(Math.round(n));
+  if (abs === 1) return f.one.split(' ')[0];
+  if (abs === 2) return f.two;
+  if (abs >= 3 && abs <= 10) return f.few;
+  if (abs === 0) return f.few;
+  return f.many;
+}

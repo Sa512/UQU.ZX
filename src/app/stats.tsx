@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -50,6 +51,22 @@ export default function Stats() {
         <Metric icon="checkmark-done" color="#10B981" label="مهام أُنجزت هذا الأسبوع" value={String(doneWeek)} />
         <Metric icon="albums" color="#0EA5E9" label="بطاقات مراجعة" value={String(cards)} />
       </View>
+
+      <Card onPress={() => router.push('/wrapped')} accessibilityLabel="ملخص فصلك" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.fill, borderColor: 'transparent' }}>
+        <AppText variant="h2">✨</AppText>
+        <View style={{ flex: 1 }}>
+          <AppText variant="h3" color="#FFFFFF">
+            ملخص فصلك
+          </AppText>
+          <AppText variant="caption" color="rgba(255,255,255,0.85)">
+            فصلك بالأرقام في شرائح تشاركها
+          </AppText>
+        </View>
+        <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+      </Card>
+      {streak(sessions, new Date(now)) > 0 && (
+        <Button title="شارك سلسلة مذاكرتك 🔥" variant="secondary" icon="share-social-outline" onPress={() => router.push({ pathname: '/share', params: { kind: 'streak' } })} />
+      )}
 
       <SectionHeader title="المذاكرة اليومية" />
       <Card style={{ gap: spacing.md }}>

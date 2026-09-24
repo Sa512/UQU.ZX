@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -121,6 +122,9 @@ export default function Gpa() {
           </AppText>
         </View>
       </Card>
+      {baseCredits > 0 && (
+        <Button title="شارك معدلك" variant="secondary" icon="share-social-outline" onPress={() => router.push({ pathname: '/share', params: { kind: 'gpa', gpa: String(round2(cum)), scale: String(scale) } })} />
+      )}
 
       <SectionHeader title="السجل السابق" />
       <View style={{ flexDirection: 'row', gap: spacing.md }}>

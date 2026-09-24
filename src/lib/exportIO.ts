@@ -19,10 +19,10 @@ export async function shareCsv(fileName: string, csv: string): Promise<{ ok: boo
 }
 
 /** يحفظ صورة (مثل خلفية الجدول) ويفتح نافذة المشاركة لحفظها في الصور. */
-export async function shareImage(uri: string): Promise<{ ok: boolean; message?: string }> {
+export async function shareImage(uri: string, title = 'حفظ الخلفية'): Promise<{ ok: boolean; message?: string }> {
   try {
     if (!(await Sharing.isAvailableAsync())) return { ok: false, message: 'المشاركة غير متاحة على هذا الجهاز.' };
-    await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'حفظ الخلفية', UTI: 'public.png' });
+    await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: title, UTI: 'public.png' });
     return { ok: true };
   } catch {
     return { ok: false, message: 'تعذّر حفظ الصورة.' };

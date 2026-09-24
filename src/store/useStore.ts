@@ -43,6 +43,8 @@ export type Settings = {
   lastSeenVersion: string;
   /** الرقم الجامعي للطالب (للحجز والتحضير). */
   uniId: string;
+  /** بداية الفصل الحالي (لـ«ملخص فصلك»). يُضبط عند بدء فصل جديد. */
+  semesterStartedAt: number | null;
 };
 
 export type Course = {
@@ -205,6 +207,7 @@ const defaultSettings: Settings = {
   reviewAskedAt: null,
   lastSeenVersion: '1.0.0',
   uniId: '',
+  semesterStartedAt: null,
 };
 
 const initialState: State = {
@@ -429,7 +432,7 @@ export const useStore = create<State & Actions>()(
         set((s) => ({ tasks: [...s.tasks, ...list.map((t) => ({ ...t, id: uid(), done: false, createdAt: Date.now() }))] })),
       startNewSemester: ({ mergeGpa, clearSchedule, clearTasks, clearCourses }) =>
         set((s) => {
-          const next: Partial<State> = {};
+          const next: Partial<State> = { settings: { ...s.settings, semesterStartedAt: Date.now() } };
           if (mergeGpa && s.gpa.rows.length) {
             const r = closeSemester(s.gpa.prevGpa, s.gpa.prevCredits, s.gpa.rows, s.settings.gradeScale);
             next.gpa = { prevGpa: r.prevGpa, prevCredits: r.prevCredits, rows: [] };

@@ -18,6 +18,7 @@ import { minutesOn, streak } from '@/lib/stats';
 import { ar, DAYS } from '@/lib/plural';
 import { remindersSupported } from '@/lib/notifications';
 import { useNow } from '@/lib/useNow';
+import { wrappedReady } from '@/lib/wrapped';
 import { turnOnReminders } from '@/lib/useReminderSync';
 import { isPro, useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
@@ -225,6 +226,21 @@ export default function Home() {
               {examIn === 0 ? 'بالتوفيق! راجع بطاقاتك قبل الدخول' : hasPlan ? 'أقرب اختبار · خطة المراجعة في مهامك' : 'أقرب اختبار · اضغط لإنشاء خطة مراجعة'}
             </AppText>
           </View>
+        </Card>
+      )}
+
+      {!isProf && wrappedReady({ sessions, startedAt: settings.semesterStartedAt, semesterWeeks: settings.semesterWeeks, now: nowMs }) && (
+        <Card onPress={() => router.push('/wrapped')} accessibilityLabel="ملخص فصلك جاهز" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.fill, borderColor: 'transparent' }}>
+          <AppText variant="h2">✨</AppText>
+          <View style={{ flex: 1 }}>
+            <AppText variant="h3" color="#FFFFFF">
+              ملخص فصلك جاهز
+            </AppText>
+            <AppText variant="caption" color="rgba(255,255,255,0.85)">
+              شوف فصلك بالأرقام وشاركه مع ربعك
+            </AppText>
+          </View>
+          <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
         </Card>
       )}
 

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { View } from 'react-native';
 import { absenceStatus, type AbsenceLevel } from '@/lib/absence';
 import { ABSENCES, ar, LECTURES } from '@/lib/plural';
@@ -64,6 +65,7 @@ export function AbsenceCard({ course }: { course: Course }) {
         />
         <Button style={{ flex: 1 }} title="تراجع" variant="ghost" icon="remove" disabled={!absences} onPress={() => adjust(course.id, -1)} />
       </View>
+      <Button title="شارك كم غياب باقي لك" variant="ghost" size="sm" icon="share-social-outline" onPress={() => router.push({ pathname: '/share', params: { kind: 'absence', id: course.id } })} />
       <AppText variant="tiny" muted>
         محسوب على {ar(st.total, LECTURES)} في الفصل (يمكن تعديل عدد الأسابيع من الإعدادات).
       </AppText>

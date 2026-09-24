@@ -57,6 +57,7 @@ export default function More() {
     items.splice(2, 0, { icon: 'calendar-clear', title: 'حجز ساعة مكتبية', subtitle: 'احجز موعدك مع الدكتور', color: '#0F766E', href: '/book' });
   }
   items.push({ icon: 'cloud-download', title: 'استيراد الجدول', subtitle: 'من بوابة الجامعة أو Excel', color: '#7C3AED', href: '/schedule-import' });
+  items.push({ icon: 'sparkles', title: 'ملخص فصلك', subtitle: 'فصلك بالأرقام وشاركه', color: '#7C3AED', href: '/wrapped' });
   items.push({ icon: 'image', title: 'خلفية الجدول', subtitle: 'جدولك كخلفية للجوال', color: '#B45309', href: '/wallpaper' });
   items.push({ icon: 'refresh-circle', title: 'فصل جديد', subtitle: 'اعتمد معدلك وجهّز الفصل القادم', color: '#0369A1', href: '/semester' });
 

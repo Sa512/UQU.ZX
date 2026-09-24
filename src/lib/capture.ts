@@ -21,3 +21,13 @@ export async function saveWallpaper(ref: RefObject<View | null>): Promise<{ ok: 
     return { ok: false, message: 'تعذّر إنشاء الصورة.' };
   }
 }
+
+/** يلتقط بطاقة الستوري بدقة 1080×1920 ويفتح نافذة المشاركة (سناب، إنستقرام، واتساب…). */
+export async function shareCardImage(ref: RefObject<View | null>): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const uri = await captureRef(ref, { format: 'png', quality: 1, width: 1080, height: 1920, result: 'tmpfile' });
+    return await shareImage(uri, 'مشاركة');
+  } catch {
+    return { ok: false, message: 'تعذّر إنشاء الصورة.' };
+  }
+}

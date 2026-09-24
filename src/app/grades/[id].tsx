@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -13,6 +13,7 @@ import { Pill } from '@/components/Rows';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { GRADE_INFO } from '@/lib/gpa';
 import { summarize, type Assessment } from '@/lib/grades';
+import { needCard } from '@/lib/shareCards';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -168,6 +169,9 @@ export default function Grades() {
           </View>
         ))}
       </Card>
+      {needCard(course.name, s) && (
+        <Button title="شارك «كم أحتاج في النهائي»" variant="secondary" icon="share-social-outline" onPress={() => router.push({ pathname: '/share', params: { kind: 'need', id: course.id } })} />
+      )}
     </Screen>
   );
 }
