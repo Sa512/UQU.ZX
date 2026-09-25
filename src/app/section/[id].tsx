@@ -93,6 +93,12 @@ export default function SectionScreen() {
         <Button style={{ flex: 1 }} size="sm" title="المجموعات" icon="people-circle-outline" variant="ghost" onPress={() => router.push({ pathname: '/groups/[id]', params: { id: section.id } })} />
       </View>
       <Button title="التحضير بالـ QR — الطلاب يحضّرون أنفسهم" icon="qr-code-outline" variant="secondary" disabled={!students.length} onPress={() => router.push({ pathname: '/checkin-host/[id]', params: { id: section.id } })} />
+      <Button
+        title={section.channel ? `قناة الشعبة · الرمز ${section.channel.code}` : 'قناة الشعبة: انشر الجدول والإعلانات للطلاب'}
+        icon="radio-outline"
+        variant="ghost"
+        onPress={() => router.push({ pathname: '/channel/[id]', params: { id: section.id } })}
+      />
 
       {atRisk > 0 && (
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.dangerSoft, borderColor: 'transparent' }}>

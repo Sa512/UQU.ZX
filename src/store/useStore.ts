@@ -15,6 +15,8 @@ import type { ImportedSlot } from '@/lib/scheduleImport';
 import { uid } from '@/lib/id';
 import type { PaymentMethod, PlanId } from '@/lib/payments';
 import { review } from '@/lib/srs';
+import type { ChannelPost, SectionChannel } from '@/lib/cloud/types';
+import { syncChannel, type SyncResult } from '@/lib/sectionChannel';
 
 export type Role = 'student' | 'professor';
 export type ThemePref = 'system' | 'light' | 'dark';
@@ -56,6 +58,8 @@ export type Course = {
   instructor: string;
   /** عدد مرات الغياب المسجلة (للطالب). */
   absences?: number;
+  /** للطالب: المادة مرتبطة بقناة شعبة نشرها الدكتور. */
+  channel?: { code: string; section: string; updatedAt: string; syncedAt: number; posts: ChannelPost[]; seenAt: string };
 };
 
 export type SlotType = 'lecture' | 'lab' | 'office';
@@ -69,6 +73,8 @@ export type Slot = {
   end: number;
   room: string;
   type: SlotType;
+  /** موعد وصل من قناة الشعبة (يُستبدل عند التحديث). */
+  channelCode?: string;
 };
 
 export type TaskType = 'assignment' | 'exam' | 'quiz' | 'project' | 'reading' | 'grading';
@@ -83,10 +89,12 @@ export type Task = {
   done: boolean;
   createdAt: number;
   doneAt?: number;
+  /** اختبار وصل من قناة الشعبة («الرمز|العنوان»). */
+  channelKey?: string;
 };
 
 /** شعبة لعضو هيئة التدريس. */
-export type Section = { id: string; courseId: string; code: string };
+export type Section = { id: string; courseId: string; code: string; /** قناة الشعبة المنشورة للطلاب. */ channel?: { id: string; code: string } };
 export type Student = { id: string; sectionId: string; name: string; uniId: string; email: string; phone: string };
 
 /** صفحة الساعات المكتبية المنشورة للدكتور. */
@@ -175,6 +183,9 @@ type Actions = {
   setScores: (itemId: string, values: Record<string, number | null>) => void;
   addTasks: (tasks: Omit<Task, 'id' | 'done' | 'createdAt'>[]) => void;
   setOfficePage: (p: OfficePage | null) => void;
+  /** يطبّق قناة شعبة (انضمام أو تحديث) ويعيد ملخص التغييرات. */
+  applyChannel: (ch: SectionChannel) => SyncResult;
+  markChannelSeen: (courseId: string) => void;
   saveMyBooking: (b: MyBooking) => void;
   setBookingStatus: (id: string, status: MyBooking['status']) => void;
   startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
@@ -426,6 +437,18 @@ export const useStore = create<State & Actions>()(
           return { scores };
         }),
       setOfficePage: (p) => set({ officePage: p }),
+      applyChannel: (ch) => {
+        const s = get();
+        const r = syncChannel({ courses: s.courses, slots: s.slots, tasks: s.tasks }, ch, Date.now());
+        set({ courses: r.courses, slots: r.slots, tasks: r.tasks });
+        return r;
+      },
+      markChannelSeen: (courseId) =>
+        set((s) => ({
+          courses: s.courses.map((c) =>
+            c.id === courseId && c.channel?.posts.length ? { ...c, channel: { ...c.channel, seenAt: c.channel.posts[0].created_at > c.channel.seenAt ? c.channel.posts[0].created_at : c.channel.seenAt } } : c,
+          ),
+        })),
       saveMyBooking: (b) => set((s) => ({ myBookings: [...s.myBookings.filter((x) => x.id !== b.id), b].sort((a, c) => a.startsAt.localeCompare(c.startsAt)) })),
       setBookingStatus: (id, status) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, status } : x)) })),
       addTasks: (list) =>

@@ -15,6 +15,8 @@ const MESSAGES: Record<string, string> = {
   already_checked_in: 'حضّرت من هذا الجوال مسبقاً ✓',
   uni_id_used: 'هذا الرقم الجامعي حُضّر به مسبقاً.',
   network: 'لا يوجد اتصال بالإنترنت.',
+  section_not_found: 'رمز الشعبة غير صحيح. تأكد منه مع الدكتور.',
+  too_many_posts: 'وصلت حد الإعلانات اليومي (20). جرّب غداً.',
 };
 
 export class CloudError extends Error {

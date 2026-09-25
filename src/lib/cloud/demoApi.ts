@@ -5,7 +5,8 @@
  */
 import { generateSlots, type Window } from '../officeHours';
 import { CloudError } from './errors';
-import type { Booking, CheckIn, CloudApi, PageInfo } from './types';
+import { sanitizeChannel } from '../sectionChannel';
+import type { Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, PageInfo } from './types';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const code = (n: number) => Array.from({ length: n }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join('');
@@ -13,6 +14,7 @@ const id = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const delay = <T>(v: T) => new Promise<T>((r) => setTimeout(() => r(v), 250));
 
 type Page = { id: string; code: string; title: string; host_name: string; slot_minutes: number; is_open: boolean; windows: Window[] };
+type Channel = ChannelInput & { id: string; code: string; updated_at: string; posts: ChannelPost[] };
 type Sess = { id: string; code: string; label: string; nonce: string; nonce_prev: string | null; nonce_at: number; open: boolean; checkins: CheckIn[]; devices: Set<string> };
 
 /** تخزين اختياري لحفظ صفحات الحجز والحجوزات بين مرات فتح التطبيق. */
@@ -23,18 +25,20 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
   const pages = new Map<string, Page>();
   const bookings: (Booking & { student: string })[] = [];
   const sessions = new Map<string, Sess>();
+  const channels = new Map<string, Channel>();
   const ready = storage
     ? storage
         .getItem(KEY)
         .then((raw) => {
           if (!raw) return;
-          const d = JSON.parse(raw) as { pages: Page[]; bookings: (Booking & { student: string })[] };
+          const d = JSON.parse(raw) as { pages: Page[]; bookings: (Booking & { student: string })[]; channels?: Channel[] };
           d.pages.forEach((p) => pages.set(p.id, p));
           bookings.push(...d.bookings);
+          d.channels?.forEach((c) => channels.set(c.id, c));
         })
         .catch(() => {})
     : Promise.resolve();
-  const save = () => storage?.setItem(KEY, JSON.stringify({ pages: [...pages.values()], bookings })).catch(() => {});
+  const save = () => storage?.setItem(KEY, JSON.stringify({ pages: [...pages.values()], bookings, channels: [...channels.values()] })).catch(() => {});
   const byCode = <T extends { code: string }>(m: Map<string, T>, c: string) => [...m.values()].find((x) => x.code === c.trim().toUpperCase());
 
   return {
@@ -133,6 +137,41 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       if (s.checkins.some((x) => x.uni_id === uniId.trim())) throw new CloudError('uni_id_used');
       s.checkins.push({ id: id(), uni_id: uniId.trim(), student_name: name.trim(), at: new Date(now()).toISOString() });
       return delay({ label: s.label });
+    },
+    // قناة الشعبة: نفس قيود قاعدة البيانات (الأحجام، حد الإعلانات اليومي، آخر 20 إعلاناً)
+    async publishSection({ id: cid, ...input }) {
+      await ready;
+      if (input.slots.length > 20 || input.exams.length > 30) throw new CloudError('unknown');
+      const existing = cid ? channels.get(cid) : undefined;
+      const stamp = new Date(now()).toISOString();
+      const c: Channel = existing ? { ...existing, ...input, updated_at: stamp } : { ...input, id: id(), code: code(6), updated_at: stamp, posts: [] };
+      channels.set(c.id, c);
+      save();
+      return delay({ id: c.id, code: c.code });
+    },
+    async getSection(c) {
+      await ready;
+      const ch = byCode(channels, c);
+      return delay(ch ? sanitizeChannel({ ...ch, posts: ch.posts.slice(0, 20) }) : null);
+    },
+    async postToSection(cid, body) {
+      await ready;
+      const ch = channels.get(cid);
+      if (!ch) throw new CloudError('not_allowed');
+      const b = body.trim();
+      if (!b || b.length > 500) throw new CloudError('unknown');
+      if (ch.posts.filter((p) => now() - Date.parse(p.created_at) < 86_400_000).length >= 20) throw new CloudError('too_many_posts');
+      const stamp = new Date(now()).toISOString();
+      ch.posts.unshift({ id: id(), body: b, created_at: stamp });
+      ch.updated_at = stamp;
+      save();
+      await delay(null);
+    },
+    async deletePost(pid) {
+      await ready;
+      for (const ch of channels.values()) ch.posts = ch.posts.filter((p) => p.id !== pid);
+      save();
+      await delay(null);
     },
   };
 }

@@ -45,12 +45,12 @@ export const bookLink = (code: string) => `mudhaker://book?c=${code}`;
 export const checkinLink = (code: string, nonce: string) => `mudhaker://checkin?c=${code}&n=${nonce}`;
 
 /** يقرأ رمز QR أو نصاً ملصوقاً: رابط مذاكر، أو «CODE NONCE»، أو الرمز وحده. */
-export function parseQr(raw: string): { kind: 'book' | 'checkin' | 'unknown'; code: string; nonce: string } {
+export function parseQr(raw: string): { kind: 'book' | 'checkin' | 'join' | 'unknown'; code: string; nonce: string } {
   const v = raw.trim();
-  const m = /^mudhaker:\/\/(book|checkin)\?(.*)$/i.exec(v);
+  const m = /^mudhaker:\/\/(book|checkin|join)\?(.*)$/i.exec(v);
   if (m) {
     const params = Object.fromEntries(m[2].split('&').map((kv) => kv.split('=').map(decodeURIComponent)));
-    return { kind: m[1].toLowerCase() as 'book' | 'checkin', code: (params.c ?? '').toUpperCase(), nonce: (params.n ?? '').toUpperCase() };
+    return { kind: m[1].toLowerCase() as 'book' | 'checkin' | 'join', code: (params.c ?? '').toUpperCase(), nonce: (params.n ?? '').toUpperCase() };
   }
   const parts = v.toUpperCase().split(/[\s·\-_,]+/).filter(Boolean);
   if (parts.length >= 2 && /^[A-Z0-9]{6}$/.test(parts[0]) && /^[A-Z0-9]{8}$/.test(parts[1])) return { kind: 'checkin', code: parts[0], nonce: parts[1] };

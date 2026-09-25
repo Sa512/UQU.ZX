@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 import { AbsenceCard } from '@/components/AbsenceCard';
+import { ChannelCard } from '@/components/ChannelCard';
 import { AddSection, SectionList } from '@/components/Sections';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
@@ -76,6 +77,7 @@ export default function CourseDetail() {
           <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
         </Card>
       )}
+      {role === 'student' && course.channel && <ChannelCard course={course} />}
       {role === 'student' && <AbsenceCard course={course} />}
 
       {role === 'professor' && (

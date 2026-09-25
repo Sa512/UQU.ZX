@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -30,6 +30,7 @@ export default function StudentCheckin() {
 
   const submit = async (raw: string) => {
     const q = parseQr(raw);
+    if (q.kind === 'join') return router.replace({ pathname: '/join', params: { c: q.code } });
     if (!q.code || !q.nonce) return setResult({ ok: false, text: 'هذا ليس رمز تحضير. امسح الرمز الظاهر على شاشة الدكتور.' });
     if (!profileOk) return setResult({ ok: false, text: 'اكتب اسمك ورقمك الجامعي أولاً.' });
     setBusy(true);

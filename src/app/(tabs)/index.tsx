@@ -19,6 +19,8 @@ import { ar, DAYS } from '@/lib/plural';
 import { remindersSupported } from '@/lib/notifications';
 import { useNow } from '@/lib/useNow';
 import { wrappedReady } from '@/lib/wrapped';
+import { unreadPosts } from '@/lib/sectionChannel';
+import { useChannelSync } from '@/lib/useChannelSync';
 import { turnOnReminders } from '@/lib/useReminderSync';
 import { isPro, useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
@@ -73,6 +75,7 @@ export default function Home() {
   const dueCards = decks.reduce((a, d) => a + d.cards.filter((c) => c.due <= nowMs).length, 0);
   const openTasks = tasks.filter((t) => !t.done).length;
   const courses = useStore((s) => s.courses);
+  useChannelSync();
   const weeks = settings.semesterWeeks;
   const atRisk = courses
     .map((course) => ({ course, st: absenceStatus(course.absences ?? 0, weeklyMeetings(course.id, course.credits, slots), weeks) }))
@@ -229,6 +232,21 @@ export default function Home() {
         </Card>
       )}
 
+      {!isProf &&
+        courses
+          .map((c) => ({ c, u: unreadPosts(c) }))
+          .filter((x) => x.u.length)
+          .slice(0, 2)
+          .map(({ c, u }) => (
+            <Card key={c.id} onPress={() => router.push({ pathname: '/course/[id]', params: { id: c.id } })} accessibilityLabel={`إعلان جديد من ${c.instructor}`} style={{ gap: 4, borderColor: colors.primary + '55', backgroundColor: colors.primarySoft }}>
+              <AppText variant="label" color={colors.primary}>
+                📣 {u.length > 1 ? `${u.length} إعلانات جديدة` : 'إعلان جديد'} · {c.instructor} · {c.name}
+              </AppText>
+              <AppText variant="body" numberOfLines={2}>
+                {u[0].body}
+              </AppText>
+            </Card>
+          ))}
       {!isProf && wrappedReady({ sessions, startedAt: settings.semesterStartedAt, semesterWeeks: settings.semesterWeeks, now: nowMs }) && (
         <Card onPress={() => router.push('/wrapped')} accessibilityLabel="ملخص فصلك جاهز" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.fill, borderColor: 'transparent' }}>
           <AppText variant="h2">✨</AppText>

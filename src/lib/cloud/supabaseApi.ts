@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { toCloudError } from './errors';
+import { sanitizeChannel } from '../sectionChannel';
 import type { Booking, CheckIn, CloudApi, PageInfo, Session } from './types';
 
 export function createSupabaseApi(url: string, anonKey: string): CloudApi {
@@ -83,6 +84,22 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     },
     async checkIn(code, nonce, uniId, name) {
       return (await call(() => sb.rpc('check_in', { p_code: code, p_nonce: nonce, p_uni_id: uniId, p_name: name }))) as { label: string };
+    },
+    async publishSection({ id, ...input }) {
+      return (await call(() =>
+        id
+          ? sb.from('section_channels').update(input).eq('id', id).select('id, code').single()
+          : sb.from('section_channels').insert(input).select('id, code').single(),
+      )) as { id: string; code: string };
+    },
+    async getSection(code) {
+      return sanitizeChannel(await call(() => sb.rpc('get_section', { p_code: code })));
+    },
+    async postToSection(channelId, body) {
+      await call(() => sb.from('section_posts').insert({ channel_id: channelId, body: body.trim() }));
+    },
+    async deletePost(postId) {
+      await call(() => sb.from('section_posts').delete().eq('id', postId));
     },
   };
 }

@@ -5,6 +5,21 @@ export type Booking = { id: string; page_id: string; starts_at: string; ends_at:
 export type CheckIn = { id: string; uni_id: string; student_name: string; at: string };
 export type Session = { id: string; code: string; nonce: string };
 
+/** قناة الشعبة: ما ينشره الدكتور ويقرؤه الطلاب بالرمز. */
+export type ChannelSlot = { weekday: number; start_min: number; end_min: number; type: 'lecture' | 'lab'; location: string };
+export type ChannelExam = { title: string; date: string; type: 'exam' | 'quiz' | 'assignment' | 'project' };
+export type ChannelPost = { id: string; body: string; created_at: string };
+export type ChannelInput = {
+  course_name: string;
+  course_code: string;
+  section_code: string;
+  instructor: string;
+  color: string;
+  slots: ChannelSlot[];
+  exams: ChannelExam[];
+};
+export type SectionChannel = ChannelInput & { id: string; code: string; updated_at: string; posts: ChannelPost[] };
+
 export interface CloudApi {
   /** true = خادم Supabase حقيقي، false = وضع تجريبي على هذا الجهاز. */
   readonly real: boolean;
@@ -20,4 +35,8 @@ export interface CloudApi {
   checkins(sessionId: string): Promise<CheckIn[]>;
   closeSession(sessionId: string): Promise<void>;
   checkIn(code: string, nonce: string, uniId: string, name: string): Promise<{ label: string }>;
+  publishSection(p: ChannelInput & { id?: string }): Promise<{ id: string; code: string }>;
+  getSection(code: string): Promise<SectionChannel | null>;
+  postToSection(channelId: string, body: string): Promise<void>;
+  deletePost(postId: string): Promise<void>;
 }

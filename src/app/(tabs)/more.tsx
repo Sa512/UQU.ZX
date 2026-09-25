@@ -54,6 +54,7 @@ export default function More() {
   }
   if (!isProf) {
     items.splice(1, 0, { icon: 'qr-code', title: 'التحضير بالـ QR', subtitle: 'امسح رمز الدكتور', color: '#DB2777', href: '/checkin' });
+    items.splice(1, 0, { icon: 'enter', title: 'انضم لشعبة', subtitle: 'مواعيد وإعلانات الدكتور', color: '#4F46E5', href: '/join' });
     items.splice(2, 0, { icon: 'calendar-clear', title: 'حجز ساعة مكتبية', subtitle: 'احجز موعدك مع الدكتور', color: '#0F766E', href: '/book' });
   }
   items.push({ icon: 'cloud-download', title: 'استيراد الجدول', subtitle: 'من بوابة الجامعة أو Excel', color: '#7C3AED', href: '/schedule-import' });
