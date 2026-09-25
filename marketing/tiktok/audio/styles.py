@@ -403,3 +403,80 @@ def lead_tone(note, dur):
 
 
 STYLES.update({'jersey': music_jersey, 'drill': music_drill, 'funk': music_funk, 'futurebass': music_futurebass})
+
+
+# ——— 9) طبول (بدون أي صوت بشري): طبل العرضة العميق، طار، دربوكة، رِق، وتصفيق جماعي ———
+def big_drum(dur=1.1):
+    """طبل كبير عميق (قريب من طبل العرضة): قرار منخفض ينزل من 110 إلى 55 هرتز مع ضربة جلد."""
+    n = int(dur * SR); tt = np.arange(n) / SR
+    f = 55 * (1 + 1.0 * np.exp(-tt * 18))
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 3.2)
+    skin = lp(rng.standard_normal(n), 700) * np.exp(-tt * 30) * 0.8
+    return np.tanh(1.8 * (body + skin))
+
+
+def tar(dur=0.22):
+    """طار (دف كبير): صفعة جلد متوسطة."""
+    n = int(dur * SR); tt = np.arange(n) / SR
+    return bp(rng.standard_normal(n), 180, 1400) * np.exp(-tt * 22) * 1.4 + np.sin(2 * np.pi * 140 * tt) * np.exp(-tt * 18) * 0.6
+
+
+def riq(dur=0.14):
+    """رِق (دف بصنوج): رنين معدني قصير."""
+    n = int(dur * SR); tt = np.arange(n) / SR
+    x = sum(np.sin(2 * np.pi * f * tt + rng.random() * 6) for f in (4700, 6300, 8100, 9900)) / 4
+    return (x * 0.6 + hp(rng.standard_normal(n), 6000) * 0.5) * np.exp(-tt * 28)
+
+
+def music_tubool():
+    drums = np.zeros(N); low = np.zeros(N); fx = np.zeros(N)
+    # إيقاع الدربوكة على السادس عشر في البناء والدروب
+    darb = 'D..T..D.D..T.T..'
+    for bi, t0 in enumerate(BARS):
+        if t0 >= OUT or t0 + BAR <= 0: continue
+        drop = t0 >= DROP - 0.01; build = t0 >= BUILD - 0.01
+        for b in range(4):
+            tb = t0 + b * BEAT
+            if tb < 0 or tb >= OUT: continue
+            # الطبل الكبير: على الأولى والثالثة في المقدمة، وعلى كل نبضة في الدروب
+            if b in (0, 2) or drop:
+                add(low, big_drum(), tb, 1.0 if drop else 0.75 if build else 0.6)
+            if drop: add(drums, kick(), tb, 0.7)
+            # الطار على النبضات الضعيفة، والتصفيق الجماعي في الدروب
+            if b in (1, 3): add(drums, tar(), tb, 0.8 if drop else 0.6)
+            if drop and b in (1, 3): add(drums, group_clap(), tb, 0.7)
+            if not build: add(drums, tar(), tb + BEAT / 2, 0.25)
+        if build:
+            for k in range(16):
+                tk = t0 + k * BEAT / 4
+                if tk >= OUT: continue
+                c = darb[k]
+                if c == 'D': add(drums, dum(), tk, 0.7 if drop else 0.5)
+                if c == 'T': add(drums, tak(), tk, 0.5 if drop else 0.4)
+                if drop: add(drums, riq(), tk, 0.22 if k % 2 == 0 else 0.12)
+                elif k % 4 == 2: add(drums, riq(), tk, 0.12)
+        if drop and bi % 2 == 1:  # قفلة دربوكة سريعة آخر كل مازورتين
+            for r in range(6): add(drums, tak(), t0 + 3 * BEAT + r * BEAT / 6, 0.3 + 0.05 * r)
+    # قبل الدروب: رولة دربوكة وطار تتسارع وتعلو
+    roll_start = DROP - BAR
+    k = 0; t = roll_start
+    while t < DROP - 0.16:
+        frac = (t - roll_start) / BAR
+        add(drums, tak() if k % 2 else tar(0.12), t, 0.2 + 0.5 * frac)
+        t += BEAT / (2 if frac < 0.5 else 4 if frac < 0.8 else 8); k += 1
+    add(fx, riser(DROP - 0.15 - roll_start) * 0.6, roll_start, 0.18)
+    silence_gap(drums, low, fx)
+    # الدروب: ضربة طبل كبيرة مع صنج وقرار 808
+    crash = hp(rng.standard_normal(int(1.8 * SR)), 3500) * np.exp(-np.arange(int(1.8 * SR)) / SR * 2.2)
+    add(low, big_drum(1.6), DROP, 1.3); add(fx, crash, DROP, 0.14); add(low, sub808(33 + 12, 1.2, drive=2.0), DROP, 0.5)
+    for i in range(3):  # الختام: ثلاث ضربات طبل ثم رنين
+        add(low, big_drum(1.8 if i == 2 else 0.9), OUT + i * BEAT / 2, 1.0 + 0.2 * i)
+    add(drums, group_clap(), OUT + BEAT, 0.8); add(fx, crash, OUT + BEAT, 0.12)
+    # صدى ساحة واسعة (العرضة في الهواء الطلق)
+    wet = np.zeros(N)
+    for dms, g in ((83, .22), (149, .15), (241, .1)):
+        k2 = int(dms / 1000 * SR); wet[k2:] += (drums + low)[:-k2] * g
+    return finish([drums, low * 1.1, fx, lp(wet, 2500) * 0.6], drive=1.9)
+
+
+STYLES['tubool'] = music_tubool
