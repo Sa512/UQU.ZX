@@ -245,3 +245,161 @@ def music_afro():
 
 
 STYLES = {'phonk': music_phonk, 'epic': music_epic, 'khaleeji': music_khaleeji, 'afro': music_afro}
+
+
+# ——— 5) جيرسي كلوب: نمط الكيك الشهير «بوم بوم بوم-بوم» وصرير السرير وتقطيعات صوتية ———
+def squeak(dur=0.12):
+    n = int(dur * SR); tt = np.arange(n) / SR
+    f = 1300 + 700 * (tt / dur) + 60 * np.sin(2 * np.pi * 38 * tt)
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.hanning(n) * 0.6
+
+
+def vox(note, dur=0.16, vowel='a'):
+    """تقطيع صوتي اصطناعي (بلا تسجيلات): سن منشاري عبر مرشحات بترددات حروف العلة."""
+    n = int(dur * SR); tt = np.arange(n) / SR; f = midi(note)
+    src = sg.sawtooth(2 * np.pi * f * tt) + 0.5 * sg.sawtooth(2 * np.pi * f * 1.004 * tt)
+    fm = {'a': (800, 1200), 'o': (500, 900), 'e': (500, 1900)}[vowel]
+    out = bp(src, fm[0] * 0.8, fm[0] * 1.25) + 0.7 * bp(src, fm[1] * 0.85, fm[1] * 1.2)
+    return out * env(n, 0.005, 0.07)
+
+
+def music_jersey():
+    drums = np.zeros(N); bass = np.zeros(N); chops = np.zeros(N); fx = np.zeros(N)
+    kick_pos = [0, 3, 6, 8, 10]  # بالسادس عشر
+    chop_line = [(0, 69, 'a'), (3, 72, 'e'), (6, 74, 'a'), (10, 72, 'o'), (12, 69, 'a'), (14, 67, 'e')]
+    roots = [45, 41, 43, 40]
+    for bi, t0 in enumerate(BARS):
+        if t0 >= OUT or t0 + BAR <= 0: continue
+        drop = t0 >= DROP - 0.01; build = t0 >= BUILD - 0.01
+        for half in (0, 1):
+            h0 = t0 + half * 2 * BEAT
+            for k in kick_pos:
+                if h0 + k * BEAT / 4 >= 0: add(drums, kick(), h0 + k * BEAT / 4, 1.0 if drop else 0.55 if build else 0.3)
+            if drop: add(drums, clap(), h0 + BEAT, 0.6); add(drums, squeak(), h0 + 1.5 * BEAT, 0.35)
+        for k in range(16):
+            tk = t0 + k * BEAT / 4
+            if 0 <= tk < OUT and (drop or k % 2 == 0): add(drums, hat(), tk, 0.08 if drop else 0.05)
+        for pos, note, v in chop_line:
+            tk = t0 + pos * BEAT / 4
+            if 0 <= tk < OUT: add(chops, vox(note + (12 if drop and pos in (6, 12) else 0), 0.16, v), tk, 0.9 if drop else 0.6)
+        if drop:
+            add(bass, sub808(roots[bi % 4] + 12, BAR * 0.95, drive=2.0), t0, 0.7)
+    add(fx, riser(DROP - 0.15 - 4.9), 4.9, 0.25)
+    silence_gap(drums, bass, chops, fx)
+    add(fx, kick(), DROP, 0.8); add(fx, squeak(0.2), DROP + 0.1, 0.4); add(fx, kick(), OUT, 0.8)
+    add(chops, vox(81, 0.6, 'a'), OUT, 0.8)
+    return finish([drums, bass, lp(chops, 7000), fx], drive=2.0)
+
+
+# ——— 6) دريل: 808 ينزلق بين النغمات، هاي هات بثلاثيات، سنير على النبضة الثالثة، لحن داكن ———
+def music_drill():
+    drums = np.zeros(N); bass = np.zeros(N); mel = np.zeros(N); fx = np.zeros(N)
+    melody = [64, 65, 67, 65, 64, 62, 64, None]  # مي فريجي: قاتم ومشدود
+    slides = [(0, 40, None), (1.5, 40, 43), (2.5, 38, 40), (3.25, 41, 38)]
+    kicks = [0, 1.5, 2.75]
+    for bi, t0 in enumerate(BARS):
+        if t0 >= OUT or t0 + BAR <= 0: continue
+        drop = t0 >= DROP - 0.01; build = t0 >= BUILD - 0.01
+        for j, note in enumerate(melody):
+            tk = t0 + j * BEAT / 2
+            if note is None or tk < 0 or tk >= OUT: continue
+            add(mel, pluck_ks(midi(note + 12), 0.6, 0.7, 0.994), tk, 0.6 if drop else 0.9)
+            if drop: add(mel, pluck_ks(midi(note), 0.5, 0.3), tk + 0.01, 0.4)
+        if not drop:
+            for b in range(4):
+                if t0 + b * BEAT >= 0: add(drums, hat(), t0 + b * BEAT, 0.08); add(drums, hat(), t0 + b * BEAT + BEAT / 2, 0.05)
+            if t0 >= 0: add(bass, sub808(52, BEAT * 2, drive=1.5), t0, 0.5 if build else 0.35)
+        if build:
+            add(drums, snare(), t0 + 2 * BEAT, 0.9 if drop else 0.5); add(drums, clap(), t0 + 2 * BEAT, 0.4 if drop else 0.2)
+            for b in range(4):
+                tb = t0 + b * BEAT
+                trip = drop and b == 3
+                for h in range(3 if trip else 2):
+                    add(drums, hat(), tb + h * BEAT / (3 if trip else 2), 0.1)
+        if drop:
+            for k in kicks: add(drums, kick(), t0 + k * BEAT, 0.9)
+            for pos, note, frm in slides:
+                add(bass, sub808(note + 12, BEAT * 1.2, glide_from=None if frm is None else frm + 12, drive=2.6), t0 + pos * BEAT, 0.9)
+    add(fx, riser(DROP - 0.15 - 4.9), 4.9, 0.22)
+    silence_gap(drums, bass, mel, fx)
+    add(fx, kick(), DROP, 0.8); add(bass, sub808(52, 1.8, glide_from=40), DROP, 0.8)
+    add(fx, kick(), OUT, 0.8); add(bass, sub808(40, 2.5), OUT, 0.8)
+    return finish([drums, bass, mel, fx], drive=2.0)
+
+
+# ——— 7) فانك برازيلي (مونتاجم): إيقاع «تامبورزاو»، ضربات 808 مشبّعة وجرس متكرر ———
+def music_funk():
+    drums = np.zeros(N); bass = np.zeros(N); bell = np.zeros(N); fx = np.zeros(N)
+    tambor = 'X..X..X...X..X..'  # بالسادس عشر
+    riff = [81, None, 81, 84, None, 81, 79, None, 81, None, 84, 86, None, 84, 81, None]
+    for bi, t0 in enumerate(BARS):
+        if t0 >= OUT or t0 + BAR <= 0: continue
+        drop = t0 >= DROP - 0.01; build = t0 >= BUILD - 0.01
+        for k in range(16):
+            tk = t0 + k * BEAT / 4
+            if tk < 0 or tk >= OUT: continue
+            if riff[k] is not None: add(bell, cowbell(riff[k] - 12, 0.12), tk, 0.45 if drop else 0.35)
+            if tambor[k] == 'X' and build:
+                add(drums, kick(), tk, 1.0 if drop else 0.5)
+                if drop: add(bass, sub808(45 + (5 if k == 10 else 0) + 12, BEAT * 0.7, drive=4.0), tk, 0.8)
+            if drop and k in (4, 12): add(drums, clap(), tk, 0.7)
+            if drop and k % 2: add(drums, hat(), tk, 0.08)
+    add(fx, riser(DROP - 0.15 - 4.9), 4.9, 0.25)
+    silence_gap(drums, bass, bell, fx)
+    add(fx, kick(), DROP, 0.9); add(bass, sub808(57, 0.8, drive=4.0), DROP, 0.9)
+    add(fx, kick(), OUT, 0.9); add(bass, sub808(45, 2.4, drive=3.0), OUT, 0.8)
+    return finish([drums, bass, bell, fx], drive=2.6)
+
+
+# ——— 8) فيوتشر بيس: كوردات عريضة «تتنفس» مع الطبل ولحن سهل يعلق في الراس ———
+def music_futurebass():
+    drums = np.zeros(N); chords = np.zeros(N); lead = np.zeros(N); bass = np.zeros(N); fx = np.zeros(N)
+    prog = [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 67]]
+    hook = [(0, 76), (0.5, 79), (1, 76), (1.5, 74), (2, 72), (2.5, 74), (3, 76), (3.75, 79)]  # سهل الحفظ
+    pump = np.ones(N)
+    for bi, t0 in enumerate(BARS):
+        if t0 >= OUT or t0 + BAR <= 0: continue
+        drop = t0 >= DROP - 0.01; build = t0 >= BUILD - 0.01
+        ch = prog[bi % 4]
+        if drop:
+            for k in range(8):  # كوردات مقطّعة على الثُمن
+                x = supersaw(ch + [ch[0] + 12], BEAT / 2 * 0.9, 4200) * env(int(BEAT / 2 * 0.9 * SR), 0.004, 0.25)
+                add(chords, x, t0 + k * BEAT / 2, 0.7)
+            for pos, note in hook:
+                if bi % 2 and pos >= 3: note += 2
+                add(lead, lead_tone(note, BEAT * 0.5), t0 + pos * BEAT, 0.5)
+            add(bass, sub808(ch[0] + 12, BAR * 0.95, drive=1.5), t0, 0.6)
+        elif t0 + BAR > 0:
+            x = supersaw(ch, BAR, 1800 if not build else 2600); add(chords, x, max(0, t0), 0.45 if build else 0.5)
+            if t0 >= 0:
+                for pos, note in hook: add(lead, pluck_ks(midi(note), 0.5, 0.8), t0 + pos * BEAT, 0.55)
+        for b in range(4):
+            tb = t0 + b * BEAT
+            if tb < 0 or tb >= OUT: continue
+            if drop:
+                add(drums, kick(), tb, 1.0)
+                kk = int(tb * SR); m = min(N - kk, int(0.3 * SR))
+                pump[kk:kk + m] = np.minimum(pump[kk:kk + m], 1 - 0.65 * np.exp(-np.arange(m) / SR * 10))
+                if b in (1, 3): add(drums, snare(), tb, 0.5); add(drums, clap(), tb, 0.5)
+                add(drums, hat(open_=True), tb + BEAT / 2, 0.1)
+            elif build and b % 2 == 0: add(drums, kick(), tb, 0.5)
+    for i in range(16):
+        t = DROP - BAR + i * BAR / 16
+        if t < DROP - 0.16: add(drums, snare(), t, 0.08 + 0.025 * i)
+    add(fx, riser(DROP - 0.15 - 4.9), 4.9, 0.25)
+    silence_gap(drums, chords, lead, bass, fx)
+    add(fx, kick(), DROP, 0.8); add(fx, kick(), OUT, 0.8)
+    tail = supersaw([60, 64, 67, 72], 2.8, 2000); tail *= np.linspace(1, 0, len(tail)) ** 1.5
+    add(chords, tail, OUT, 0.6)
+    d = int(BEAT * 0.75 * SR); wet = np.zeros(N)
+    for k, g in enumerate((0.3, 0.15), 1): wet[k * d:] += lead[:N - k * d] * g
+    return finish([drums, chords * pump, lead + wet, bass, fx], drive=1.8)
+
+
+def lead_tone(note, dur):
+    n = int(dur * SR); tt = np.arange(n) / SR; f = midi(note) * (1 + 0.004 * np.sin(2 * np.pi * 6 * tt))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    return lp(sg.sawtooth(ph) + 0.5 * sg.square(ph / 2), 5000) * env(n, 0.005, 0.25)
+
+
+STYLES.update({'jersey': music_jersey, 'drill': music_drill, 'funk': music_funk, 'futurebass': music_futurebass})
