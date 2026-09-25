@@ -1,0 +1,320 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<title>مذاكر · المراجعة الشاملة قبل الإطلاق</title>
+<style>
+/*FONTS*/
+:root {
+  --ink: #1E1B4B; --text: #1F2433; --muted: #5B6478; --line: #E3E6F0; --soft: #F5F6FB;
+  --violet: #6D28D9; --indigo: #4F46E5; --gold: #F59E0B;
+  --crit: #B91C1C; --crit-bg: #FEE2E2; --high: #C2410C; --high-bg: #FFEDD5; --med: #A16207; --med-bg: #FEF9C3; --low: #1D4ED8; --low-bg: #DBEAFE; --ok: #047857; --ok-bg: #D1FAE5;
+}
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Plex, 'Segoe UI', Tahoma, sans-serif; color: var(--text); font-size: 10.3pt; line-height: 1.68; }
+.page { width: 210mm; min-height: 297mm; padding: 20mm 18mm 22mm; position: relative; page-break-after: always; break-after: page; }
+.page:last-child { page-break-after: auto; }
+.cover { background: linear-gradient(160deg, #7C3AED, #4F46E5 55%, #312E81); color: #fff; display: flex; flex-direction: column; justify-content: space-between; padding: 26mm 20mm; }
+.cover .logo { width: 30mm; height: 30mm; border-radius: 8mm; box-shadow: 0 4mm 10mm rgba(0,0,0,.25); }
+.cover h1 { font-size: 46pt; line-height: 1.15; margin-top: 10mm; }
+.cover .sub { font-size: 17pt; font-weight: 500; opacity: .95; margin-top: 4mm; }
+.cover .meta { display: flex; gap: 8mm; flex-wrap: wrap; font-size: 11pt; opacity: .9; }
+.cover .meta b { display: block; font-size: 20pt; }
+.cover .verdict { background: rgba(255,255,255,.14); border-radius: 5mm; padding: 6mm 7mm; font-size: 12.5pt; line-height: 1.7; }
+h2 { font-size: 20pt; color: var(--ink); line-height: 1.3; margin-bottom: 2mm; text-wrap: balance; }
+h2 small { display: block; font-size: 10pt; color: var(--violet); font-weight: 500; letter-spacing: .02em; }
+h3 { font-size: 12.5pt; color: var(--ink); margin: 6mm 0 2mm; }
+p { margin-bottom: 2.5mm; }
+.lead { font-size: 11.5pt; color: var(--muted); margin-bottom: 5mm; }
+ul { padding-right: 5mm; margin-bottom: 3mm; }
+li { margin-bottom: 1.2mm; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.box { border: .3mm solid var(--line); border-radius: 4mm; padding: 4mm 5mm; background: #fff; }
+.box h4 { font-size: 11pt; color: var(--ink); margin-bottom: 1.5mm; }
+.box ul { margin: 0; }
+.stat { background: var(--soft); border-radius: 4mm; padding: 4mm; }
+.stat b { display: block; font-size: 22pt; color: var(--indigo); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 9.5pt; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 9.6pt; margin: 2mm 0 4mm; }
+th { background: var(--soft); color: var(--ink); text-align: right; padding: 2mm 2.5mm; font-weight: 700; border-bottom: .4mm solid var(--line); }
+td { padding: 1.6mm 2.5mm; border-bottom: .3mm solid var(--line); vertical-align: top; }
+tr { break-inside: avoid; }
+.sev { display: inline-block; border-radius: 99px; padding: 0 2.5mm; font-size: 8.6pt; font-weight: 700; white-space: nowrap; }
+.crit { background: var(--crit-bg); color: var(--crit); } .high { background: var(--high-bg); color: var(--high); }
+.med { background: var(--med-bg); color: var(--med); } .low { background: var(--low-bg); color: var(--low); } .ok { background: var(--ok-bg); color: var(--ok); }
+.note { background: var(--soft); border-right: 1.2mm solid var(--indigo); border-radius: 2mm; padding: 3mm 4mm; margin: 3mm 0; font-size: 10pt; }
+.check li { list-style: none; position: relative; padding-right: 6mm; }
+.check li::before { content: '☐'; position: absolute; right: 0; color: var(--indigo); }
+.phase { border-radius: 4mm; padding: 4mm 5mm; margin-bottom: 3.5mm; background: #fff; border: .3mm solid var(--line); break-inside: avoid; }
+.phase .tag { display: inline-block; background: var(--indigo); color: #fff; border-radius: 99px; padding: 0 3mm; font-size: 8.8pt; font-weight: 700; margin-left: 2mm; }
+.phase h4 { display: inline; font-size: 11.5pt; color: var(--ink); }
+.phase p { margin: 1.5mm 0 0; }
+.shots { display: flex; gap: 3mm; margin: 3mm 0; }
+.shots img { width: 32mm; border-radius: 3.5mm; border: .6mm solid #0F172A; }
+.foot { position: absolute; bottom: 9mm; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: #94A3B8; }
+.en { direction: ltr; unicode-bidi: isolate; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: 9pt; background: var(--soft); padding: 0 1mm; border-radius: 1mm; direction: ltr; unicode-bidi: isolate; }
+</style>
+</head>
+<body>
+
+<!-- الغلاف -->
+<section class="page cover">
+  <div>
+    <img class="logo" src="{{icon}}" alt="">
+    <h1>مذاكر<br>المراجعة الشاملة<br>قبل الإطلاق</h1>
+    <p class="sub">مراجعة تقنية وأمنية كاملة، ووصف كل ما في التطبيق، واقتراحات، وخطة الربط مع أنظمة الجامعات</p>
+  </div>
+  <div class="meta">
+    <div><b>1.3.0</b>الإصدار</div>
+    <div><b>39</b>شاشة</div>
+    <div><b>117</b>اختبار للتطبيق</div>
+    <div><b>4</b>مجموعات اختبارات للخادم</div>
+    <div><b>26 سبتمبر 2026</b>تاريخ المراجعة</div>
+  </div>
+  <div class="verdict">
+    <b>الخلاصة:</b> التطبيق جاهز تقنياً للإطلاق. وجدنا مشكلة حرجة واحدة وثلاث مهمة، وأصلحناها كلها في هذه المراجعة. الباقي قبل الإطلاق إعدادات حسابات (Apple وGoogle وSupabase وRevenueCat) وبندان أمنيان موصى بهما، وكلها مفصّلة في صفحة «قائمة ما قبل الإطلاق».
+  </div>
+</section>
+
+<!-- الخلاصة التنفيذية -->
+<section class="page">
+  <h2><small>الخلاصة التنفيذية</small>أين نحن الآن؟</h2>
+  <p class="lead">«مذاكر» تطبيق عربي لطلاب الجامعات السعودية وأعضاء هيئة التدريس، على iPhone وAndroid من كود واحد. معظمه يعمل على الجهاز بدون إنترنت، وثلاث خدمات فقط تستخدم خادماً: حجز الساعات المكتبية، والتحضير بالـ QR، وقناة الشعبة.</p>
+  <div class="grid3">
+    <div class="stat"><b>39</b><span>شاشة للطالب والدكتور</span></div>
+    <div class="stat"><b>~12,400</b><span>سطر برمجي (TypeScript)</span></div>
+    <div class="stat"><b>117</b><span>اختبار آلي للتطبيق، كلها ناجحة</span></div>
+    <div class="stat"><b>7</b><span>جداول على الخادم، كلها محمية بـ RLS</span></div>
+    <div class="stat"><b>22/23</b><span>ثغرة مزروعة عمداً كشفتها اختبارات الخادم (والباقية بلا أثر)</span></div>
+    <div class="stat"><b>0</b><span>ثغرات عالية أو حرجة في المكتبات المستخدمة</span></div>
+  </div>
+
+  <h3>ما أُصلح في هذه المراجعة</h3>
+  <table>
+    <tr><th>الخطورة</th><th>المشكلة</th><th>ما فعلناه</th></tr>
+    <tr><td><span class="sev crit">حرجة</span></td><td>لو نُشر التطبيق بدون مفاتيح الشراء داخل التطبيق، كانت صفحة الدفع التجريبية تفتح وتمنح «برو» مجاناً بأي رقم بطاقة صالح الشكل، وApple ترفض هذا (الإرشاد 3.1.1).</td><td>الدفع التجريبي صار مستحيلاً في نسخة المتجر، ويظهر «الاشتراك متاح قريباً» بدل ذلك. أضفنا اختباراً يمنع رجوع المشكلة.</td></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>إعلانات قناة الشعبة محتوى يكتبه المستخدمون، وApple تشترط الإبلاغ عنه وحظر مصدره (الإرشاد 1.2).</td><td>زر «إبلاغ» على كل إعلان، و«مغادرة القناة»، وقواعد المحتوى في شروط الاستخدام.</td></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>حذف البيانات من الخادم كان بالمراسلة فقط، ونظام حماية البيانات الشخصية يعطي المستخدم حق الحذف.</td><td>زر «حذف بياناتي من الخادم» في الإعدادات، يحذف بيانات المستخدم وحده. مختبَر، ومحمي من حذف بيانات غيره.</td></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>الجداول الأقدم كانت تسمح للمالك باختيار رمز الصفحة أو رمز التحضير أو مدة صلاحيته بنفسه.</td><td>صلاحيات على الأعمدة المطلوبة فقط، مع اختبارات.</td></tr>
+  </table>
+  <div class="note">كل إصلاح نُفّذ مع اختبار آلي، ورُفع على الفرع <code>claude/compassionate-lamport-xorm9c</code>.</div>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>2</span></div>
+</section>
+
+<!-- كل شيء في التطبيق: الطالب -->
+<section class="page">
+  <h2><small>كل شيء في التطبيق</small>للطالب</h2>
+  <div class="shots"><img src="{{img:home}}" alt=""><img src="{{img:grades}}" alt=""><img src="{{img:absence}}" alt=""><img src="{{img:wrapped}}" alt=""></div>
+  <div class="grid2">
+    <div class="box"><h4>يومه الجامعي</h4><ul>
+      <li><b>الرئيسية:</b> المحاضرة الحالية والتالية، والمواعيد القادمة، وهدف المذاكرة اليومي، والتاريخ الهجري.</li>
+      <li><b>الجدول:</b> محاضرات ومعامل لكل يوم، مع تنبيه عند تعارض محاضرتين.</li>
+      <li><b>المهام:</b> واجبات واختبارات ومشاريع مرتبة (متأخرة، اليوم، هذا الأسبوع، لاحقاً).</li>
+      <li><b>التذكيرات:</b> قبل المحاضرة، ومساء وصباح يوم التسليم، وقبل الاختبار بثلاثة أيام. تعمل بلا إنترنت.</li>
+    </ul></div>
+    <div class="box"><h4>المذاكرة</h4><ul>
+      <li><b>مؤقت التركيز</b> (بومودورو) بجلسات محفوظة لكل مادة.</li>
+      <li><b>بطاقات المراجعة</b> بالتكرار المتباعد.</li>
+      <li><b>خطة مراجعة تلقائية</b> قبل كل اختبار.</li>
+      <li><b>الإحصائيات:</b> الأسبوع، وتوزيع الوقت على المواد، والأيام المتتالية.</li>
+    </ul></div>
+    <div class="box"><h4>الدرجات والغياب</h4><ul>
+      <li><b>كم تحتاج في النهائي</b> لكل تقدير (A+ إلى D).</li>
+      <li><b>حاسبة المعدل</b> بنظامي 5 و4، مع المعدل المطلوب للفصل القادم.</li>
+      <li><b>عدّاد الحرمان</b> (25%) لكل مادة، مع تحذير قبل الحد.</li>
+      <li><b>فصل جديد:</b> يعتمد المعدل التراكمي ويصفّر الغياب.</li>
+    </ul></div>
+    <div class="box"><h4>مع الدكتور والزملاء</h4><ul>
+      <li><b>انضم لشعبة</b> برمز الدكتور، فتُضاف المادة ومواعيدها واختباراتها، وتصله الإعلانات وأي تأجيل.</li>
+      <li><b>التحضير بالـ QR</b> بمسح رمز الدكتور.</li>
+      <li><b>حجز الساعات المكتبية</b> بمواعيد 15 دقيقة.</li>
+      <li><b>المشاركة:</b> بطاقات ستوري (النهائي، الغياب، المعدل، السلسلة)، و«ملخص فصلك».</li>
+    </ul></div>
+  </div>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>3</span></div>
+</section>
+
+<!-- الدكتور والمشترك -->
+<section class="page">
+  <h2><small>كل شيء في التطبيق</small>لعضو هيئة التدريس، ولكل المستخدمين</h2>
+  <div class="shots"><img src="{{img:sections}}" alt=""><img src="{{img:channel}}" alt=""><img src="{{img:qr}}" alt=""><img src="{{img:gradebook}}" alt=""></div>
+  <div class="grid2">
+    <div class="box"><h4>الشعب والطلاب</h4><ul>
+      <li><b>استيراد الجدول</b> من بوابة الجامعة أو Excel بلصقة، فتُنشأ المقررات والشعب تلقائياً.</li>
+      <li><b>استيراد قائمة الطلاب</b> (الاسم، والرقم الجامعي، والبريد، والجوال) من Excel.</li>
+      <li><b>التحضير اليدوي</b> وسجل الحضور، وكشف الغياب والحرمان، والتصدير إلى Excel.</li>
+      <li><b>رصد الدرجات</b> والإحصائيات، و<b>المجموعات</b> والاختيار العشوائي.</li>
+    </ul></div>
+    <div class="box"><h4>الخدمات السحابية للدكتور</h4><ul>
+      <li><b>التحضير بالـ QR:</b> رمز يتجدد كل 15 ثانية، والطلاب يحضّرون أنفسهم، ويُسجَّل الحضور في الشعبة.</li>
+      <li><b>حجز الساعات المكتبية:</b> ينشر ساعاته برمز، والطلاب يحجزون بلا تعارض.</li>
+      <li><b>قناة الشعبة:</b> ينشر المواعيد والاختبارات، ويرسل إعلانات (20 يومياً كحد أقصى).</li>
+      <li><b>خلفية للجوال</b> بجدوله أو ساعاته المكتبية.</li>
+    </ul></div>
+    <div class="box"><h4>لكل المستخدمين</h4><ul>
+      <li>واجهة عربية بالكامل (من اليمين لليسار)، ووضع داكن، وتباين يراعي إمكانية الوصول (WCAG AA).</li>
+      <li>نسخ احتياطي واستعادة، واستيراد الجدول ومشاركته مع زميل.</li>
+      <li>«ما الجديد» بعد كل تحديث، وطلب تقييم التطبيق في لحظة مناسبة.</li>
+    </ul></div>
+    <div class="box"><h4>مذاكر برو (الاشتراك)</h4><ul>
+      <li>ثلاث خطط: شهري، وفصلي، وسنوي، مع فترة تجربة إن فُعّلت في المتجر.</li>
+      <li>الشراء عبر متجر Apple وGoogle (RevenueCat)، مع «استعادة المشتريات» و«إدارة الاشتراك».</li>
+      <li>الأسعار شاملة ضريبة القيمة المضافة 15%.</li>
+    </ul></div>
+  </div>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>4</span></div>
+</section>
+
+<!-- البنية التقنية -->
+<section class="page">
+  <h2><small>كيف بُني</small>البنية التقنية والجودة</h2>
+  <table>
+    <tr><th>الجزء</th><th>التقنية</th><th>لماذا</th></tr>
+    <tr><td>التطبيق</td><td class="en">Expo SDK 57 · React Native 0.86 · TypeScript · expo-router</td><td>كود واحد لـ iPhone وAndroid، وتحديثات أسرع.</td></tr>
+    <tr><td>البيانات المحلية</td><td class="en">Zustand + AsyncStorage</td><td>يعمل بلا إنترنت وبلا حساب، والبيانات على جهاز المستخدم.</td></tr>
+    <tr><td>الخادم</td><td class="en">Supabase (Postgres + RLS + Anonymous Auth)</td><td>قواعد الأمان داخل قاعدة البيانات نفسها، بلا كلمات مرور.</td></tr>
+    <tr><td>الاشتراكات</td><td class="en">RevenueCat (IAP)</td><td>شراء نظامي عبر المتجرين.</td></tr>
+    <tr><td>الاختبارات</td><td>اختبارات وحدات، واختبارات قاعدة بيانات مع ثغرات مزروعة عمداً، وتشغيل كامل في المتصفح</td><td>كل ميزة لها اختبار يمنع رجوع الأخطاء.</td></tr>
+  </table>
+  <h3>كيف نتأكد من الجودة</h3>
+  <div class="grid3">
+    <div class="box"><h4>اختبارات التطبيق</h4><p>117 اختباراً آلياً للمنطق: المعدل، والدرجات، والغياب، والتذكيرات، والمزامنة مع قناة الشعبة، والدفع.</p></div>
+    <div class="box"><h4>اختبارات الخادم</h4><p>أربع مجموعات على Postgres محلي يحاكي Supabase، مع زرع ثغرات عمداً للتأكد أن الاختبارات تكشفها.</p></div>
+    <div class="box"><h4>تشغيل كامل</h4><p>سيناريوهات حقيقية في المتصفح، منها دكتور وطالب على جهازين منفصلين، في الوضعين الفاتح والداكن.</p></div>
+  </div>
+  <h3>أين تُحفظ البيانات</h3>
+  <table>
+    <tr><th>البيانات</th><th>المكان</th><th>مدة الحفظ</th></tr>
+    <tr><td>الجدول، والمهام، والدرجات، والمذاكرة، والإعدادات</td><td>جهاز المستخدم فقط</td><td>حتى يحذفها</td></tr>
+    <tr><td>قوائم الطلاب وسجلات الحضور اليدوي (للدكتور)</td><td>جهاز الدكتور فقط</td><td>حتى يحذفها</td></tr>
+    <tr><td>الحجوزات (الاسم، والرقم الجامعي، والموضوع)</td><td>الخادم</td><td>90 يوماً بعد الموعد</td></tr>
+    <tr><td>التحضير بالـ QR</td><td>الخادم</td><td>30 يوماً</td></tr>
+    <tr><td>قناة الشعبة: المواعيد والإعلانات (بلا أي بيانات طلاب)</td><td>الخادم</td><td>الإعلانات 180 يوماً</td></tr>
+  </table>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>5</span></div>
+</section>
+
+<!-- المراجعة الأمنية -->
+<section class="page">
+  <h2><small>المراجعة الأمنية (السيبرانية)</small>ماذا فحصنا، وماذا وجدنا</h2>
+  <p class="lead">فحصنا: الشيفرة كاملة، وقواعد الأمان في قاعدة البيانات، والمكتبات المستخدمة، والأسرار المرفوعة، وإعدادات النشر، ومتطلبات Apple وGoogle، ونظام حماية البيانات الشخصية.</p>
+  <h3>ما هو سليم</h3>
+  <ul>
+    <li><b>لا أسرار في المستودع:</b> لا مفاتيح خاصة ولا كلمات مرور؛ المفاتيح العامة فقط (المسموح ظهورها في التطبيق) تُمرَّر كمتغيرات بيئة.</li>
+    <li><b>قاعدة البيانات:</b> كل جدول محمي بـ RLS. الكتابة الحساسة (الحجز والتحضير) عبر دوال تتحقق من كل شرط، ولا يرى أي طالب بيانات طالب آخر. الاختبارات كشفت 22 من 23 ثغرة زرعناها عمداً، والباقية بلا أثر فعلي.</li>
+    <li><b>التحضير:</b> رمز يتجدد كل 15 ثانية، والرقم الجامعي لا يتكرر في الجلسة، ويُحضَّر من الجوال مرة واحدة.</li>
+    <li><b>البيانات القادمة من الخادم</b> تُفحص قبل أن تلمس بيانات الطالب، وأي حقل مخالف يُسقط.</li>
+    <li><b>المكتبات:</b> صفر ثغرات عالية أو حرجة. توجد 15 متوسطة، أغلبها في أدوات البناء لا في التطبيق المنشور.</li>
+    <li><b>iOS:</b> إقرار التشفير مضبوط (<code>ITSAppUsesNonExemptEncryption = false</code>)، وأذونات الكاميرا والصور بنصوص عربية واضحة.</li>
+  </ul>
+  <h3>المخاطر المتبقية</h3>
+  <table>
+    <tr><th>الخطورة</th><th>الخطر</th><th>التوصية</th><th>متى</th></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>قوائم الطلاب (أسماء، وأرقام جامعية، وجوالات) محفوظة على جهاز الدكتور بلا تشفير.</td><td>قفل التطبيق ببصمة الوجه أو الإصبع في وضع الدكتور، وتشفير هذه البيانات.</td><td>قبل الإطلاق للدكاترة</td></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>تسجيل الدخول المجهول بلا حماية من الإغراق الآلي.</td><td>تفعيل CAPTCHA وحدود الطلبات في إعدادات Supabase.</td><td>قبل الإطلاق</td></tr>
+    <tr><td><span class="sev med">متوسطة</span></td><td>طالب يصوّر رمز التحضير ويرسله لزميل غائب خلال أقل من 45 ثانية.</td><td>تقصير الصلاحية إلى 20 ثانية، ومقارنة عدد الحاضرين بالقاعة، وخيار اختياري بالموقع لاحقاً.</td><td>الإصدار 1.4</td></tr>
+    <tr><td><span class="sev med">متوسطة</span></td><td>تخمين رموز الشعب والصفحات بطلبات كثيرة (الرموز 6 خانات، أي نحو مليار احتمال).</td><td>حد لعدد الطلبات لكل مستخدم في الدوال.</td><td>الإصدار 1.4</td></tr>
+    <tr><td><span class="sev med">متوسطة</span></td><td>15 ثغرة متوسطة في مكتبات Expo (أغلبها أدوات بناء).</td><td>تحديث Expo لآخر إصدار فرعي قبل البناء النهائي.</td><td>قبل البناء</td></tr>
+    <tr><td><span class="sev low">منخفضة</span></td><td>الاسم والرقم الجامعي في الحجز يكتبهما الطالب ولا يُتحقق منهما.</td><td>الدخول بحساب الجامعة عند الشراكة (انظر الربط مع الجامعات).</td><td>المرحلة الثانية</td></tr>
+    <tr><td><span class="sev low">منخفضة</span></td><td>ملف النسخة الاحتياطية نص غير مشفر.</td><td>تنبيه عند التصدير، وخيار تشفير بكلمة مرور.</td><td>الإصدار 1.5</td></tr>
+    <tr><td><span class="sev low">منخفضة</span></td><td>لا يوجد رصد للأعطال بعد الإطلاق.</td><td>أداة رصد أعطال بلا بيانات شخصية.</td><td>قبل الإطلاق</td></tr>
+  </table>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>6</span></div>
+</section>
+
+<!-- قائمة ما قبل الإطلاق -->
+<section class="page">
+  <h2><small>ما ينقص قبل الإطلاق</small>قائمة ما قبل الإطلاق</h2>
+  <div class="grid2">
+    <div class="box"><h4>الحسابات والخادم</h4><ul class="check">
+      <li>حساب Apple Developer (99 دولاراً سنوياً) وGoogle Play (25 دولاراً مرة واحدة).</li>
+      <li>مشروع Supabase: تشغيل ملفات الهجرة الثلاثة بالترتيب، وتفعيل الدخول المجهول، وCAPTCHA، وحدود الطلبات.</li>
+      <li>وضع مفاتيح Supabase في إعدادات البناء (EAS).</li>
+      <li>تشغيل التنظيف اليومي للبيانات القديمة (<code>cleanup_old_data</code>).</li>
+    </ul></div>
+    <div class="box"><h4>الاشتراكات</h4><ul class="check">
+      <li>منتجات الاشتراك الثلاثة في App Store Connect وGoogle Play.</li>
+      <li>ربطها في RevenueCat، ووضع المفاتيح في EAS.</li>
+      <li>اتفاقية التطبيقات المدفوعة في Apple: البنك والضرائب.</li>
+      <li>تجربة شراء حقيقية واسترجاع في وضع الاختبار (Sandbox) لكل منصة.</li>
+    </ul></div>
+    <div class="box"><h4>الأمان والخصوصية</h4><ul class="check">
+      <li>قفل التطبيق للدكتور (البند المهم الأول).</li>
+      <li>أداة رصد الأعطال.</li>
+      <li>تحديث Expo لآخر إصدار فرعي.</li>
+      <li>إجابات الخصوصية في المتجرين (جاهزة في <code>store/listing.md</code>).</li>
+      <li>بريد دعم بنطاق خاص بدل البريد الشخصي، وموقع لسياسة الخصوصية.</li>
+    </ul></div>
+    <div class="box"><h4>الاختبار والإطلاق</h4><ul class="check">
+      <li>بناء تجريبي (TestFlight وAndroid الداخلي) لـ 20–30 طالباً ودكتورين من كليات مختلفة، لمدة أسبوعين.</li>
+      <li>إصلاح ملاحظات المختبرين، ثم البناء النهائي والإرسال للمراجعة.</li>
+      <li>تجهيز صور المتجر (جاهزة) والوصف (جاهز).</li>
+      <li>تجهيز المقاطع الأولى في تيك توك، ورسالة القروبات، والسفراء.</li>
+    </ul></div>
+  </div>
+  <div class="note"><b>تنظيمياً:</b> لبيع الاشتراكات من السعودية تحتاج غالباً سجلاً تجارياً أو وثيقة العمل الحر، وبيانات ضريبية في حسابات المتاجر. نوصي باستشارة محاسب قبل تفعيل الدفع. وأي مؤثر يُدفع له يحتاج رخصة «موثوق».</div>
+  <h3>ترتيب مقترح للأسبوعين القادمين</h3>
+  <table>
+    <tr><th>الأيام</th><th>العمل</th></tr>
+    <tr><td>1–3</td><td>الحسابات، وSupabase، وRevenueCat، وقفل التطبيق للدكتور، ورصد الأعطال.</td></tr>
+    <tr><td>4–5</td><td>بناء تجريبي وتوزيعه على المختبرين، وبدء المحتوى التشويقي في تيك توك.</td></tr>
+    <tr><td>6–12</td><td>جمع الملاحظات وإصلاحها (الإصدار 1.4)، وتجربة الدفع الحقيقي.</td></tr>
+    <tr><td>13–14</td><td>البناء النهائي والإرسال لمراجعة Apple وGoogle، والإطلاق مع أسبوع المقاطع.</td></tr>
+  </table>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>7</span></div>
+</section>
+
+<!-- اقتراحات جديدة -->
+<section class="page">
+  <h2><small>اقتراحات جديدة</small>ما الذي يجعل مذاكر أقوى؟</h2>
+  <p class="lead">مرتبة حسب أثرها على النمو وفائدتها، مع تقدير الجهد.</p>
+  <table>
+    <tr><th>الاقتراح</th><th>لمن</th><th>الفائدة</th><th>الجهد</th></tr>
+    <tr><td><b>استيراد مواعيد Blackboard</b> برابط التقويم (iCal) الذي يعطيه النظام لكل طالب</td><td>الطالب</td><td>كل الواجبات والاختبارات تدخل التطبيق تلقائياً، بلا شراكة وبلا كلمة مرور.</td><td>متوسط</td></tr>
+    <tr><td><b>إشعارات فورية لإعلانات الدكتور</b> حتى والتطبيق مغلق</td><td>الاثنين</td><td>يجعل قناة الشعبة بديلاً فعلياً عن القروبات.</td><td>متوسط</td></tr>
+    <tr><td><b>ادعُ زملاءك وخذ «برو» مجاناً</b></td><td>الطالب</td><td>نمو ذاتي بين الدفعات.</td><td>متوسط</td></tr>
+    <tr><td><b>ويدجت للشاشة الرئيسية وشاشة القفل</b>: المحاضرة التالية والعد التنازلي للفاينل</td><td>الطالب</td><td>يذكّر بالتطبيق كل مرة يُفتح فيها الجوال.</td><td>متوسط</td></tr>
+    <tr><td><b>اختبار قصير داخل المحاضرة</b>: أسئلة سريعة يجيب عنها الطلاب من جوالاتهم</td><td>الدكتور</td><td>تفاعل وتقييم فوري، ويُدخل الشعبة كلها للتطبيق.</td><td>كبير</td></tr>
+    <tr><td><b>غرفة مذاكرة مع الزملاء</b>: مؤقت مشترك وترتيب أسبوعي</td><td>الطالب</td><td>عادة يومية ومنافسة لطيفة.</td><td>كبير</td></tr>
+    <tr><td><b>التقويم الأكاديمي لكل جامعة</b>: الإجازات، وفترات الاختبارات، والحذف والإضافة</td><td>الاثنين</td><td>تذكيرات تلقائية بمواعيد الجامعة الرسمية.</td><td>صغير</td></tr>
+    <tr><td><b>مزامنة بين الأجهزة ونسخ احتياطي سحابي</b> بالدخول ببريد الجامعة</td><td>الاثنين</td><td>لا تضيع البيانات عند تغيير الجوال.</td><td>كبير</td></tr>
+    <tr><td><b>قفل التطبيق</b> ببصمة الوجه أو الإصبع</td><td>الدكتور</td><td>حماية بيانات الطلاب (مطلوب قبل الإطلاق للدكاترة).</td><td>صغير</td></tr>
+    <tr><td><b>تحدي المذاكرة الأسبوعي</b> بشارات تُشارك</td><td>الطالب</td><td>محتوى مشاركة إضافي على طريقة «ملخص فصلك».</td><td>صغير</td></tr>
+  </table>
+  <div class="note">نوصي بإصدار <b>1.4</b> يجمع: قفل التطبيق، وإشعارات الإعلانات، واستيراد Blackboard، والتقويم الأكاديمي. هذه أربعة بنود بأثر كبير وجهد معقول.</div>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>8</span></div>
+</section>
+
+<!-- الربط مع الجامعات -->
+<section class="page">
+  <h2><small>المستقبل</small>الربط مع أنظمة الجامعات</h2>
+  <p class="lead">القاعدة الثابتة: لا نطلب كلمة مرور بوابة الجامعة من الطالب ولا نسحب بياناته منها. هذا غير آمن ويخالف سياسات الجامعات. الربط يكون إما بما يعطيه النظام للطالب نفسه، أو بشراكة رسمية مع الجامعة.</p>
+
+  <div class="phase"><span class="tag">المرحلة 1 · الآن</span><h4>ربط بلا شراكة</h4>
+    <p><b>تقويم Blackboard:</b> Blackboard يعطي كل طالب رابط تقويم خاصاً به (iCal). يلصقه الطالب في التطبيق، فتُجلب مواعيد الواجبات والاختبارات مباشرة من جواله إلى Blackboard، دون أن يمر أي شيء بخادمنا. <b>التقويم الأكاديمي:</b> ننشره نحن لكل جامعة من مصادرها الرسمية العامة. <b>الجدول:</b> الاستيراد بلصقة الموجود حالياً.</p></div>
+
+  <div class="phase"><span class="tag">المرحلة 2 · بعد أول شراكة</span><h4>الدخول بحساب الجامعة</h4>
+    <p>أغلب الجامعات السعودية تعطي منسوبيها حسابات Microsoft 365. بالدخول الموحّد عبر نظام الجامعة نفسه (SSO: <span class="en">OpenID Connect / SAML</span>)، نتحقق من أن الطالب طالب فعلاً وأن الدكتور دكتور فعلاً، دون أن نرى كلمة المرور. هذا يحل التحقق من الهوية في الحجز والتحضير، ويفتح المزامنة بين الأجهزة.</p></div>
+
+  <div class="phase"><span class="tag">المرحلة 3 · تكامل التعليم الإلكتروني</span><h4>مذاكر أداة داخل Blackboard أو Moodle</h4>
+    <p>بمعيار <span class="en">LTI 1.3 Advantage</span> المدعوم في Blackboard وMoodle وCanvas، يضيف الدكتور مذاكر داخل مقرره. تصل قائمة الطلاب رسمياً، والدرجات تُرفع لسجل الدرجات، والتحضير بالـ QR يُسجَّل في النظام.</p></div>
+
+  <div class="phase"><span class="tag">المرحلة 4 · شراكة كاملة</span><h4>واجهات النظام الأكاديمي</h4>
+    <p>بموافقة عمادة التعاملات الإلكترونية: جلب الجدول والشعب والتقويم رسمياً من النظام الأكاديمي (مثل أنظمة Banner) عبر واجهات برمجية معتمدة، وتسجيل الحضور مباشرة في سجلات الجامعة.</p></div>
+
+  <h3>ما تطلبه الجامعات عادة من أي شريك تقني</h3>
+  <ul>
+    <li><b>ضوابط الأمن السيبراني</b> الصادرة من الهيئة الوطنية للأمن السيبراني، لأن الجامعات الحكومية جهات حكومية.</li>
+    <li><b>استضافة البيانات داخل المملكة</b> غالباً، مما قد يعني نقل الخادم إلى مزوّد سحابي بمنطقة سعودية عند الشراكة.</li>
+    <li><b>اتفاقية معالجة بيانات</b> متوافقة مع نظام حماية البيانات الشخصية.</li>
+    <li><b>اختبار اختراق</b> من جهة مستقلة، وتقرير أمني. هذه المراجعة نقطة بداية جيدة له.</li>
+  </ul>
+  <div class="note"><b>الخطوة العملية الأولى:</b> ابدأ بجامعة واحدة (أم القرى) عبر كلية أو نادٍ طلابي. أثبت الاستخدام بأرقام حقيقية من المرحلة 1، ثم قدّم مقترح المرحلة 2 لعمادة التعاملات الإلكترونية ومعه هذا الملف.</div>
+  <div class="foot"><span>مذاكر · المراجعة الشاملة</span><span>9</span></div>
+</section>
+
+</body>
+</html>

@@ -40,3 +40,4 @@ yarn-error.*
 /ios
 /android
 marketing/guide/_out.html
+reports/_out.html
