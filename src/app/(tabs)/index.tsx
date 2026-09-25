@@ -21,6 +21,7 @@ import { useNow } from '@/lib/useNow';
 import { wrappedReady } from '@/lib/wrapped';
 import { unreadPosts } from '@/lib/sectionChannel';
 import { useChannelSync } from '@/lib/useChannelSync';
+import { useFeedSync } from '@/lib/useFeedSync';
 import { turnOnReminders } from '@/lib/useReminderSync';
 import { isPro, useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
@@ -76,6 +77,7 @@ export default function Home() {
   const openTasks = tasks.filter((t) => !t.done).length;
   const courses = useStore((s) => s.courses);
   useChannelSync();
+  useFeedSync();
   const weeks = settings.semesterWeeks;
   const atRisk = courses
     .map((course) => ({ course, st: absenceStatus(course.absences ?? 0, weeklyMeetings(course.id, course.credits, slots), weeks) }))

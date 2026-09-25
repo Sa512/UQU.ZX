@@ -61,7 +61,7 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
 1. أنشئ مشروعاً في https://supabase.com (الخطة المجانية تكفي للبداية).
    - **المنطقة:** اختر الأقرب للمملكة. بيانات الطلاب (الاسم والرقم الجامعي) بيانات شخصية؛ راجع مع جامعتك متطلبات نظام حماية البيانات الشخصية لنقلها خارج المملكة.
 2. Authentication ← Sign In / Providers ← فعّل **Anonymous Sign-Ins** (ويُفضّل تفعيل CAPTCHA لاحقاً للحد من الإساءة).
-3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql`) ← Run.
+3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql`) ← Run.
 4. التنظيف التلقائي: Database ← Extensions ← فعّل `pg_cron`، ثم نفّذ:
    ```sql
    select cron.schedule('mudhaker-cleanup', '0 3 * * *', 'select public.cleanup_old_data()');
@@ -72,6 +72,15 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "eyJ..." --environment production --visibility plaintext
    ```
    (مفتاح anon عام بطبيعته؛ الحماية في قواعد RLS والدوال المختبرة في `supabase/tests`.)
+6. **حماية الدخول المجهول:** Authentication ← Sign In / Providers ← فعّل **Anonymous sign-ins**، ثم Authentication ← Attack Protection ← فعّل **CAPTCHA** (Cloudflare Turnstile)، وراجع **Rate Limits** (مثلاً 30 تسجيلاً مجهولاً في الساعة لكل عنوان IP).
+7. **إشعارات إعلانات الدكاترة (اختياري لكنه موصى به):**
+   ```bash
+   npx eas-cli@latest init                       # يضيف projectId إلى app.json (مطلوب لعناوين الإشعارات)
+   npx supabase functions deploy notify-section-post --no-verify-jwt
+   npx supabase secrets set WEBHOOK_SECRET="اختر-نصاً-عشوائياً-طويلاً"
+   ```
+   ثم Database ← Webhooks ← Create: الجدول `section_posts`، الحدث **Insert**، النوع **Supabase Edge Function** ← `notify-section-post`، وأضف ترويسة `x-webhook-secret` بنفس القيمة.
+   بدون هذه الخطوة تعمل القناة كما هي، ويصل الإعلان عند فتح التطبيق.
 
 ## 6) البناء والتجربة ثم الإرسال
 

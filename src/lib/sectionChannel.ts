@@ -103,6 +103,7 @@ export function syncChannel(d: Data, ch: SectionChannel, now: number): SyncResul
     posts: ch.posts,
     // عند الانضمام تُعدّ الإعلانات السابقة مقروءة، فلا يصل «إعلان جديد» عن أشياء قديمة
     seenAt: prev?.seenAt ?? (ch.posts[0]?.created_at ?? new Date(now).toISOString()),
+    pushed: prev?.pushed,
   };
   const courses = course
     ? d.courses.map((c) => (c.id === courseId ? { ...c, name: ch.course_name, code: ch.course_code || c.code, instructor: ch.instructor, channel } : c))

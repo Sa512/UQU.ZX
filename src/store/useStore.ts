@@ -17,6 +17,7 @@ import type { PaymentMethod, PlanId } from '@/lib/payments';
 import { review } from '@/lib/srs';
 import type { ChannelPost, SectionChannel } from '@/lib/cloud/types';
 import { syncChannel, type SyncResult } from '@/lib/sectionChannel';
+import { mergeIcs, type IcsEvent } from '@/lib/ical';
 
 export type Role = 'student' | 'professor';
 export type ThemePref = 'system' | 'light' | 'dark';
@@ -47,6 +48,8 @@ export type Settings = {
   uniId: string;
   /** بداية الفصل الحالي (لـ«ملخص فصلك»). يُضبط عند بدء فصل جديد. */
   semesterStartedAt: number | null;
+  /** قفل التطبيق بالبصمة (موصى به للدكتور لحماية بيانات الطلاب). */
+  appLock: boolean;
 };
 
 export type Course = {
@@ -59,7 +62,7 @@ export type Course = {
   /** عدد مرات الغياب المسجلة (للطالب). */
   absences?: number;
   /** للطالب: المادة مرتبطة بقناة شعبة نشرها الدكتور. */
-  channel?: { code: string; section: string; updatedAt: string; syncedAt: number; posts: ChannelPost[]; seenAt: string };
+  channel?: { code: string; section: string; updatedAt: string; syncedAt: number; posts: ChannelPost[]; seenAt: string; /** سُجّل هذا الجهاز لإشعارات القناة. */ pushed?: boolean };
 };
 
 export type SlotType = 'lecture' | 'lab' | 'office';
@@ -91,7 +94,12 @@ export type Task = {
   doneAt?: number;
   /** اختبار وصل من قناة الشعبة («الرمز|العنوان»). */
   channelKey?: string;
+  /** مهمة مستوردة من تقويم (مثل Blackboard): «ics:الرابط:معرّف الحدث». */
+  sourceKey?: string;
 };
+
+/** رابط تقويم خاص بالطالب (Blackboard وغيره). يبقى على الجهاز فقط ولا يدخل النسخ الاحتياطية لأنه يحمل رمزاً سرياً. */
+export type CalendarFeed = { id: string; url: string; label: string; lastSync: number | null; lastCount: number };
 
 /** شعبة لعضو هيئة التدريس. */
 export type Section = { id: string; courseId: string; code: string; /** قناة الشعبة المنشورة للطلاب. */ channel?: { id: string; code: string } };
@@ -144,6 +152,7 @@ type State = {
   scores: Scores;
   officePage: OfficePage | null;
   myBookings: MyBooking[];
+  feeds: CalendarFeed[];
   gpa: GpaState;
   subscription: Subscription;
   transactions: Transaction[];
@@ -190,6 +199,11 @@ type Actions = {
   forgetCloudLinks: () => void;
   /** الطالب يغادر قناة الشعبة (حظر مصدر الإعلانات): تبقى المادة ومواعيدها، وتتوقف التحديثات. */
   leaveChannel: (courseId: string) => void;
+  markChannelPushed: (courseId: string) => void;
+  addFeed: (url: string, label: string) => string;
+  removeFeed: (id: string) => void;
+  /** يدمج أحداث تقويم في المهام ويعيد عدد المضاف والمحدّث. */
+  applyIcs: (feedId: string, events: IcsEvent[]) => { added: number; updated: number };
   saveMyBooking: (b: MyBooking) => void;
   setBookingStatus: (id: string, status: MyBooking['status']) => void;
   startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
@@ -223,6 +237,7 @@ const defaultSettings: Settings = {
   lastSeenVersion: '1.0.0',
   uniId: '',
   semesterStartedAt: null,
+  appLock: false,
 };
 
 const initialState: State = {
@@ -240,6 +255,7 @@ const initialState: State = {
   scores: {},
   officePage: null,
   myBookings: [],
+  feeds: [],
   gpa: { prevGpa: 0, prevCredits: 0, rows: [] },
   subscription: { plan: 'free', until: null },
   transactions: [],
@@ -447,6 +463,27 @@ export const useStore = create<State & Actions>()(
         set({ courses: r.courses, slots: r.slots, tasks: r.tasks });
         return r;
       },
+      addFeed: (url, label) => {
+        const existing = get().feeds.find((f) => f.url === url);
+        if (existing) return existing.id;
+        const id = uid();
+        set((s) => ({ feeds: [...s.feeds, { id, url, label, lastSync: null, lastCount: 0 }] }));
+        return id;
+      },
+      removeFeed: (id) =>
+        set((s) => ({
+          feeds: s.feeds.filter((f) => f.id !== id),
+          // تُحذف المواعيد القادمة غير المنجزة من هذا التقويم، ويبقى ما أنجزه الطالب
+          tasks: s.tasks.filter((t) => !(t.sourceKey?.startsWith(`ics:${id}:`) && !t.done)),
+        })),
+      applyIcs: (feedId, events) => {
+        const s = get();
+        const r = mergeIcs(s.tasks, events, s.courses, feedId, new Date());
+        set({ tasks: r.tasks, feeds: s.feeds.map((f) => (f.id === feedId ? { ...f, lastSync: Date.now(), lastCount: events.length } : f)) });
+        return { added: r.added, updated: r.updated };
+      },
+      markChannelPushed: (courseId) =>
+        set((s) => ({ courses: s.courses.map((c) => (c.id === courseId && c.channel ? { ...c, channel: { ...c.channel, pushed: true } } : c)) })),
       leaveChannel: (courseId) =>
         set((s) => {
           const code = s.courses.find((c) => c.id === courseId)?.channel?.code;

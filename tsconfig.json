@@ -16,6 +16,7 @@
   ],
   "exclude": [
     "scripts",
+    "supabase/functions/*/index.ts",
     "node_modules"
   ]
 }

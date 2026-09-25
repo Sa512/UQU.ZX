@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
+import appJson from '../../app.json';
 import { useState } from 'react';
-import { Linking, View } from 'react-native';
+import { Linking, Platform, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -15,6 +16,7 @@ import { Segmented } from '@/components/Segmented';
 import { APP_INFO } from '@/content/app';
 import { buildBackup } from '@/lib/backup';
 import { cloud } from '@/lib/cloud';
+import { lockAvailable, unlock } from '@/lib/appLock';
 import { backupSupported, pickBackup, shareBackup } from '@/lib/backupIO';
 import { formatDuration } from '@/lib/dates';
 import type { GradeScale } from '@/lib/gpa';
@@ -30,6 +32,13 @@ export default function Settings() {
   const update = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
   const forgetCloudLinks = useStore((s) => s.forgetCloudLinks);
+  const [lockMsg, setLockMsg] = useState<string>();
+  // تشغيل القفل أو إيقافه يتطلب البصمة نفسها، حتى لا يوقفه غيرك
+  const toggleLock = async (on: boolean) => {
+    setLockMsg(undefined);
+    if (on && !(await lockAvailable())) return setLockMsg(Platform.OS === 'web' ? 'القفل متاح في تطبيق الجوال.' : 'فعّل بصمة الوجه أو الإصبع أو رمز الجوال من إعدادات جوالك أولاً.');
+    if (await unlock()) update({ appLock: on });
+  };
   const [cloudMsg, setCloudMsg] = useState<{ ok: boolean; text: string }>();
   const loadSample = useStore((s) => s.loadSampleData);
   const hasData = useStore((s) => s.courses.length > 0);
@@ -175,8 +184,22 @@ export default function Settings() {
       <SectionHeader title="البيانات والخصوصية" />
       <Card style={{ gap: spacing.md }}>
         <AppText variant="caption" muted>
-          بياناتك محفوظة على جهازك فقط ولا تُرسل لأي خادم. صدّر نسخة احتياطية قبل تغيير جوالك.
+          معظم بياناتك محفوظة على جهازك فقط. الحجز والتحضير بالـ QR وقناة الشعبة تستخدم خادماً. صدّر نسخة احتياطية قبل تغيير جوالك.
         </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <AppText variant="label">قفل التطبيق بالبصمة</AppText>
+            <AppText variant="caption" muted>
+              {settings.role === 'professor' ? 'موصى به: يحمي أسماء طلابك وأرقامهم على جوالك.' : 'يطلب بصمة الوجه أو الإصبع عند فتح التطبيق.'}
+            </AppText>
+          </View>
+          <Toggle accessibilityLabel="قفل التطبيق بالبصمة" value={settings.appLock} onValueChange={toggleLock} />
+        </View>
+        {lockMsg && (
+          <AppText variant="caption" color={colors.danger}>
+            {lockMsg}
+          </AppText>
+        )}
         {!hasData && <Button title="تحميل جدول تجريبي" variant="secondary" icon="sparkles" onPress={loadSample} />}
         {backupSupported && (
           <>
@@ -259,7 +282,7 @@ export default function Settings() {
       </Card>
 
       <AppText variant="tiny" muted center>
-        مذاكر · الإصدار {Constants.expoConfig?.version ?? '1.0.0'} · صُنع بحب لطلاب الجامعات 💜
+        مذاكر · الإصدار {Constants.expoConfig?.version ?? appJson.expo.version} · صُنع بحب لطلاب الجامعات 💜
       </AppText>
     </Screen>
   );

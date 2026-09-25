@@ -57,6 +57,7 @@ export default function More() {
     items.splice(1, 0, { icon: 'enter', title: 'انضم لشعبة', subtitle: 'مواعيد وإعلانات الدكتور', color: '#4F46E5', href: '/join' });
     items.splice(2, 0, { icon: 'calendar-clear', title: 'حجز ساعة مكتبية', subtitle: 'احجز موعدك مع الدكتور', color: '#0F766E', href: '/book' });
   }
+  if (!isProf) items.push({ icon: 'school', title: 'مواعيد Blackboard', subtitle: 'الواجبات والاختبارات تلقائياً', color: '#0369A1', href: '/calendar-import' });
   items.push({ icon: 'cloud-download', title: 'استيراد الجدول', subtitle: 'من بوابة الجامعة أو Excel', color: '#7C3AED', href: '/schedule-import' });
   items.push({ icon: 'sparkles', title: 'ملخص فصلك', subtitle: 'فصلك بالأرقام وشاركه', color: '#7C3AED', href: '/wrapped' });
   items.push({ icon: 'image', title: 'خلفية الجدول', subtitle: 'جدولك كخلفية للجوال', color: '#B45309', href: '/wallpaper' });

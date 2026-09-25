@@ -41,4 +41,6 @@ export interface CloudApi {
   deletePost(postId: string): Promise<void>;
   /** يحذف كل ما يخص هذا المستخدم على الخادم (حق الحذف في نظام حماية البيانات الشخصية). */
   deleteMyData(): Promise<void>;
+  subscribeChannel(code: string, token: string): Promise<void>;
+  unsubscribeChannel(code: string, token: string): Promise<void>;
 }

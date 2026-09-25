@@ -10,6 +10,7 @@ import { QrScanner, scannerSupported } from '@/components/QrScanner';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { cloud, type SectionChannel } from '@/lib/cloud';
 import { DAY_NAMES, formatMinutes, formatShortDate, fromDateKey } from '@/lib/dates';
+import { ensureChannelPush } from '@/lib/channelPush';
 import { parseQr } from '@/lib/officeHours';
 import { useStore } from '@/store/useStore';
 import { radius, spacing } from '@/theme';
@@ -53,6 +54,8 @@ export default function Join() {
     if (!ch) return;
     const r = applyChannel(ch);
     haptic.success();
+    const joinedCourse = useStore.getState().courses.find((c) => c.id === r.courseId);
+    if (joinedCourse) ensureChannelPush(joinedCourse);
     router.replace({ pathname: '/course/[id]', params: { id: r.courseId } });
   };
 

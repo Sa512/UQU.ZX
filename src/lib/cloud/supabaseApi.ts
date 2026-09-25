@@ -109,5 +109,12 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     async deleteMyData() {
       await call(() => sb.rpc('delete_my_data'));
     },
+    async subscribeChannel(code, token) {
+      const r = (await call(() => sb.rpc('subscribe_channel', { p_code: code, p_token: token }))) as { ok?: boolean; error?: string };
+      if (r.error) throw toCloudError(r.error);
+    },
+    async unsubscribeChannel(code, token) {
+      await call(() => sb.rpc('unsubscribe_channel', { p_code: code, p_token: token }));
+    },
   };
 }

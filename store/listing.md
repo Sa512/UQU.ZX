@@ -97,6 +97,7 @@
 **App Store — App Privacy** (بعد إضافة الحجز والتحضير بالـ QR وقناة الشعبة):
 - **Contact Info → Name:** نعم — App Functionality — Linked to user — لا يُستخدم للتتبّع.
 - **Identifiers → User ID:** نعم (الرقم الجامعي + معرّف الجهاز المجهول) — App Functionality — Linked to user — لا تتبّع.
+- **Identifiers → Device ID:** نعم (عنوان إشعارات Expo لقنوات الشعب التي انضم إليها الطالب) — App Functionality — Not linked to identity — لا تتبّع.
 - **User Content → Other User Content:** نعم (موضوع الزيارة، وإعلانات قناة الشعبة ومواعيدها التي ينشرها عضو هيئة التدريس) — App Functionality — Linked to user.
 - **Purchases → Purchase History:** نعم (عبر RevenueCat) — App Functionality — Not linked to identity.
 - باقي الفئات (الموقع، جهات الاتصال، الصحة، البيانات المالية، سجل التصفح، التشخيص): **لا**.

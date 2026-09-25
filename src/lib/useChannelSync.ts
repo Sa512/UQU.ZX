@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { cloud } from './cloud';
+import { ensureChannelPush } from './channelPush';
 import { needsSync } from './sectionChannel';
 
 /** يحدّث قنوات الشعب في الخلفية عند فتح الرئيسية (مرة كل 20 دقيقة لكل مادة كحد أقصى). */
@@ -17,6 +18,11 @@ export function useChannelSync() {
         } catch {
           // بلا إنترنت: نحاول في المرة القادمة
         }
+      }
+      // تسجيل إشعارات القنوات التي لم تُسجَّل بعد (مثلاً بعد السماح بالإشعارات لاحقاً)
+      for (const c of useStore.getState().courses.filter((x) => x.channel && !x.channel.pushed)) {
+        if (cancelled) return;
+        await ensureChannelPush(c);
       }
     });
     return () => {

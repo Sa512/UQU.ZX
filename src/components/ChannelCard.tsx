@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { APP_INFO } from '@/content/app';
+import { dropChannelPush } from '@/lib/channelPush';
 import { cloud } from '@/lib/cloud';
 import { formatShortDate } from '@/lib/dates';
 import { unreadPosts } from '@/lib/sectionChannel';
@@ -94,7 +95,7 @@ export function ChannelCard({ course }: { course: Course }) {
       <Pressable
         accessibilityRole="button"
         hitSlop={8}
-        onPress={() => confirm('مغادرة قناة الشعبة؟', 'تبقى المادة ومواعيدها عندك، ولن تصلك إعلانات أو تحديثات من هذه القناة.', () => leave(course.id), 'مغادرة')}
+        onPress={() => confirm('مغادرة قناة الشعبة؟', 'تبقى المادة ومواعيدها عندك، ولن تصلك إعلانات أو تحديثات من هذه القناة.', () => { dropChannelPush(course); leave(course.id); }, 'مغادرة')}
       >
         <AppText variant="tiny" muted center>
           مغادرة القناة
