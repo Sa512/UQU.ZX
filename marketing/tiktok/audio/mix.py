@@ -361,7 +361,13 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     if '--samples' in sys.argv: return samples(model_dir, out_dir)
     voice_id = next((a.split('=')[1] for a in sys.argv if a.startswith('--voice=')), DEFAULT_VOICE)
-    bg = music_chill() if '--chill' in sys.argv else music()
+    style = next((a.split('=')[1] for a in sys.argv if a.startswith('--style=')), None)
+    if style:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import styles
+        bg = styles.STYLES[style]()
+    else:
+        bg = music_chill() if '--chill' in sys.argv else music()
     say = make_tts(model_dir, voice_id) if with_voice else None
     ids = next((a.split('=')[1].split(',') for a in sys.argv if a.startswith('--ids=')), list(SCRIPTS))
     tag = next((a.split('=')[1] for a in sys.argv if a.startswith('--tag=')), '')

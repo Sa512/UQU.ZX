@@ -26,8 +26,9 @@ const MONTAGE = [
 
 const font = (w) => `url(data:font/ttf;base64,${fs.readFileSync(`${ROOT}/node_modules/@expo-google-fonts/ibm-plex-sans-arabic/${w}/IBMPlexSansArabic_${w}.ttf`).toString('base64')})`;
 const b64 = (f) => fs.readFileSync(f).toString('base64');
-// إيموجي Fluent 3D من مايكروسوفت (رخصة MIT) بدل إيموجي النظام: شكل قريب من iOS ومسموح تجارياً
-const emoji = (name, size) => `<img src="data:image/png;base64,${b64(path.join(__dirname, 'emoji', name + '.png'))}" style="width:${size}px;height:${size}px;vertical-align:middle">`;
+// EMOJI=apple (افتراضي، بطلب صاحب الحساب) أو EMOJI=fluent (Fluent 3D من مايكروسوفت، رخصة MIT، بديل آمن تجارياً)
+const EMOJI_SET = process.env.EMOJI || 'apple';
+const emoji = (name, size) => `<img src="data:image/png;base64,${b64(path.join(__dirname, 'emoji', EMOJI_SET === 'apple' ? 'apple' : '', name + '.png'))}" style="width:${size}px;height:${size}px;vertical-align:middle">`;
 const markSvg = fs.readFileSync(path.join(ROOT, 'marketing/brand/logo-mark.svg'), 'utf8').replace(/width="1024" height="1024"/, 'width="100%" height="100%"');
 
 const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>
@@ -55,7 +56,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#0B1020}
 .o .cta{margin-top:30px;font-size:50px;font-weight:700;color:#FCD34D}
 </style></head><body><div id="stage">
 <div class="full center" id="q"><div class="q">طالب جامعي؟</div></div>
-${PAINS.map(([e, t], i) => `<div class="full center pain" id="p${i}"><div class="e">${emoji(e, 190)}</div><div class="t">${t}</div></div>`).join('')}
+${PAINS.map(([e, t], i) => `<div class="full center pain" id="p${i}"><div class="e">${emoji(e, 160)}</div><div class="t">${t}</div></div>`).join('')}
 <div class="glow" id="glow"></div>
 <div class="full center" id="k"><div class="k1" id="k1">خلاص…</div><div class="k2" id="k2">جهّزنا لك شي ${emoji('eyes', 96)}</div></div>
 <div class="full flash" id="flash"></div>
