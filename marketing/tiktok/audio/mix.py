@@ -28,6 +28,18 @@ SCRIPTS = {
     ],
 }
 OUTRO = (12.9, 'مُذَاكِر. رَفِيقُكَ الجَامِعِي.')
+# المقطع التشويقي: جمل قصيرة تقع على الإيقاع، وختام خاص به
+SCRIPTS['00-teaser'] = [
+    (0.1, 'طَالِب جَامِعِي؟'),
+    (4.95, 'خَلَاص. جَهَّزْنَا لَك شَي.'),
+    (7.0, 'مُذَاكِر!'),
+    (7.95, 'جَدْوَلَك.'),
+    (8.95, 'دَرَجَاتَك.'),
+    (9.95, 'غِيَابَك.'),
+    (10.95, 'وَشَارِكْهَا.'),
+    (11.9, 'وَلِلدُّكْتُورِ كَمَان!'),
+]
+OUTROS = {'00-teaser': (13.5, 'قَرِيبًا. تَابِعْنَا.')}
 
 # ——— موسيقى هادئة (--chill): بداية هادئة، بناء، ثم «دروب» عند ظهور النتيجة ———
 # 120 نبضة/دقيقة: المازورة ثانيتان، والشبكة تبدأ من 0.9 ث حتى تقع المازورات على لحظات المقطع:
@@ -297,7 +309,8 @@ def make_tts(model_dir, voice=DEFAULT_VOICE):
         x = np.asarray(a.samples, dtype=np.float64)
         if 'world' in v: x = world_convert(x, a.sample_rate, **v['world'])
         x = np.interp(np.arange(0, len(x), PITCH * a.sample_rate / SR), np.arange(len(x)), x)
-        x = polish(x / (np.max(np.abs(x)) + 1e-9))
+        x = trim(x / (np.max(np.abs(x)) + 1e-9))
+        x = polish(x)
         if v.get('room'):  # صدى أعمق لصوت المذيع
             wet = np.zeros_like(x)
             for dms, g in ((31, .12), (53, .09), (89, .06), (131, .04)):
@@ -305,6 +318,13 @@ def make_tts(model_dir, voice=DEFAULT_VOICE):
             x = x + lp(wet, 3000); x /= np.max(np.abs(x)) + 1e-9
         return x
     return say
+
+def trim(x, thr=0.008, pad=0.09):
+    """يقص الصمت في أول المقطع وآخره (المولّد يضيف هامشاً) حتى تقع الكلمات على الإيقاع."""
+    idx = np.flatnonzero(np.abs(x) > thr)
+    if not len(idx): return x
+    p = int(pad * SR)
+    return x[max(0, idx[0] - p): idx[-1] + p]
 
 def world_convert(x, sr, f0=1.0, formant=1.0, expr=1.0, breath=0.0, trem=0.0):
     """تحويل الصوت بمرمّز WORLD: f0 يغيّر الطبقة، formant يغيّر «حجم» الصوت (عمر/جنس)،
@@ -347,8 +367,8 @@ def main():
         voice = np.zeros(N); mask = np.zeros(N)
         if say:
             free = 0.0  # لا يبدأ سطر قبل أن ينتهي السابق
-            for at, text in lines + [OUTRO]:
-                x = say(text); at = max(at, free + 0.2); free = at + len(x) / SR
+            for at, text in lines + [OUTROS.get(vid, OUTRO)]:
+                x = say(text); at = max(at, free + 0.12); free = at + len(x) / SR
                 s = int(at * SR); e = min(N, s + len(x))
                 voice[s:e] += x[:e - s]; mask[s:e] = 1
                 if s + len(x) > N: print(f'  تنبيه: {vid} "{text[:20]}" يتجاوز نهاية المقطع')

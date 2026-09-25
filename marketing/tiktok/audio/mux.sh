@@ -3,7 +3,7 @@
 # الاستخدام: FFMPEG=ffmpeg bash marketing/tiktok/audio/mux.sh <مجلد الصوت>
 set -euo pipefail
 FF=${FFMPEG:-ffmpeg}; A=$1; D=$(cd "$(dirname "$0")/.." && pwd)
-for id in 01-final-grade 02-absence 03-qr-attendance; do
+for id in 00-teaser 01-final-grade 02-absence 03-qr-attendance; do
   src="$D/silent/$id.mp4"
   for kind in "" "-music"; do
     "$FF" -y -loglevel error -i "$src" -i "$A/$id$kind.wav" -map 0:v -map 1:a -c:v copy \
