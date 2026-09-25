@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import {
   availableMethods,
+  sandboxCheckoutAllowed,
   detectBrand,
   expiryValid,
   formatCardNumber,
@@ -103,5 +104,15 @@ describe('sandbox gateway', () => {
   it('requires the right STC Pay OTP', async () => {
     expect((await sandboxGateway.pay({ plan, method: 'stcpay', mobile: '0551234567', otp: '000000' })).ok).toBe(false);
     expect((await sandboxGateway.pay({ plan, method: 'stcpay', mobile: '0551234567', otp: SANDBOX_OTP })).ok).toBe(true);
+  });
+});
+
+describe('sandbox checkout gate (launch blocker)', () => {
+  it('is never available in a store build without the explicit flag', () => {
+    expect(sandboxCheckoutAllowed({ dev: false, os: 'ios' })).toBe(false);
+    expect(sandboxCheckoutAllowed({ dev: false, os: 'android', flag: '0' })).toBe(false);
+    expect(sandboxCheckoutAllowed({ dev: true, os: 'ios' })).toBe(true);
+    expect(sandboxCheckoutAllowed({ dev: false, os: 'web' })).toBe(true);
+    expect(sandboxCheckoutAllowed({ dev: false, os: 'ios', flag: '1' })).toBe(true);
   });
 });

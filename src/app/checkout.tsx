@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -21,6 +21,7 @@ import {
   PLANS,
   SANDBOX_DECLINE_CARD,
   SANDBOX_OTP,
+  sandboxCheckoutEnabled,
   validateCard,
   vatBreakdown,
   type CardErrors,
@@ -40,6 +41,12 @@ const METHOD_ICON: Record<PaymentMethod, keyof typeof Ionicons.glyphMap> = {
 const BRAND_LABEL = { mada: 'مدى', visa: 'VISA', mastercard: 'Mastercard', amex: 'AMEX', unknown: '' } as const;
 
 export default function Checkout() {
+  // حماية ثانية: لو وصل أحد لهذه الصفحة برابط مباشر في نسخة المتجر
+  if (!sandboxCheckoutEnabled) return <Redirect href="/pro" />;
+  return <CheckoutForm />;
+}
+
+function CheckoutForm() {
   const { colors } = useTheme();
   const params = useLocalSearchParams<{ plan?: string }>();
   const plan = PLANS.find((p) => p.id === params.plan) ?? PLANS[1];

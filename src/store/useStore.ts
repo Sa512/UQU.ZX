@@ -186,6 +186,10 @@ type Actions = {
   /** يطبّق قناة شعبة (انضمام أو تحديث) ويعيد ملخص التغييرات. */
   applyChannel: (ch: SectionChannel) => SyncResult;
   markChannelSeen: (courseId: string) => void;
+  /** بعد حذف البيانات من الخادم: يزيل الروابط المحلية بما حُذف. */
+  forgetCloudLinks: () => void;
+  /** الطالب يغادر قناة الشعبة (حظر مصدر الإعلانات): تبقى المادة ومواعيدها، وتتوقف التحديثات. */
+  leaveChannel: (courseId: string) => void;
   saveMyBooking: (b: MyBooking) => void;
   setBookingStatus: (id: string, status: MyBooking['status']) => void;
   startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
@@ -443,6 +447,18 @@ export const useStore = create<State & Actions>()(
         set({ courses: r.courses, slots: r.slots, tasks: r.tasks });
         return r;
       },
+      leaveChannel: (courseId) =>
+        set((s) => {
+          const code = s.courses.find((c) => c.id === courseId)?.channel?.code;
+          return {
+            courses: s.courses.map(({ channel, ...c }) => (c.id === courseId ? c : { ...c, channel })),
+            // المواعيد تصير مواعيد الطالب العادية (لا تُستبدل ولا تُحذف بعد الآن)
+            slots: s.slots.map(({ channelCode, ...x }) => (code && channelCode === code ? x : { ...x, channelCode })),
+            tasks: s.tasks.map(({ channelKey, ...t }) => (code && channelKey?.startsWith(`${code}|`) ? t : { ...t, channelKey })),
+          };
+        }),
+      forgetCloudLinks: () =>
+        set((s) => ({ officePage: null, myBookings: [], sections: s.sections.map(({ channel: _c, ...rest }) => rest) })),
       markChannelSeen: (courseId) =>
         set((s) => ({
           courses: s.courses.map((c) =>

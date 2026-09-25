@@ -14,6 +14,7 @@ import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { APP_INFO } from '@/content/app';
 import { buildBackup } from '@/lib/backup';
+import { cloud } from '@/lib/cloud';
 import { backupSupported, pickBackup, shareBackup } from '@/lib/backupIO';
 import { formatDuration } from '@/lib/dates';
 import type { GradeScale } from '@/lib/gpa';
@@ -28,6 +29,8 @@ export default function Settings() {
   const settings = useStore((s) => s.settings);
   const update = useStore((s) => s.updateSettings);
   const resetAll = useStore((s) => s.resetAll);
+  const forgetCloudLinks = useStore((s) => s.forgetCloudLinks);
+  const [cloudMsg, setCloudMsg] = useState<{ ok: boolean; text: string }>();
   const loadSample = useStore((s) => s.loadSampleData);
   const hasData = useStore((s) => s.courses.length > 0);
   const [name, setName] = useState(settings.name);
@@ -220,11 +223,34 @@ export default function Settings() {
         <Button title="شروط الاستخدام" variant="ghost" icon="document-text-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })} />
         <Button title="تواصل مع الدعم" variant="ghost" icon="mail-outline" onPress={() => Linking.openURL(`mailto:${APP_INFO.supportEmail}?subject=${encodeURIComponent('دعم تطبيق مذاكر')}`)} />
         <Button
+          title="حذف بياناتي من الخادم"
+          variant="ghost"
+          icon="cloud-offline-outline"
+          onPress={() =>
+            confirm('حذف بياناتك من الخادم؟', 'تُحذف حجوزاتك وتحضيراتك، وصفحات الساعات المكتبية وقنوات الشعب التي نشرتها. بيانات جهازك تبقى.', async () => {
+              try {
+                await cloud.deleteMyData();
+                forgetCloudLinks();
+                setCloudMsg({ ok: true, text: 'حُذفت بياناتك من الخادم ✓' });
+              } catch (e) {
+                setCloudMsg({ ok: false, text: (e as Error).message });
+              }
+            })
+          }
+        />
+        {cloudMsg && (
+          <AppText variant="caption" center color={cloudMsg.ok ? colors.success : colors.danger}>
+            {cloudMsg.text}
+          </AppText>
+        )}
+        <Button
           title="حذف جميع البيانات"
           variant="danger"
           icon="trash-outline"
           onPress={() =>
-            confirm('حذف جميع البيانات؟', 'سيُحذف كل شيء نهائياً ولا يمكن التراجع.', () => {
+            confirm('حذف جميع البيانات؟', 'سيُحذف كل شيء من جهازك ومن الخادم نهائياً ولا يمكن التراجع.', async () => {
+              // نحاول الخادم أولاً؛ إن لم يتوفر إنترنت تبقى بيانات الخادم وتُحذف تلقائياً حسب مدد الحفظ
+              await cloud.deleteMyData().catch(() => {});
               resetAll();
               router.replace('/onboarding');
             })

@@ -101,5 +101,8 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     async deletePost(postId) {
       await call(() => sb.from('section_posts').delete().eq('id', postId));
     },
+    async deleteMyData() {
+      await call(() => sb.rpc('delete_my_data'));
+    },
   };
 }

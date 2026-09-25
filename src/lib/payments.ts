@@ -198,3 +198,13 @@ export const sandboxGateway: PaymentGateway = {
 };
 
 export const paymentGateway: PaymentGateway = sandboxGateway;
+
+/**
+ * متى يُسمح بصفحة الدفع التجريبية؟ في التطوير، أو النموذج على المتصفح، أو بعلَم صريح فقط.
+ * نسخة المتجر بدون مفاتيح الشراء داخل التطبيق يجب ألا تفتحها: كانت ستمنح «برو» مجاناً
+ * بأي رقم بطاقة صالح الشكل، وApple ترفض الدفع خارج نظامها للاشتراكات الرقمية (الإرشاد 3.1.1).
+ */
+export function sandboxCheckoutAllowed(p: { dev: boolean; os: string; flag?: string }): boolean {
+  return p.dev || p.os === 'web' || p.flag === '1';
+}
+export const sandboxCheckoutEnabled = sandboxCheckoutAllowed({ dev: typeof __DEV__ !== 'undefined' && __DEV__, os: Platform.OS, flag: process.env.EXPO_PUBLIC_PAYMENTS_SANDBOX });

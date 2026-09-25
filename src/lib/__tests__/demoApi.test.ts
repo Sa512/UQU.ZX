@@ -52,3 +52,15 @@ describe('demo persistence', () => {
     expect((await createDemoApi(now, 'd', storage).getPage(code))?.taken).toHaveLength(0);
   });
 });
+
+describe('delete my data', () => {
+  it('removes pages, bookings and channels from the demo server', async () => {
+    const api = createDemoApi(() => Date.UTC(2026, 9, 5, 6, 0));
+    const { code } = await api.publishPage({ title: 'ساعات', host_name: 'د. سارة', slot_minutes: 15, windows: [{ weekday: 1, start_min: 600, end_min: 660, location: '' }] });
+    const ch = await api.publishSection({ course_name: 'مادة', course_code: '', section_code: '', instructor: 'د. سارة', color: '#4F46E5', slots: [], exams: [] });
+    await api.deleteMyData();
+    await expect(api.getPage(code)).resolves.toBeNull();
+    await expect(api.getSection(ch.code)).resolves.toBeNull();
+    await expect(api.myBookings()).resolves.toEqual([]);
+  }, 10_000);
+});

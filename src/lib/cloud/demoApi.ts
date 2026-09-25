@@ -167,6 +167,16 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       save();
       await delay(null);
     },
+    async deleteMyData() {
+      // الوضع التجريبي على جهاز واحد: كل البيانات تخص هذا الجهاز
+      await ready;
+      pages.clear();
+      bookings.length = 0;
+      sessions.clear();
+      channels.clear();
+      save();
+      await delay(null);
+    },
     async deletePost(pid) {
       await ready;
       for (const ch of channels.values()) ch.posts = ch.posts.filter((p) => p.id !== pid);

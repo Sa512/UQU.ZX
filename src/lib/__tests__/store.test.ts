@@ -80,3 +80,22 @@ describe('store: gradebook and new semester', () => {
     expect(s.tasks).toHaveLength(0);
   });
 });
+
+describe('store: leave a section channel', () => {
+  beforeEach(() => useStore.getState().resetAll());
+
+  it('keeps the course and its dates but stops syncing them', () => {
+    const ch = { id: 'x', code: 'ABC234', course_name: 'هياكل البيانات', course_code: 'CS 2301', section_code: '1041', instructor: 'د. سارة', color: '#4F46E5', updated_at: '', posts: [],
+      slots: [{ weekday: 0, start_min: 480, end_min: 580, type: 'lecture' as const, location: '' }], exams: [{ title: 'فصلي', date: '2026-10-20', type: 'exam' as const }] };
+    const { courseId } = useStore.getState().applyChannel(ch);
+    useStore.getState().leaveChannel(courseId);
+    const s = useStore.getState();
+    expect(s.courses[0].channel).toBeUndefined();
+    expect(s.slots).toHaveLength(1);
+    expect(s.slots[0].channelCode).toBeUndefined();
+    expect(s.tasks[0].channelKey).toBeUndefined();
+    // إعادة الانضمام لا تكرر الاختبار القديم لأنه صار مهمة عادية؟ بل تضيف نسخة مرتبطة جديدة: المهم ألا تحذف مواعيد الطالب
+    useStore.getState().applyChannel({ ...ch, slots: [] });
+    expect(useStore.getState().slots).toHaveLength(1);
+  });
+});

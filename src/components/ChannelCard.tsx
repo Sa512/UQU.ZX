@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
+import { APP_INFO } from '@/content/app';
 import { cloud } from '@/lib/cloud';
 import { formatShortDate } from '@/lib/dates';
 import { unreadPosts } from '@/lib/sectionChannel';
@@ -8,6 +9,7 @@ import { spacing, useTheme } from '@/theme';
 import { AppText } from './AppText';
 import { Button } from './Button';
 import { Card } from './Card';
+import { confirm } from './confirm';
 import { haptic } from './haptics';
 
 /** للطالب: إعلانات الدكتور وتحديث مواعيد الشعبة. */
@@ -15,6 +17,7 @@ export function ChannelCard({ course }: { course: Course }) {
   const { colors } = useTheme();
   const applyChannel = useStore((s) => s.applyChannel);
   const markSeen = useStore((s) => s.markChannelSeen);
+  const leave = useStore((s) => s.leaveChannel);
   // الإعلانات غير المقروءة لحظة الفتح تبقى مميزة حتى مغادرة الصفحة
   const [fresh] = useState(() => new Set(unreadPosts(course).map((p) => p.id)));
   const [busy, setBusy] = useState(false);
@@ -44,6 +47,12 @@ export function ChannelCard({ course }: { course: Course }) {
     }
   };
 
+  // الإبلاغ عن محتوى مسيء (متطلب Apple 1.2 للمحتوى الذي يكتبه المستخدمون)
+  const report = (id: string, body: string) =>
+    Linking.openURL(
+      `mailto:${APP_INFO.supportEmail}?subject=${encodeURIComponent('بلاغ عن إعلان في مذاكر')}&body=${encodeURIComponent(`رمز القناة: ${ch.code}\nرقم الإعلان: ${id}\nنص الإعلان: ${body}\n\nسبب البلاغ: `)}`,
+    ).catch(() => setMsg({ ok: false, text: `راسلنا على ${APP_INFO.supportEmail} مع رمز القناة ${ch.code}.` }));
+
   const posts = all ? ch.posts : ch.posts.slice(0, 3);
   return (
     <Card style={{ gap: spacing.md }}>
@@ -61,10 +70,17 @@ export function ChannelCard({ course }: { course: Course }) {
         posts.map((p) => (
           <View key={p.id} style={{ gap: 2, paddingStart: spacing.md, borderStartWidth: 3, borderColor: fresh.has(p.id) ? colors.primary : colors.border }}>
             <AppText variant="body">{p.body}</AppText>
-            <AppText variant="tiny" muted>
-              {formatShortDate(new Date(p.created_at))}
-              {fresh.has(p.id) ? ' · جديد' : ''}
-            </AppText>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <AppText variant="tiny" muted>
+                {formatShortDate(new Date(p.created_at))}
+                {fresh.has(p.id) ? ' · جديد' : ''}
+              </AppText>
+              <Pressable accessibilityRole="button" accessibilityLabel="الإبلاغ عن الإعلان" hitSlop={8} onPress={() => report(p.id, p.body)}>
+                <AppText variant="tiny" color={colors.textMuted}>
+                  إبلاغ
+                </AppText>
+              </Pressable>
+            </View>
           </View>
         ))
       )}
@@ -75,6 +91,15 @@ export function ChannelCard({ course }: { course: Course }) {
           {msg.text}
         </AppText>
       )}
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={8}
+        onPress={() => confirm('مغادرة قناة الشعبة؟', 'تبقى المادة ومواعيدها عندك، ولن تصلك إعلانات أو تحديثات من هذه القناة.', () => leave(course.id), 'مغادرة')}
+      >
+        <AppText variant="tiny" muted center>
+          مغادرة القناة
+        </AppText>
+      </Pressable>
     </Card>
   );
 }

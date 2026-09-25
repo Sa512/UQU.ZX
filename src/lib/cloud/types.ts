@@ -39,4 +39,6 @@ export interface CloudApi {
   getSection(code: string): Promise<SectionChannel | null>;
   postToSection(channelId: string, body: string): Promise<void>;
   deletePost(postId: string): Promise<void>;
+  /** يحذف كل ما يخص هذا المستخدم على الخادم (حق الحذف في نظام حماية البيانات الشخصية). */
+  deleteMyData(): Promise<void>;
 }

@@ -11,7 +11,7 @@ import { haptic } from '@/components/haptics';
 import { Pill } from '@/components/Rows';
 import { Screen } from '@/components/Screen';
 import { formatShortDate } from '@/lib/dates';
-import { METHOD_INFO, PLANS, type PlanId } from '@/lib/payments';
+import { METHOD_INFO, PLANS, sandboxCheckoutEnabled, type PlanId } from '@/lib/payments';
 import { ar, DAYS } from '@/lib/plural';
 import { buyPackage, freeTrialDays, loadStorePackages, manageSubscription, restorePurchases, storeBillingEnabled, type StorePackages } from '@/lib/purchases';
 import { FREE_LIMITS, isPro, useStore } from '@/store/useStore';
@@ -50,7 +50,10 @@ export default function Pro() {
 
   const subscribe = async () => {
     setMessage(undefined);
-    if (!storeBillingEnabled) return router.push({ pathname: '/checkout', params: { plan } });
+    if (!storeBillingEnabled) {
+      if (!sandboxCheckoutEnabled) return setMessage('الاشتراك متاح قريباً من داخل التطبيق.');
+      return router.push({ pathname: '/checkout', params: { plan } });
+    }
     const pkg = packages[plan];
     if (!pkg) return setMessage('هذه الخطة غير متاحة حالياً في المتجر.');
     setBusy('buy');
@@ -134,7 +137,7 @@ export default function Pro() {
             <Button title="إدارة الاشتراك أو إلغاؤه" variant="secondary" icon="settings-outline" onPress={() => manageSubscription().catch(() => {})} />
           ) : (
             <>
-              <Button title="تمديد الاشتراك" variant="secondary" onPress={() => router.push({ pathname: '/checkout', params: { plan: 'term' } })} />
+              {sandboxCheckoutEnabled && <Button title="تمديد الاشتراك" variant="secondary" onPress={() => router.push({ pathname: '/checkout', params: { plan: 'term' } })} />}
               <Button
                 title="إلغاء الاشتراك"
                 variant="ghost"
