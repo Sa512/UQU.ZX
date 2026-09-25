@@ -363,7 +363,9 @@ def main():
     voice_id = next((a.split('=')[1] for a in sys.argv if a.startswith('--voice=')), DEFAULT_VOICE)
     bg = music_chill() if '--chill' in sys.argv else music()
     say = make_tts(model_dir, voice_id) if with_voice else None
-    for vid, lines in SCRIPTS.items():
+    ids = next((a.split('=')[1].split(',') for a in sys.argv if a.startswith('--ids=')), list(SCRIPTS))
+    tag = next((a.split('=')[1] for a in sys.argv if a.startswith('--tag=')), '')
+    for vid, lines in ((k, SCRIPTS[k]) for k in ids):
         voice = np.zeros(N); mask = np.zeros(N)
         if say:
             free = 0.0  # لا يبدأ سطر قبل أن ينتهي السابق
@@ -377,7 +379,7 @@ def main():
         music_gain = 0.32 * (1 - 0.55 * duck) if say else 0.45 * np.ones(N)
         mix = bg * music_gain + voice * 0.8
         mix /= max(1.0, np.max(np.abs(mix)) / 0.95)
-        path = os.path.join(out_dir, vid + ('.wav' if say else '-music.wav'))
+        path = os.path.join(out_dir, vid + (f'-{tag}' if tag else '') + ('.wav' if say else '-music.wav'))
         sf.write(path, np.stack([mix, mix], 1).astype(np.float32), SR)
         print(path)
 
