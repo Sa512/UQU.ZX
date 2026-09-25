@@ -19,9 +19,19 @@ create or replace function t.expect_error(sql text, expected text) returns void 
 declare
   failed boolean := false;
   msg text;
+  res text;
 begin
   begin
-    execute sql;
+    if sql ~* '^\s*select' then
+      execute sql into res;
+      -- الدوال المحمية بحارس تعيد الخطأ قيمةً {"error": ...} بدل رفعه
+      if res is not null and left(res, 1) = '{' and (res::json ->> 'error') is not null then
+        failed := true;
+        msg := res::json ->> 'error';
+      end if;
+    else
+      execute sql;
+    end if;
   exception when others then
     failed := true;
     msg := sqlerrm;
@@ -33,6 +43,12 @@ begin
   if msg not like '%' || expected || '%' then
     raise exception 'EXPECTED [%] but got [%] for: %', expected, msg, sql;
   end if;
+end $$;
+-- نجاح إلزامي: يفشل الاختبار إن أعاد الحارس خطأً
+create or replace function t.must(j json) returns json language plpgsql as $$
+begin
+  if j ->> 'error' is not null then raise exception 'EXPECTED SUCCESS but got [%]', j ->> 'error'; end if;
+  return j;
 end $$;
 grant execute on all functions in schema t to authenticated, anon;
 create table t.ctx (k text primary key, v text);
@@ -66,8 +82,8 @@ begin
   assert info ->> 'host_name' = 'د. سارة', 'page info visible by code';
   assert json_array_length(info -> 'taken') = 0, 'nothing taken yet';
   assert (select count(*) from office_hours_pages) = 0, 'student cannot read pages table directly';
-  perform public.book_office_hour(c, t.next_slot(1, 600), 'سارة محمد', '443001122', 'سؤال عن الواجب');
-  perform public.book_office_hour(c, t.next_slot(1, 630), 'سارة محمد', '443001122');
+  perform t.must(public.book_office_hour(c, t.next_slot(1, 600), 'سارة محمد', '443001122', 'سؤال عن الواجب'));
+  perform t.must(public.book_office_hour(c, t.next_slot(1, 630), 'سارة محمد', '443001122'));
   perform t.expect_error(format('select public.book_office_hour(%L, %L, %L, %L)', c, t.next_slot(1, 645), 'سارة محمد', '443001122'), 'too_many_bookings');
 end $$;
 
@@ -83,7 +99,7 @@ begin
   perform t.expect_error(format('select public.book_office_hour(%L, %L, %L, %L)', c, now() - interval '1 day', 'نورة علي', '443001133'), 'slot_in_past');
   perform t.expect_error(format('select public.book_office_hour(%L, %L, %L, %L)', c, t.next_slot(1, 615), 'ن', '443001133'), 'check constraint');
   perform t.expect_error(format('select public.book_office_hour(%L, %L, %L, %L)', 'ZZZZZZ', t.next_slot(1, 615), 'نورة علي', ''), 'page_not_found');
-  perform public.book_office_hour(c, t.next_slot(1, 615), 'نورة علي', '443001133');
+  perform t.must(public.book_office_hour(c, t.next_slot(1, 615), 'نورة علي', '443001133'));
   assert (select count(*) from bookings) = 1, 'student sees only own bookings';
   assert (select public.get_office_hours(c)::text) not like '%سارة محمد%', 'no student names leak through page info';
   assert json_array_length(public.get_office_hours(c) -> 'taken') = 3, 'taken slots listed';
@@ -108,7 +124,7 @@ select public.cancel_booking((select v::uuid from t.ctx where k = 'sara_booking'
 
 -- الموعد الملغى صار متاحاً لريم
 select t.as_user(:'rim');
-select public.book_office_hour((select v from t.ctx where k = 'code'), t.next_slot(1, 600), 'ريم خالد', '443001144');
+select t.must(public.book_office_hour((select v from t.ctx where k = 'code'), t.next_slot(1, 600), 'ريم خالد', '443001144'));
 
 -- ===== التحضير الذاتي =====
 select t.as_user(:'prof');
@@ -121,7 +137,7 @@ declare c text := (select v from t.ctx where k = 'scode');
 declare n text := (select v from t.ctx where k = 'nonce1');
 begin
   perform t.expect_error(format('select public.check_in(%L, %L, %L, %L)', c, 'WRONG123', '443001122', 'سارة محمد'), 'qr_expired');
-  perform public.check_in(c, n, '443001122', 'سارة محمد');
+  perform t.must(public.check_in(c, n, '443001122', 'سارة محمد'));
   perform t.expect_error(format('select public.check_in(%L, %L, %L, %L)', c, n, '443001199', 'سارة محمد'), 'already_checked_in');
   perform t.expect_error(format('select public.rotate_nonce(%L)', (select v from t.ctx where k = 'sid')), 'not_allowed');
   perform t.expect_error(format('select public.check_in(%L, %L, %L, %L)', c, n, 'abc', 'سارة'), 'check constraint');
@@ -136,7 +152,7 @@ select t.expect_error(format('select public.check_in(%L, %L, %L, %L)', (select v
 select t.as_user(:'prof');
 insert into t.ctx select 'nonce2', public.rotate_nonce((select v::uuid from t.ctx where k = 'sid'));
 select t.as_user(:'noura');
-select public.check_in((select v from t.ctx where k = 'scode'), (select v from t.ctx where k = 'nonce1'), '443001133', 'نورة علي');
+select t.must(public.check_in((select v from t.ctx where k = 'scode'), (select v from t.ctx where k = 'nonce1'), '443001133', 'نورة علي'));
 
 -- بعد 50 ثانية: الرمز القديم والحالي منتهيان (صورة أُرسلت لطالب غائب لا تعمل)
 reset role;

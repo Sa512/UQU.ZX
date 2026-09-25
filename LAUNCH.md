@@ -61,7 +61,7 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
 1. أنشئ مشروعاً في https://supabase.com (الخطة المجانية تكفي للبداية).
    - **المنطقة:** اختر الأقرب للمملكة. بيانات الطلاب (الاسم والرقم الجامعي) بيانات شخصية؛ راجع مع جامعتك متطلبات نظام حماية البيانات الشخصية لنقلها خارج المملكة.
 2. Authentication ← Sign In / Providers ← فعّل **Anonymous Sign-Ins** (ويُفضّل تفعيل CAPTCHA لاحقاً للحد من الإساءة).
-3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql`) ← Run.
+3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql`) ← Run.
 4. التنظيف التلقائي: Database ← Extensions ← فعّل `pg_cron`، ثم نفّذ:
    ```sql
    select cron.schedule('mudhaker-cleanup', '0 3 * * *', 'select public.cleanup_old_data()');

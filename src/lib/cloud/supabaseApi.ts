@@ -61,7 +61,9 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
       return (await call(() => sb.from('bookings').select('*').eq('page_id', pageId).eq('status', 'booked').gte('starts_at', new Date().toISOString()).order('starts_at'))) as Booking[];
     },
     async book(code, startsAt, name, uniId, topic) {
-      return (await call(() => sb.rpc('book_office_hour', { p_code: code, p_starts_at: startsAt, p_name: name, p_uni_id: uniId, p_topic: topic }))) as string;
+      const r = (await call(() => sb.rpc('book_office_hour', { p_code: code, p_starts_at: startsAt, p_name: name, p_uni_id: uniId, p_topic: topic }))) as { id?: string; error?: string };
+      if (r.error || !r.id) throw toCloudError(r.error ?? 'unknown');
+      return r.id;
     },
     async myBookings() {
       const { data: u } = await sb.auth.getUser();
@@ -83,7 +85,10 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
       await call(() => sb.from('attendance_sessions').update({ is_open: false }).eq('id', sessionId));
     },
     async checkIn(code, nonce, uniId, name) {
-      return (await call(() => sb.rpc('check_in', { p_code: code, p_nonce: nonce, p_uni_id: uniId, p_name: name }))) as { label: string };
+      // الخادم يعيد الأخطاء قيمةً {error} حتى تبقى المحاولة الفاشلة محسوبة في حد الطلبات
+      const r = (await call(() => sb.rpc('check_in', { p_code: code, p_nonce: nonce, p_uni_id: uniId, p_name: name }))) as { label?: string; error?: string };
+      if (r.error || !r.label) throw toCloudError(r.error ?? 'unknown');
+      return { label: r.label };
     },
     async publishSection({ id, ...input }) {
       return (await call(() =>

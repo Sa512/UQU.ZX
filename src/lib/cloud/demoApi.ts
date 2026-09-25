@@ -130,7 +130,8 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       if (!s.open) throw new CloudError('session_closed');
       const age = now() - s.nonce_at;
       const n = nonce.trim().toUpperCase();
-      const ok = (n === s.nonce && age <= 30_000) || (s.nonce_prev !== null && n === s.nonce_prev && age <= 45_000);
+      // نفس نافذة الخادم: الحالي 20 ثانية من تجديده، والسابق 5 ثوانٍ بعد التجديد
+      const ok = (n === s.nonce && age <= 20_000) || (s.nonce_prev !== null && n === s.nonce_prev && age <= 5_000);
       if (!ok) throw new CloudError('qr_expired');
       if (!/^\d{4,12}$/.test(uniId.trim())) throw new CloudError('unknown');
       // الوضع التجريبي على جهاز واحد: نسمح بعدة طلاب من الجهاز نفسه لتسهيل التجربة، ونمنع تكرار الرقم الجامعي

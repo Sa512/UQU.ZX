@@ -21,7 +21,7 @@ insert into section_channels (course_name, instructor) values ('مادة ب', '�
 
 -- طالب يحجز عند الدكتور الأول
 select t.as_user(:'s1');
-select public.book_office_hour((select v from t.ctx where k = 'code1'), t.next_slot(extract(dow from now() at time zone 'Asia/Riyadh')::int, 600), 'طالب', '443000001', '');
+select t.must(public.book_office_hour((select v from t.ctx where k = 'code1'), t.next_slot(extract(dow from now() at time zone 'Asia/Riyadh')::int, 600), 'طالب', '443000001', ''));
 
 -- الطالب يحذف بياناته: حجزه فقط
 do $$

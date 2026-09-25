@@ -64,3 +64,20 @@ describe('delete my data', () => {
     await expect(api.myBookings()).resolves.toEqual([]);
   }, 10_000);
 });
+
+describe('tighter QR window (1.4)', () => {
+  it('accepts the current code for 20s and the previous one for 5s after rotation', async () => {
+    let now = Date.UTC(2026, 9, 5, 6, 0);
+    const api = createDemoApi(() => now);
+    const s = await api.startSession('نافذة');
+    const n2 = await api.rotate(s.id);
+    now += 4_000;
+    await api.checkIn(s.code, s.nonce, '443009001', 'أ'); // السابق خلال 5 ثوانٍ
+    now += 2_000;
+    await expect(api.checkIn(s.code, s.nonce, '443009002', 'ب')).rejects.toMatchObject({ code: 'qr_expired' });
+    now += 13_000; // 19 ثانية منذ التجديد
+    await api.checkIn(s.code, n2, '443009002', 'ب');
+    now += 2_000;
+    await expect(api.checkIn(s.code, n2, '443009003', 'ج')).rejects.toMatchObject({ code: 'qr_expired' });
+  }, 10_000);
+});
