@@ -1,0 +1,427 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<title>مذاكر · تقرير المشروع الكامل</title>
+<style>
+/*FONTS*/
+:root {
+  --ink: #1E1B4B; --text: #1F2433; --muted: #5B6478; --line: #E3E6F0; --soft: #F5F6FB;
+  --violet: #6D28D9; --indigo: #4F46E5; --gold: #F59E0B;
+  --crit: #B91C1C; --crit-bg: #FEE2E2; --high: #C2410C; --high-bg: #FFEDD5; --med: #A16207; --med-bg: #FEF9C3; --low: #1D4ED8; --low-bg: #DBEAFE; --ok: #047857; --ok-bg: #D1FAE5;
+}
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Plex, 'Segoe UI', Tahoma, sans-serif; color: var(--text); font-size: 10.3pt; line-height: 1.68; }
+.page { width: 210mm; min-height: 297mm; padding: 20mm 18mm 22mm; position: relative; page-break-after: always; break-after: page; }
+.page:last-child { page-break-after: auto; }
+.cover { background: linear-gradient(160deg, #7C3AED, #4F46E5 55%, #312E81); color: #fff; display: flex; flex-direction: column; justify-content: space-between; padding: 26mm 20mm; }
+.cover .logo { width: 30mm; height: 30mm; border-radius: 8mm; box-shadow: 0 4mm 10mm rgba(0,0,0,.25); }
+.cover h1 { font-size: 46pt; line-height: 1.15; margin-top: 10mm; }
+.cover .sub { font-size: 17pt; font-weight: 500; opacity: .95; margin-top: 4mm; }
+.cover .meta { display: flex; gap: 8mm; flex-wrap: wrap; font-size: 11pt; opacity: .9; }
+.cover .meta b { display: block; font-size: 20pt; }
+.cover .verdict { background: rgba(255,255,255,.14); border-radius: 5mm; padding: 6mm 7mm; font-size: 12.5pt; line-height: 1.7; }
+h2 { font-size: 20pt; color: var(--ink); line-height: 1.3; margin-bottom: 2mm; text-wrap: balance; }
+h2 small { display: block; font-size: 10pt; color: var(--violet); font-weight: 500; letter-spacing: .02em; }
+h3 { font-size: 12.5pt; color: var(--ink); margin: 6mm 0 2mm; }
+p { margin-bottom: 2.5mm; }
+.lead { font-size: 11.5pt; color: var(--muted); margin-bottom: 5mm; }
+ul { padding-right: 5mm; margin-bottom: 3mm; }
+li { margin-bottom: 1.2mm; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.box { border: .3mm solid var(--line); border-radius: 4mm; padding: 4mm 5mm; background: #fff; }
+.box h4 { font-size: 11pt; color: var(--ink); margin-bottom: 1.5mm; }
+.box ul { margin: 0; }
+.stat { background: var(--soft); border-radius: 4mm; padding: 4mm; }
+.stat b { display: block; font-size: 22pt; color: var(--indigo); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 9.5pt; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 9.6pt; margin: 2mm 0 4mm; }
+th { background: var(--soft); color: var(--ink); text-align: right; padding: 2mm 2.5mm; font-weight: 700; border-bottom: .4mm solid var(--line); }
+td { padding: 1.6mm 2.5mm; border-bottom: .3mm solid var(--line); vertical-align: top; }
+tr { break-inside: avoid; }
+.sev { display: inline-block; border-radius: 99px; padding: 0 2.5mm; font-size: 8.6pt; font-weight: 700; white-space: nowrap; }
+.crit { background: var(--crit-bg); color: var(--crit); } .high { background: var(--high-bg); color: var(--high); }
+.med { background: var(--med-bg); color: var(--med); } .low { background: var(--low-bg); color: var(--low); } .ok { background: var(--ok-bg); color: var(--ok); }
+.note { background: var(--soft); border-right: 1.2mm solid var(--indigo); border-radius: 2mm; padding: 3mm 4mm; margin: 3mm 0; font-size: 10pt; }
+.check li { list-style: none; position: relative; padding-right: 6mm; }
+.check li::before { content: '☐'; position: absolute; right: 0; color: var(--indigo); }
+.phase { border-radius: 4mm; padding: 4mm 5mm; margin-bottom: 3.5mm; background: #fff; border: .3mm solid var(--line); break-inside: avoid; }
+.phase .tag { display: inline-block; background: var(--indigo); color: #fff; border-radius: 99px; padding: 0 3mm; font-size: 8.8pt; font-weight: 700; margin-left: 2mm; }
+.phase h4 { display: inline; font-size: 11.5pt; color: var(--ink); }
+.phase p { margin: 1.5mm 0 0; }
+.shots { display: flex; gap: 3mm; margin: 3mm 0; }
+.shots img { width: 32mm; border-radius: 3.5mm; border: .6mm solid #0F172A; }
+.foot { position: absolute; bottom: 9mm; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: #94A3B8; }
+.en { direction: ltr; unicode-bidi: isolate; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: 9pt; background: var(--soft); padding: 0 1mm; border-radius: 1mm; direction: ltr; unicode-bidi: isolate; }
+/* إضافات تقرير المشروع */
+.tl { position: relative; padding-right: 7mm; }
+.tl::before { content: ''; position: absolute; right: 2mm; top: 2mm; bottom: 2mm; width: .6mm; background: var(--line); }
+.ev { position: relative; margin-bottom: 3.2mm; break-inside: avoid; }
+.ev::before { content: ''; position: absolute; right: -6.6mm; top: 1.6mm; width: 3.2mm; height: 3.2mm; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 0 .8mm #fff; }
+.ev.rel::before { background: var(--gold); width: 4mm; height: 4mm; right: -7mm; }
+.ev .d { font-size: 8.8pt; color: var(--muted); font-weight: 500; }
+.ev .v { display: inline-block; background: var(--ink); color: #fff; border-radius: 99px; padding: 0 2.6mm; font-size: 8.6pt; font-weight: 700; margin-left: 1.5mm; direction: ltr; }
+.ev h4 { display: inline; font-size: 11pt; color: var(--ink); }
+.ev p { margin: .6mm 0 0; font-size: 9.8pt; }
+.chart { display: flex; align-items: flex-end; gap: 2.2mm; height: 46mm; border-bottom: .3mm solid #CBD2E1; padding: 0 1mm; margin-top: 6mm; }
+.chart .c { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.chart .bar { width: 100%; max-width: 9mm; background: var(--indigo); border-radius: 1.1mm 1.1mm 0 0; }
+.chart .val { font-size: 8.4pt; color: var(--text); font-weight: 700; margin-bottom: .8mm; font-variant-numeric: tabular-nums; }
+.chart .val.q { color: var(--muted); font-weight: 500; }
+.axis { display: flex; gap: 2.2mm; padding: 0 1mm; margin-top: 1.2mm; }
+.axis span { flex: 1; text-align: center; font-size: 7.6pt; color: var(--muted); line-height: 1.3; }
+.phone3 { display: flex; gap: 8mm; justify-content: center; margin: 3mm 0 1mm; }
+.phone3 figure { width: 25%; text-align: center; font-size: 8.6pt; color: var(--muted); }
+.phone3 img { width: 100%; border-radius: 3.5mm; border: .6mm solid #0F172A; display: block; margin-bottom: 1mm; }
+.media { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 3mm 0; }
+.media figure { font-size: 8.4pt; color: var(--muted); text-align: center; }
+.media img { width: 100%; border-radius: 2.5mm; display: block; margin-bottom: 1mm; border: .3mm solid var(--line); }
+.feat { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5mm 5mm; }
+.feat div { break-inside: avoid; font-size: 9.7pt; }
+.feat b { color: var(--ink); display: block; font-size: 10.3pt; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 4mm 0; }
+</style>
+</head>
+<body>
+
+<!-- 1. الغلاف -->
+<section class="page cover">
+  <div>
+    <img class="logo" src="{{icon}}" alt="">
+    <h1>مذاكر<br>تقرير المشروع الكامل</h1>
+    <p class="sub">من الفكرة إلى الإصدار 1.4.0: كل ما بُني، وكل تحديث وتطوير، والتسويق، والأمان، وما بقي قبل الإطلاق</p>
+  </div>
+  <div class="meta">
+    <div><b>1.4.0</b>الإصدار الحالي</div>
+    <div><b>43</b>شاشة</div>
+    <div><b>129</b>اختبار للتطبيق</div>
+    <div><b>6</b>مجموعات اختبار للخادم</div>
+    <div><b>38</b>تحديثاً في السجل</div>
+    <div><b>22–27 سبتمبر 2026</b>فترة العمل</div>
+  </div>
+  <div class="verdict">
+    <b>باختصار:</b> بنينا تطبيقاً عربياً كاملاً لطلاب الجامعات السعودية وأعضاء هيئة التدريس، لنظامي iPhone وAndroid، وخادماً سحابياً آمناً لميزات التحضير والحجز وقناة الشعبة. معه حزمة تسويق كاملة: هوية بصرية، ودليل PDF، ومقاطع تيك توك بموسيقى وأصوات مؤلفة من الصفر، ومنشور لينكدإن، ومقطع موشن. التطبيق جاهز تقنياً، والباقي إعدادات حسابات المتاجر والخادم.
+  </div>
+</section>
+
+<!-- 2. الخلاصة -->
+<section class="page">
+  <h2><small>نظرة عامة</small>ما هو مذاكر؟</h2>
+  <p class="lead">«مذاكر – رفيقك الجامعي» تطبيق جوال عربي بالكامل يجمع في مكان واحد ما يتوزع عادة بين صورة الجدول وقروبات الواتساب وملفات الإكسل: الجدول، الواجبات، الدرجات، الغياب، المعدل، والمذاكرة. ولعضو هيئة التدريس: الشعب، التحضير، الرصد، الساعات المكتبية، والإعلانات.</p>
+  <div class="kpis">
+    <div class="stat"><b>43</b><span>شاشة في التطبيق</span></div>
+    <div class="stat"><b>129</b><span>اختباراً آلياً للتطبيق، كلها ناجحة</span></div>
+    <div class="stat"><b>5</b><span>ترحيلات لقاعدة البيانات، كلها مغطاة باختبارات</span></div>
+    <div class="stat"><b>13</b><span>ألف سطر كود في التطبيق</span></div>
+  </div>
+  <div class="grid2">
+    <div class="box"><h4>لمن؟</h4><ul>
+      <li><b>الطالب:</b> ينظّم فصله ويعرف وضعه (كم يحتاج، كم باقي له غياب، معدله) ويذاكر بذكاء.</li>
+      <li><b>عضو هيئة التدريس:</b> يدير شعبه وطلابه، يحضّر بالـ QR، يرصد الدرجات، وينشر الإعلانات.</li>
+    </ul></div>
+    <div class="box"><h4>المبادئ التي التزمنا بها</h4><ul>
+      <li>عربي أولاً (من اليمين لليسار) بجمع عربي صحيح وتاريخ هجري.</li>
+      <li>البيانات على الجوال، والخادم لما يحتاج مشاركة فقط.</li>
+      <li>لا نطلب كلمة مرور بوابة الجامعة أبداً.</li>
+      <li>كل منطق مهم عليه اختبارات، وكل ميزة سحابية مختبرة أمنياً.</li>
+    </ul></div>
+  </div>
+  <h3>محتوى التقرير</h3>
+  <table>
+    <tr><th>القسم</th><th>ماذا فيه</th></tr>
+    <tr><td>الخط الزمني</td><td>كل تحديث بتاريخه ورقم إصداره، من أول سطر إلى الإصدار 1.4.0</td></tr>
+    <tr><td>ميزات الطالب ثم الدكتور</td><td>كل ما في التطبيق مع لقطات شاشة</td></tr>
+    <tr><td>الخادم والبنية التقنية</td><td>كيف بُني وأين تُحفظ البيانات</td></tr>
+    <tr><td>الأمان والخصوصية</td><td>المراجعة الشاملة، وما وجدناه، وكيف أصلحناه</td></tr>
+    <tr><td>الجودة والاختبارات</td><td>نمو الاختبارات مع كل إصدار، واختبارات الطفرات</td></tr>
+    <tr><td>التسويق والمحتوى</td><td>الهوية، الدليل، تيك توك، لينكدإن، مقطع الموشن، النموذج الحي</td></tr>
+    <tr><td>الملفات المسلّمة</td><td>أين تجد كل شيء في المستودع</td></tr>
+    <tr><td>ما بقي والخطوات القادمة</td><td>خطوات الحسابات قبل الإطلاق، وخطة الربط مع الجامعات</td></tr>
+  </table>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>2</span></div>
+</section>
+
+<!-- 3. الخط الزمني 1 -->
+<section class="page">
+  <h2><small>من البداية حتى الآن</small>الخط الزمني للتطوير (1/2)</h2>
+  <p class="lead">كل نقطة تحديث مرفوع على المستودع. النقاط الذهبية إصدارات رئيسية.</p>
+  <div class="tl">
+    <div class="ev rel"><span class="d">22 سبتمبر</span> <span class="v">1.0</span><h4>بناء التطبيق من الصفر</h4>
+      <p>تطبيق Expo بالعربية للطالب والدكتور: اختيار الدور، الرئيسية (هدف المذاكرة اليومي والسلسلة والمحاضرة القادمة)، الجدول الأسبوعي مع كشف التعارض، المواد، المهام والاختبارات، مؤقت التركيز (بومودورو)، حاسبة المعدل (من 5 ومن 4)، بطاقات المراجعة المتباعدة، الإحصائيات، الوضع الفاتح والداكن، واشتراك Pro. <b>33 اختباراً.</b></p></div>
+    <div class="ev"><span class="d">22 سبتمبر</span><h4>التذكيرات</h4><p>تذكير قبل كل محاضرة (5–60 دقيقة)، وليلة وصباح التسليم، وقبل الاختبار بثلاثة أيام، ضمن حد iOS للإشعارات المجدولة. <b>40 اختباراً.</b></p></div>
+    <div class="ev"><span class="d">22 سبتمبر</span><h4>جاهزية المتاجر</h4><p>اشتراكات حقيقية عبر RevenueCat (App Store وGoogle Play)، سياسة الخصوصية والشروط على موقع، وصف المتجر وكلماته، 12 لقطة متجر، ودليل الإطلاق LAUNCH.md.</p></div>
+    <div class="ev"><span class="d">22 سبتمبر</span><h4>مراجعة أولى</h4><p>جمع عربي صحيح («بعد يومين» لا «بعد 2 أيام»)، متتبع الغياب مقابل حد الحرمان 25٪، النسخ الاحتياطي والاستعادة، وتنبيه نهاية جلسة التركيز. <b>50 اختباراً.</b></p></div>
+    <div class="ev rel"><span class="d">23 سبتمبر</span> <span class="v">1.1</span><h4>الدرجات والتاريخ الهجري</h4><p>متتبع درجات لكل مادة: كم تحتاج في الباقي لكل تقدير. التاريخ الهجري (أم القرى)، بطاقة «ما الجديد»، طلب التقييم بعد استخدام حقيقي، وخطة تسويق كاملة. <b>59 اختباراً.</b></p></div>
+    <div class="ev"><span class="d">23 سبتمبر</span><h4>أدوات عضو هيئة التدريس</h4><p>الشعب وقوائم الطلاب (لصق من Excel أو Blackboard)، التحضير وسجله، حساب غياب كل طالب، تصدير CSV، استيراد الجدول بالنسخ واللصق، وخلفية جوال بالجدول. <b>69 اختباراً.</b></p></div>
+    <div class="ev"><span class="d">23 سبتمبر</span><h4>الرصد والمجموعات وخطط المراجعة</h4><p>دفتر درجات للشعبة (بنود، لصق من Excel، مجاميع، تقديرات، توزيع)، مجموعات عشوائية، خطة مراجعة تلقائية لكل اختبار، مشاركة الجدول مع زميل، ومعالج الفصل الجديد. <b>81 اختباراً.</b></p></div>
+    <div class="ev"><span class="d">23 سبتمبر</span><h4>الخادم السحابي: التحضير بالـ QR والساعات المكتبية</h4><p>قاعدة بيانات Supabase بحماية على مستوى الصفوف، رمز QR يتجدد، تحضير ذاتي من جوال الطالب، وحجز الساعات المكتبية بمواعيد الرياض. اختبارات SQL واختبار طفرات كشف ثغرة وأُصلحت. <b>91 اختباراً.</b></p></div>
+  </div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>3</span></div>
+</section>
+
+<!-- 4. الخط الزمني 2 -->
+<section class="page">
+  <h2><small>من البداية حتى الآن</small>الخط الزمني للتطوير (2/2)</h2>
+  <div class="tl">
+    <div class="ev"><span class="d">23 سبتمبر</span><h4>دليل التطبيق PDF وأول مقاطع تيك توك</h4><p>دليل ملوّن من 18 صفحة، وهوية بصرية (شعار ولوحة ألوان)، وثلاثة مقاطع مدتها 16 ثانية بتعليق صوتي عربي وموسيقى أصلية.</p></div>
+    <div class="ev rel"><span class="d">24 سبتمبر</span> <span class="v">1.2</span><h4>بطاقات المشاركة و«ملخص فصلك»</h4><p>بطاقات ستوري جاهزة للمشاركة (كم أحتاج في النهائي، الغياب المتبقي، المعدل، سلسلة المذاكرة) و«ملخص فصلك» بأسلوب الشرائح. <b>104 اختبارات.</b></p></div>
+    <div class="ev"><span class="d">25 سبتمبر</span><h4>حساب تيك توك والمقطع التشويقي</h4><p>صورة الحساب والاسم والبايو، مقطع تشويقي بإيموجي آبل، وعشرة أنماط موسيقية أصلية، منها «طبول» بلا صوت بشري.</p></div>
+    <div class="ev"><span class="d">25 سبتمبر</span><h4>لينكدإن ودليل النشر</h4><p>عرض من 8 شرائح بالعربية والإنجليزية ومنشور جاهز، وخطة نشر وهاشتاقات لتيك توك.</p></div>
+    <div class="ev rel"><span class="d">25 سبتمبر</span> <span class="v">1.3</span><h4>قناة الشعبة</h4><p>الدكتور ينشر شعبته برمز من 6 خانات أو QR، وينشر إعلانات. الطالب ينضم فتُضاف المادة والمحاضرات والاختبارات، وتصله التأجيلات والإلغاءات والإعلانات تلقائياً. <b>114 اختباراً.</b></p></div>
+    <div class="ev"><span class="d">25 سبتمبر</span><h4>المراجعة الأمنية الشاملة وإصلاحاتها</h4><p>أغلقنا ثغرة حرجة في الدفع التجريبي، وأضفنا «حذف بياناتي من الخادم»، والإبلاغ عن الإعلانات ومغادرة القناة، وصلاحيات أدق على الأعمدة. وصدر معها تقرير مراجعة من 9 صفحات.</p></div>
+    <div class="ev"><span class="d">25 سبتمبر</span><h4>تقوية الخادم</h4><p>حدود محاولات لكل مستخدم ضد التخمين (30 بحثاً و12 تحضيراً في الدقيقة، و10 حجوزات كل 10 دقائق)، ورمز التحضير صالح 20 ثانية فقط بدل 60.</p></div>
+    <div class="ev rel"><span class="d">25 سبتمبر</span> <span class="v">1.4</span><h4>Blackboard والإشعارات الفورية والقفل</h4><p>استيراد مواعيد Blackboard من رابط التقويم، وإشعار فوري بكل إعلان من الدكتور، وقفل التطبيق بالبصمة. ومعها نموذج حي للتجربة من المتصفح. <b>129 اختباراً.</b></p></div>
+    <div class="ev"><span class="d">27 سبتمبر</span><h4>مقطع الموشن الكامل</h4><p>مقطع 72 ثانية يعرض التطبيق كاملاً، بنسختين: طبول فقط، أو أغنية بلازمة مغنّاة مع تعليق صوتي.</p></div>
+    <div class="ev"><span class="d">27 سبتمبر</span><h4>هذا التقرير</h4><p>توثيق كل ما سبق في ملف واحد.</p></div>
+  </div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>4</span></div>
+</section>
+
+<!-- 5. الطالب -->
+<section class="page">
+  <h2><small>كل شيء في التطبيق</small>للطالب</h2>
+  <div class="phone3">
+    <figure><img src="{{img:home}}">الرئيسية: يومك بنظرة</figure>
+    <figure><img src="{{img:grades}}">كم تحتاج لكل تقدير</figure>
+    <figure><img src="{{img:calendar}}">مواعيد Blackboard (1.4)</figure>
+  </div>
+  <div class="feat">
+    <div><b>الرئيسية</b>هدف المذاكرة اليومي، سلسلة الأيام، المحاضرة الحالية والقادمة، أقرب اختبار بعدّ تنازلي، والتاريخ الهجري.</div>
+    <div><b>الجدول</b>محاضرات ومعامل وساعات مكتبية، مع كشف التعارض. يُستورد باللصق من البوابة أو من زميل، أو بالانضمام لشعبة.</div>
+    <div><b>المهام والاختبارات</b>مرتبة بمواعيدها (اليوم، هذا الأسبوع، لاحقاً)، بأولوية ونوع، وخطة مراجعة تلقائية لكل اختبار.</div>
+    <div><b>مواعيد Blackboard</b>يلصق الطالب رابط تقويمه الخاص فتدخل الواجبات والاختبارات تلقائياً وتتحدث كل 6 ساعات، بلا كلمة مرور.</div>
+    <div><b>الدرجات</b>تقييمات كل مادة، والدرجة المتوقعة، وكم تحتاج في الباقي لكل تقدير.</div>
+    <div><b>الغياب</b>عدّاد لكل مادة مقابل حد الحرمان 25٪، مع تحذير قبل الوصول له.</div>
+    <div><b>حاسبة المعدل</b>من 5 أو من 4، مع التراكمي وخطة للوصول لمعدل مستهدف.</div>
+    <div><b>ذاكر</b>مؤقت تركيز يسجّل الوقت لكل مادة، مع تنبيه عند انتهاء الجلسة.</div>
+    <div><b>بطاقات المراجعة</b>تكرار متباعد (صناديق لايتنر) يعرض البطاقة في الوقت المناسب.</div>
+    <div><b>الإحصائيات</b>ساعات الأسبوع، والأيام المتتالية، والمهام المنجزة.</div>
+    <div><b>المشاركة و«ملخص فصلك»</b>بطاقات ستوري جاهزة، وملخص للفصل بأرقامه وشخصيتك في المذاكرة.</div>
+    <div><b>قناة الشعبة</b>ينضم برمز الدكتور فتصله المواعيد والإعلانات، وإشعار فوري بكل إعلان.</div>
+  </div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>5</span></div>
+</section>
+
+<!-- 6. الدكتور -->
+<section class="page">
+  <h2><small>كل شيء في التطبيق</small>لعضو هيئة التدريس، ولكل المستخدمين</h2>
+  <div class="phone3">
+    <figure><img src="{{img:qr}}">تحضير QR يتجدد</figure>
+    <figure><img src="{{img:gradebook}}">رصد الدرجات</figure>
+    <figure><img src="{{img:channel}}">قناة الشعبة</figure>
+  </div>
+  <div class="feat">
+    <div><b>الشعب والطلاب</b>قائمة الطلاب باللصق من Excel أو Blackboard أو ملف CSV، مع اكتشاف الأعمدة تلقائياً وتجاهل المكرر.</div>
+    <div><b>التحضير اليدوي</b>لكل شعبة وتاريخ، مع سجل الجلسات، وغياب كل طالب، وتنبيه المعرّضين للحرمان، والتصدير لـ Excel.</div>
+    <div><b>التحضير بالـ QR</b>رمز يتجدد كل 15 ثانية ويصلح 20 ثانية فقط، وتحضير واحد لكل جهاز ولكل رقم جامعي.</div>
+    <div><b>رصد الدرجات</b>بنود تقييم، ولصق الدرجات من Excel، ومجاميع وتقديرات وتوزيع، وتصدير.</div>
+    <div><b>المجموعات</b>تقسيم عشوائي متوازن بالحجم أو العدد، واختيار طالب عشوائي.</div>
+    <div><b>الساعات المكتبية</b>صفحة حجز برمز أو QR، بمواعيد الرياض، مع رؤية الحجوزات وإلغائها.</div>
+    <div><b>قناة الشعبة</b>ينشر الجدول والاختبارات والإعلانات، وتصل للطلاب فوراً بإشعار.</div>
+    <div><b>خلفية الجوال</b>الجدول أو الساعات المكتبية كخلفية بدقة كاملة وثلاثة أشكال.</div>
+  </div>
+  <h3>لكل المستخدمين</h3>
+  <div class="feat">
+    <div><b>الوضع الفاتح والداكن</b>بتباين يحقق معيار الإتاحة WCAG AA.</div>
+    <div><b>قفل بالبصمة (1.4)</b>بصمة الوجه أو الإصبع عند فتح التطبيق.</div>
+    <div><b>النسخ الاحتياطي</b>تصدير كل البيانات واستعادتها، وحذف بيانات الخادم بضغطة.</div>
+    <div><b>الفصل الجديد</b>معالج يدمج الفصل في التراكمي ويصفّر ما تختاره.</div>
+    <div><b>Pro</b>اشتراك عبر متاجر Apple وGoogle، مع فترة تجربة وشروط تجديد واضحة.</div>
+    <div><b>التذكيرات</b>قبل المحاضرات والتسليمات والاختبارات.</div>
+  </div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>6</span></div>
+</section>
+
+<!-- 7. البنية -->
+<section class="page">
+  <h2><small>كيف بُني</small>البنية التقنية</h2>
+  <div class="grid2">
+    <div class="box"><h4>التطبيق</h4><ul>
+      <li>Expo SDK 57 وReact Native 0.86 وTypeScript بالوضع الصارم.</li>
+      <li>التنقل بـ Expo Router (43 شاشة).</li>
+      <li>الحالة في Zustand وتُحفظ على الجهاز، مع دمج آمن للإعدادات عند الترقية.</li>
+      <li>منطق نقي مفصول في <code>src/lib</code> ومختبر بالكامل.</li>
+      <li>نسخة ويب للنموذج الحي بنفس الكود.</li>
+    </ul></div>
+    <div class="box"><h4>الخادم (Supabase)</h4><ul>
+      <li>تسجيل دخول مجهول: لا بريد ولا رقم ولا كلمة مرور.</li>
+      <li>حماية على مستوى الصفوف في كل جدول.</li>
+      <li>الكتابة عبر دوال موثوقة فقط، تتحقق من كل قيمة.</li>
+      <li>دالة على الخادم (Edge Function) ترسل إشعارات الإعلانات.</li>
+      <li>تنظيف دوري: التحضير بعد 30 يوماً، والحجوزات بعد 90، والإعلانات بعد 180.</li>
+    </ul></div>
+  </div>
+  <h3>أين تُحفظ البيانات؟</h3>
+  <table>
+    <tr><th>البيانات</th><th>المكان</th></tr>
+    <tr><td>الجدول، المهام، الدرجات، الغياب، المعدل، البطاقات، المذاكرة</td><td><span class="sev ok">الجوال فقط</span></td></tr>
+    <tr><td>قوائم طلاب الدكتور ودرجاتهم وتحضيره اليدوي</td><td><span class="sev ok">جوال الدكتور فقط</span></td></tr>
+    <tr><td>رابط تقويم Blackboard</td><td><span class="sev ok">الجوال فقط</span>، يُجلب منه مباشرة ولا يمر بخادمنا</td></tr>
+    <tr><td>جلسات التحضير بالـ QR، الساعات المكتبية والحجوزات، قناة الشعبة وإعلاناتها، عناوين الإشعارات</td><td><span class="sev low">الخادم</span>، لأنها مشتركة بين أكثر من شخص</td></tr>
+  </table>
+  <h3>المدفوعات</h3>
+  <p>الاشتراك عبر RevenueCat بمشتريات المتاجر الرسمية (Apple وGoogle). صفحة الدفع التجريبية (مدى، Apple Pay، STC Pay) مقفلة في نسخ المتجر، ولا تعمل إلا في التطوير أو بتفعيل صريح.</p>
+  <div class="note">القاعدة الثابتة في كل المشروع: لا نطلب ولا نخزّن كلمة مرور بوابة الجامعة. الربط يكون بروابط يعطيها النظام نفسه (مثل رابط تقويم Blackboard) أو بالنسخ واللصق.</div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>7</span></div>
+</section>
+
+<!-- 8. الأمان -->
+<section class="page">
+  <h2><small>الأمان والخصوصية</small>المراجعة الشاملة وما أصلحناه</h2>
+  <p class="lead">راجعنا التطبيق والخادم من البداية للنهاية قبل الإطلاق. هذه أهم النتائج، وكلها مغلقة.</p>
+  <table>
+    <tr><th>الخطورة</th><th>ما وجدناه</th><th>الإصلاح</th></tr>
+    <tr><td><span class="sev crit">حرجة</span></td><td>صفحة الدفع التجريبية تفعّل Pro مجاناً بأي رقم بطاقة صالح الشكل في نسخ المتجر</td><td>مقفلة في نسخ المتجر، وعليها اختبار</td></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>لا توجد طريقة لحذف بيانات المستخدم من الخادم</td><td>زر «حذف بياناتي من الخادم» يحذف صفوف المستخدم فقط</td></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>محتوى المستخدمين (الإعلانات) بلا إبلاغ أو حظر، وهذا شرط من Apple</td><td>زر إبلاغ على كل إعلان، ومغادرة القناة، وقواعد محتوى في الشروط</td></tr>
+    <tr><td><span class="sev high">مهمة</span></td><td>صلاحيات الجداول تسمح باختيار الرموز وقيم حساسة</td><td>صلاحيات على مستوى الأعمدة بعد سحب كل الصلاحيات الافتراضية</td></tr>
+    <tr><td><span class="sev med">متوسطة</span></td><td>تخمين رموز الصفحات والقنوات والتحضير بلا حد</td><td>حدود محاولات لكل مستخدم، وتُحسب حتى المحاولات الفاشلة</td></tr>
+    <tr><td><span class="sev med">متوسطة</span></td><td>رمز التحضير يبقى صالحاً دقيقة، فيمكن تصويره وإرساله لزميل غائب</td><td>صالح 20 ثانية فقط من ظهوره</td></tr>
+    <tr><td><span class="sev low">منخفضة</span></td><td>بيانات القناة القادمة من الخادم تُدمج دون فحص</td><td>تنظيف كل القيم وتحديد أطوالها قبل الدمج</td></tr>
+  </table>
+  <h3>نقطة دقيقة اكتشفتها الاختبارات</h3>
+  <p>أول نسخة من حدود المحاولات كانت ترفض الطلب برفع خطأ، فتتراجع قاعدة البيانات عن تسجيل المحاولة نفسها، ولا تُحسب المحاولات الفاشلة، وهي بالضبط شكل التخمين. الاختبارات كشفت ذلك، فصار الحارس يعيد الخطأ قيمةً وتبقى المحاولة محسوبة.</p>
+  <h3>اختبار الطفرات</h3>
+  <p>نزرع أخطاء متعمدة في كود الخادم ونتأكد أن الاختبارات تكشفها:</p>
+  <div class="grid3">
+    <div class="stat"><b>8 / 8</b><span>قناة الشعبة</span></div>
+    <div class="stat"><b>7 / 7</b><span>حدود المحاولات والتحضير</span></div>
+    <div class="stat"><b>5 / 6</b><span>حذف البيانات (الناجي تغيير بلا أثر)</span></div>
+  </div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>8</span></div>
+</section>
+
+<!-- 9. الجودة -->
+<section class="page">
+  <h2><small>الجودة</small>الاختبارات مع كل تحديث</h2>
+  <p class="lead">عدد الاختبارات الآلية للتطبيق بعد كل تحديث رئيسي. كل تحديث رُفع وكل الاختبارات ناجحة، ومعه فحص الأنواع (TypeScript) والتدقيق (Lint).</p>
+  <div class="chart">
+    <div class="c"><span class="val">33</span><div class="bar" style="height:23%"></div></div>
+    <div class="c"><span class="val q">40</span><div class="bar" style="height:28%"></div></div>
+    <div class="c"><span class="val q">43</span><div class="bar" style="height:30%"></div></div>
+    <div class="c"><span class="val q">50</span><div class="bar" style="height:35%"></div></div>
+    <div class="c"><span class="val">59</span><div class="bar" style="height:41%"></div></div>
+    <div class="c"><span class="val q">69</span><div class="bar" style="height:48%"></div></div>
+    <div class="c"><span class="val q">81</span><div class="bar" style="height:57%"></div></div>
+    <div class="c"><span class="val q">91</span><div class="bar" style="height:64%"></div></div>
+    <div class="c"><span class="val">104</span><div class="bar" style="height:73%"></div></div>
+    <div class="c"><span class="val">114</span><div class="bar" style="height:80%"></div></div>
+    <div class="c"><span class="val q">117</span><div class="bar" style="height:82%"></div></div>
+    <div class="c"><span class="val">129</span><div class="bar" style="height:90%"></div></div>
+  </div>
+  <div class="axis"><span>1.0</span><span>تذكيرات</span><span>المتاجر</span><span>مراجعة</span><span>1.1</span><span>الدكتور</span><span>الرصد</span><span>السحابة</span><span>1.2</span><span>1.3</span><span>الأمان</span><span>1.4</span></div>
+  <h3>ماذا نختبر؟</h3>
+  <div class="grid2">
+    <div class="box"><h4>التطبيق (129 اختباراً في 19 ملفاً)</h4><ul>
+      <li>المعدل والدرجات وكم تحتاج، والغياب والحرمان.</li>
+      <li>التذكيرات وحدود الإشعارات، والتواريخ والجمع العربي.</li>
+      <li>استيراد الجدول والطلاب والدرجات وملفات التقويم.</li>
+      <li>دمج قناة الشعبة دون المساس ببيانات الطالب.</li>
+      <li>بطاقات المشاركة وملخص الفصل وقفل الدفع التجريبي.</li>
+    </ul></div>
+    <div class="box"><h4>الخادم (6 مجموعات SQL)</h4><ul>
+      <li>الحجز والتحضير وقواعد الوقت والتعارض.</li>
+      <li>قناة الشعبة وصلاحياتها وحدودها.</li>
+      <li>الخصوصية وحذف البيانات والصلاحيات على الأعمدة.</li>
+      <li>حدود المحاولات ونافذة رمز التحضير.</li>
+      <li>الإشعارات والاشتراك فيها.</li>
+    </ul></div>
+  </div>
+  <div class="note">اختبرنا تدفقات كاملة في المتصفح لكل إصدار (من التسجيل حتى الميزة) بلقطات شاشة. ما لا يُختبر إلا على جهاز حقيقي: البصمة، والإشعارات الفعلية، وجلب تقويم Blackboard الحقيقي.</div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>9</span></div>
+</section>
+
+<!-- 10. التسويق -->
+<section class="page">
+  <h2><small>التسويق والمحتوى</small>كل ما جهّزناه للإطلاق</h2>
+  <div class="media">
+    <figure><img src="{{file:marketing/tiktok/motion-cover.jpg}}">مقطع الموشن (72 ث)</figure>
+    <figure><img src="{{file:marketing/tiktok/00-teaser-cover.jpg}}">المقطع التشويقي</figure>
+    <figure><img src="{{file:marketing/tiktok/01-final-grade-cover.jpg}}">مقطع «كم تحتاج»</figure>
+    <figure><img src="{{file:marketing/tiktok/03-qr-attendance-cover.jpg}}">مقطع التحضير بالـ QR</figure>
+  </div>
+  <div class="grid2">
+    <div class="box"><h4>الهوية والوثائق</h4><ul>
+      <li>شعار متجه وأشكاله (أفقي، عمودي، أبيض) ولوحة الهوية.</li>
+      <li>دليل التطبيق PDF ملوّن من 18 صفحة.</li>
+      <li>خطة تسويق كاملة: الجمهور، التسعير، مراحل الإطلاق مع التقويم الأكاديمي، الميزانية، المؤشرات.</li>
+      <li>تقرير المراجعة الشاملة (9 صفحات)، وهذا التقرير.</li>
+    </ul></div>
+    <div class="box"><h4>تيك توك</h4><ul>
+      <li>حساب جاهز: صورة واسم مستخدم <span class="en">@mudhaker.app</span> وبايو يخاطب الطالب والدكتور.</li>
+      <li>3 مقاطع للميزات، ومقطع تشويقي بعشرة أنماط موسيقية أصلية.</li>
+      <li>أصوات عربية بأعمار مختلفة، واختيار صوت شاب حماسي.</li>
+      <li>أدلة: الانتشار، والنشر والهاشتاقات، وإعداد الحساب.</li>
+    </ul></div>
+    <div class="box"><h4>مقطع الموشن الكامل</h4><ul>
+      <li>72 ثانية: المشاكل ← الشعار ← 13 ميزة للطالب ← 7 للدكتور ← جدار الشاشات ← الخصوصية ← الختام.</li>
+      <li>نسخة طبول سعودية بلا صوت بشري.</li>
+      <li>نسخة أغنية بلازمة مغنّاة «مذاكر… رفيقك الجامعي» مع تعليق صوتي.</li>
+    </ul></div>
+    <div class="box"><h4>لينكدإن والنموذج الحي</h4><ul>
+      <li>عرض من 8 شرائح بلغتين، ومنشور عربي وإنجليزي.</li>
+      <li>نموذج حي للتطبيق يُفتح من المتصفح للتجربة والعرض.</li>
+    </ul></div>
+  </div>
+  <div class="note">كل الموسيقى والأصوات مولّدة برمجياً من الصفر، بلا عينات خارجية ولا حقوق لطرف ثالث. الاستثناء الوحيد إيموجي آبل في المقاطع (باختيارك)، وجاهز بديل مرخّص (Fluent) بتغيير خيار واحد.</div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>10</span></div>
+</section>
+
+<!-- 11. الملفات -->
+<section class="page">
+  <h2><small>المرجع</small>أين تجد كل شيء</h2>
+  <table>
+    <tr><th>الملف أو المجلد</th><th>ماذا فيه</th></tr>
+    <tr><td><code>src/app</code></td><td>شاشات التطبيق (43)</td></tr>
+    <tr><td><code>src/lib</code> و <code>src/lib/__tests__</code></td><td>المنطق واختباراته</td></tr>
+    <tr><td><code>supabase/migrations</code> و <code>supabase/tests</code></td><td>قاعدة البيانات (5 ترحيلات) واختباراتها (6 مجموعات)</td></tr>
+    <tr><td><code>supabase/functions/notify-section-post</code></td><td>دالة إرسال إشعارات الإعلانات</td></tr>
+    <tr><td><code>docs/</code></td><td>سياسة الخصوصية والشروط (موقع GitHub Pages)</td></tr>
+    <tr><td><code>LAUNCH.md</code></td><td>خطوات الإطلاق وقائمة الفحص قبل النشر</td></tr>
+    <tr><td><code>PLAN.md</code> و <code>AUDIT.md</code> و <code>README.md</code></td><td>الخطة، التدقيق، وشرح المشروع</td></tr>
+    <tr><td><code>store/</code></td><td>وصف المتجر ولقطاته وإجابات الخصوصية</td></tr>
+    <tr><td><code>reports/</code></td><td>تقرير المراجعة الشاملة وهذا التقرير ومولّدهما</td></tr>
+    <tr><td><code>marketing/MARKETING.md</code> و <code>content-kit.md</code></td><td>خطة التسويق ومحتوى جاهز للنشر</td></tr>
+    <tr><td><code>marketing/mudhaker-app-guide.pdf</code></td><td>دليل التطبيق الملوّن</td></tr>
+    <tr><td><code>marketing/brand/</code></td><td>الشعار والهوية وصور الحساب</td></tr>
+    <tr><td><code>marketing/linkedin/</code></td><td>شرائح لينكدإن والمنشور</td></tr>
+    <tr><td><code>marketing/tiktok/*.mp4</code></td><td>كل المقاطع الجاهزة للنشر</td></tr>
+    <tr><td><code>marketing/tiktok/mudhaker-motion*.mp4</code></td><td>مقطع الموشن بنسختيه</td></tr>
+    <tr><td><code>marketing/tiktok/audio/</code></td><td>مولّد الموسيقى والأصوات</td></tr>
+    <tr><td><code>marketing/tiktok/*.md</code></td><td>أدلة الحساب والانتشار والنشر</td></tr>
+  </table>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>11</span></div>
+</section>
+
+<!-- 12. ما بقي -->
+<section class="page">
+  <h2><small>الخطوة التالية</small>ما بقي قبل الإطلاق، وما بعده</h2>
+  <h3>خطوات تحتاج حساباتك (لا تُنجز من الكود)</h3>
+  <ul class="check">
+    <li>إنشاء مشروع Supabase، وتشغيل الترحيلات الخمسة، وتفعيل CAPTCHA للدخول المجهول.</li>
+    <li>نشر دالة الإشعارات وربطها بقاعدة البيانات (Webhook).</li>
+    <li>ربط المشروع بـ EAS، وبناء نسخة تجريبية، وتجربتها على جوالات حقيقية (البصمة والإشعارات وBlackboard).</li>
+    <li>حساب Apple Developer وGoogle Play، ومنتجات الاشتراك، وربطها بـ RevenueCat.</li>
+    <li>رفع اللقطات والوصف وإجابات الخصوصية، ثم الإرسال للمراجعة.</li>
+    <li>فتح حساب تيك توك وجدولة المقاطع حسب دليل النشر.</li>
+  </ul>
+  <h3>الربط مع أنظمة الجامعات (خطة مرحلية)</h3>
+  <div class="phase"><span class="tag">تم</span><h4>المرحلة 1: بدون أي صلاحيات</h4><p>النسخ واللصق من البوابة، ورابط تقويم Blackboard (الإصدار 1.4).</p></div>
+  <div class="phase"><span class="tag">قادم</span><h4>المرحلة 2: ملفات رسمية</h4><p>استيراد ملفات الجدول وقوائم الطلاب التي تصدّرها الأنظمة مباشرة.</p></div>
+  <div class="phase"><span class="tag">قادم</span><h4>المرحلة 3: شراكة مع جامعة</h4><p>ربط رسمي (LTI أو واجهة برمجية) بموافقة عمادة تقنية المعلومات، بدءاً بجامعة واحدة كتجربة.</p></div>
+  <h3>أفكار للإصدارات القادمة</h3>
+  <div class="feat">
+    <div><b>ويدجت الشاشة الرئيسية</b>المحاضرة القادمة وأقرب تسليم.</div>
+    <div><b>مذاكرة جماعية</b>جلسات تركيز مع الزملاء.</div>
+    <div><b>ملاحظات المحاضرة</b>مرتبطة بالمادة والجدول.</div>
+    <div><b>لوحة للقسم</b>إحصائيات مجمّعة للدكتور ورئيس القسم.</div>
+  </div>
+  <div class="note"><b>الخلاصة:</b> في ستة أيام صار عندك تطبيق كامل بإصداره الرابع، وخادم آمن ومختبر، وحزمة تسويق جاهزة. الخطوة الوحيدة المتبقية قبل وصوله للطلاب هي إعداد الحسابات أعلاه.</div>
+  <div class="foot"><span>مذاكر · تقرير المشروع الكامل</span><span>12</span></div>
+</section>
+
+</body>
+</html>
