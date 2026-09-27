@@ -41,3 +41,8 @@ yarn-error.*
 /android
 marketing/guide/_out.html
 reports/_out.html
+
+# مخرجات مؤقتة لمولّدات التسويق
+__pycache__/
+marketing/tiktok/silent/*.part*.mp4
+marketing/tiktok/silent/*.parts.txt
