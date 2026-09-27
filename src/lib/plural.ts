@@ -28,6 +28,7 @@ export const LECTURES: Forms = { one: 'محاضرة واحدة', two: 'محاض�
 export const MEETINGS: Forms = { one: 'لقاء واحد', two: 'لقاءين', few: 'لقاءات', many: 'لقاءً' };
 export const ABSENCES: Forms = { one: 'غياب واحد', two: 'غيابين', few: 'غيابات', many: 'غياباً' };
 export const SESSIONS_F: Forms = { one: 'جلسة واحدة', two: 'جلستين', few: 'جلسات', many: 'جلسة' };
+export const SUMMARIES: Forms = { one: 'ملخص واحد', two: 'ملخصين', few: 'ملخصات', many: 'ملخصاً' };
 
 /** المعدود وحده بعد رقم معروض بخط كبير: ١ «غياب»، ٢ «غيابين»، ٣–١٠ «غيابات»، ١١+ «غياباً»، ٠ «غيابات». */
 export function unit(n: number, f: Forms): string {

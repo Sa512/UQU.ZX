@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Field } from '@/components/Field';
+import { UniversityField } from '@/components/UniversityField';
 import { haptic } from '@/components/haptics';
 import { Segmented } from '@/components/Segmented';
 import { WHATS_NEW } from '@/content/whatsNew';
@@ -157,7 +158,7 @@ export default function Onboarding() {
               autoFocus
               returnKeyType="next"
             />
-            <Field label="الجامعة" placeholder="اسم جامعتك" value={university} onChangeText={setUniversity} />
+            <UniversityField value={university} onChange={setUniversity} />
             <Field label={role === 'student' ? 'التخصص' : 'القسم'} placeholder={role === 'student' ? 'مثال: علوم الحاسب' : 'مثال: قسم الرياضيات'} value={major} onChangeText={setMajor} />
             <View style={{ gap: 6 }}>
               <AppText variant="label">نظام المعدل في جامعتك</AppText>

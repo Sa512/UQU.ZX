@@ -18,6 +18,8 @@ import { review } from '@/lib/srs';
 import type { ChannelPost, SectionChannel } from '@/lib/cloud/types';
 import { syncChannel, type SyncResult } from '@/lib/sectionChannel';
 import { mergeIcs, type IcsEvent } from '@/lib/ical';
+import { detectLms, LMS_INFO } from '@/lib/universities';
+import { toCards, type Block, type Summary } from '@/lib/summaries';
 
 export type Role = 'student' | 'professor';
 export type ThemePref = 'system' | 'light' | 'dark';
@@ -50,6 +52,8 @@ export type Settings = {
   semesterStartedAt: number | null;
   /** قفل التطبيق بالبصمة (موصى به للدكتور لحماية بيانات الطلاب). */
   appLock: boolean;
+  /** وضع «وقت مفتوح» في المذاكرة: يعدّ تصاعدياً بلا نهاية محددة. */
+  focusOpen: boolean;
 };
 
 export type Course = {
@@ -153,6 +157,7 @@ type State = {
   officePage: OfficePage | null;
   myBookings: MyBooking[];
   feeds: CalendarFeed[];
+  summaries: Summary[];
   gpa: GpaState;
   subscription: Subscription;
   transactions: Transaction[];
@@ -204,6 +209,11 @@ type Actions = {
   removeFeed: (id: string) => void;
   /** يدمج أحداث تقويم في المهام ويعيد عدد المضاف والمحدّث. */
   applyIcs: (feedId: string, events: IcsEvent[]) => { added: number; updated: number };
+  addSummary: (title: string, courseId: string | null, blocks: Block[]) => string;
+  updateSummary: (id: string, p: Partial<Pick<Summary, 'title' | 'courseId' | 'blocks'>>) => void;
+  deleteSummary: (id: string) => void;
+  /** ينشئ (أو يحدّث) مجموعة بطاقات من مصطلحات الملخص وأسئلته، ويعيد معرّفها وعدد البطاقات الجديدة. */
+  summaryToDeck: (id: string) => { deckId: string; added: number } | null;
   saveMyBooking: (b: MyBooking) => void;
   setBookingStatus: (id: string, status: MyBooking['status']) => void;
   startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
@@ -238,6 +248,7 @@ const defaultSettings: Settings = {
   uniId: '',
   semesterStartedAt: null,
   appLock: false,
+  focusOpen: false,
 };
 
 const initialState: State = {
@@ -256,6 +267,7 @@ const initialState: State = {
   officePage: null,
   myBookings: [],
   feeds: [],
+  summaries: [],
   gpa: { prevGpa: 0, prevCredits: 0, rows: [] },
   subscription: { plan: 'free', until: null },
   transactions: [],
@@ -289,6 +301,7 @@ export const useStore = create<State & Actions>()(
           tasks: s.tasks.map((t) => (t.courseId === id ? { ...t, courseId: null } : t)),
           sessions: s.sessions.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)),
           decks: s.decks.map((d) => (d.courseId === id ? { ...d, courseId: null } : d)),
+          summaries: s.summaries.map((x) => (x.courseId === id ? { ...x, courseId: null } : x)),
           assessments: s.assessments.filter((a) => a.courseId !== id),
           sections: s.sections.filter((x) => x.courseId !== id),
           students: s.students.filter((x) => s.sections.some((q) => q.id === x.sectionId && q.courseId !== id)),
@@ -478,7 +491,9 @@ export const useStore = create<State & Actions>()(
         })),
       applyIcs: (feedId, events) => {
         const s = get();
-        const r = mergeIcs(s.tasks, events, s.courses, feedId, new Date());
+        const feed = s.feeds.find((f) => f.id === feedId);
+        const lms = feed ? detectLms(feed.url) : null;
+        const r = mergeIcs(s.tasks, events, s.courses, feedId, new Date(), lms && lms !== 'other' ? LMS_INFO[lms].name : 'الجامعة');
         set({ tasks: r.tasks, feeds: s.feeds.map((f) => (f.id === feedId ? { ...f, lastSync: Date.now(), lastCount: events.length } : f)) });
         return { added: r.added, updated: r.updated };
       },
@@ -502,6 +517,33 @@ export const useStore = create<State & Actions>()(
             c.id === courseId && c.channel?.posts.length ? { ...c, channel: { ...c.channel, seenAt: c.channel.posts[0].created_at > c.channel.seenAt ? c.channel.posts[0].created_at : c.channel.seenAt } } : c,
           ),
         })),
+      addSummary: (title, courseId, blocks) => {
+        const id = uid();
+        const now = Date.now();
+        set((s) => ({ summaries: [{ id, title, courseId, blocks, createdAt: now, updatedAt: now }, ...s.summaries] }));
+        return id;
+      },
+      updateSummary: (id, p) =>
+        set((s) => ({ summaries: s.summaries.map((x) => (x.id === id ? { ...x, ...p, updatedAt: Date.now() } : x)) })),
+      deleteSummary: (id) => set((s) => ({ summaries: s.summaries.filter((x) => x.id !== id) })),
+      summaryToDeck: (id) => {
+        const s = get();
+        const sum = s.summaries.find((x) => x.id === id);
+        if (!sum) return null;
+        const drafts = toCards(sum.blocks);
+        const now = Date.now();
+        const existing = sum.deckId ? s.decks.find((d) => d.id === sum.deckId) : undefined;
+        const deckId = existing?.id ?? uid();
+        const have = new Set(existing?.cards.map((c) => c.front) ?? []);
+        const fresh = drafts.filter((d) => !have.has(d.front)).map((d) => ({ id: uid(), front: d.front, back: d.back, box: 0, due: now }));
+        set((st) => ({
+          decks: existing
+            ? st.decks.map((d) => (d.id === deckId ? { ...d, cards: [...d.cards, ...fresh] } : d))
+            : [...st.decks, { id: deckId, title: `ملخص: ${sum.title}`.slice(0, 80), courseId: sum.courseId, cards: fresh, createdAt: now }],
+          summaries: st.summaries.map((x) => (x.id === id ? { ...x, deckId } : x)),
+        }));
+        return { deckId, added: fresh.length };
+      },
       saveMyBooking: (b) => set((s) => ({ myBookings: [...s.myBookings.filter((x) => x.id !== b.id), b].sort((a, c) => a.startsAt.localeCompare(c.startsAt)) })),
       setBookingStatus: (id, status) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, status } : x)) })),
       addTasks: (list) =>
@@ -518,6 +560,7 @@ export const useStore = create<State & Actions>()(
           if (clearCourses) {
             Object.assign(next, { courses: [], assessments: [], sections: [], students: [], attendance: [], gradeItems: [], scores: {} });
             next.decks = s.decks.map((d) => ({ ...d, courseId: null }));
+            next.summaries = s.summaries.map((x) => ({ ...x, courseId: null }));
             if (!clearTasks) next.tasks = s.tasks.map((t) => ({ ...t, courseId: null }));
           } else {
             // فصل جديد: يُصفّر الغياب ويُبقي المقررات
@@ -618,6 +661,7 @@ export const useStore = create<State & Actions>()(
           tasks: d.tasks,
           sessions: d.sessions,
           decks: d.decks,
+          summaries: d.summaries ?? [],
           assessments: d.assessments,
           sections: d.sections,
           students: d.students,

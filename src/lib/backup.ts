@@ -6,6 +6,7 @@ import type { Course, Deck, GpaState, Section, Session, Settings, Slot, Student,
 import type { AttendanceRecord } from './attendance';
 import type { GradeItem, Scores } from './gradebook';
 import type { Assessment } from './grades';
+import { sanitizeSummaries, type Summary } from './summaries';
 
 export const BACKUP_APP = 'mudhaker';
 export const BACKUP_VERSION = 1;
@@ -17,6 +18,8 @@ export type BackupData = {
   tasks: Task[];
   sessions: Session[];
   decks: Deck[];
+  /** أُضيفت في 1.5؛ النسخ الأقدم لا تحتويها. */
+  summaries?: Summary[];
   assessments: Assessment[];
   sections: Section[];
   students: Student[];
@@ -62,6 +65,7 @@ export function parseBackup(text: string): ParseResult {
     tasks: d.tasks,
     sessions: d.sessions,
     decks: d.decks,
+    summaries: sanitizeSummaries(d.summaries),
     assessments: isArr(d.assessments) ? d.assessments : [],
     sections: isArr(d.sections) ? d.sections : [],
     students: isArr(d.students) ? d.students : [],
@@ -70,6 +74,6 @@ export function parseBackup(text: string): ParseResult {
     scores: d.scores && typeof d.scores === 'object' && !isArr(d.scores) ? d.scores : {},
     gpa: d.gpa && isArr(d.gpa.rows) ? d.gpa : { prevGpa: 0, prevCredits: 0, rows: [] },
   };
-  const summary = `${data.courses.length} مقرر، ${data.tasks.length} مهمة، ${data.decks.length} مجموعة بطاقات${data.students.length ? `، ${data.students.length} طالب` : ''}`;
+  const summary = `${data.courses.length} مقرر، ${data.tasks.length} مهمة، ${data.decks.length} مجموعة بطاقات${data.summaries?.length ? `، ${data.summaries.length} ملخص` : ''}${data.students.length ? `، ${data.students.length} طالب` : ''}`;
   return { ok: true, data, summary };
 }

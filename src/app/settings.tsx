@@ -9,6 +9,7 @@ import { Card } from '@/components/Card';
 import { Chip, ChipRow } from '@/components/Chip';
 import { confirm } from '@/components/confirm';
 import { Field } from '@/components/Field';
+import { UniversityField } from '@/components/UniversityField';
 import { Stepper } from '@/components/Pickers';
 import { Toggle } from '@/components/Toggle';
 import { Screen, SectionHeader } from '@/components/Screen';
@@ -57,7 +58,7 @@ export default function Settings() {
       <SectionHeader title="الملف الشخصي" />
       <Card style={{ gap: spacing.md }}>
         <Field label="الاسم" value={name} onChangeText={setName} onBlur={saveProfile} onEndEditing={saveProfile} />
-        <Field label="الجامعة" value={university} onChangeText={setUniversity} onBlur={saveProfile} onEndEditing={saveProfile} />
+        <UniversityField value={university} onChange={(v) => { setUniversity(v); update({ university: v.trim() }); }} />
         {settings.role === 'student' && (
           <Field label="الرقم الجامعي" value={uniIdText} onChangeText={setUniIdText} onBlur={() => update({ uniId: uniIdText.replace(/\D/g, '') })} onEndEditing={() => update({ uniId: uniIdText.replace(/\D/g, '') })} keyboardType="number-pad" hint="يُستخدم للتحضير بالـ QR وحجز الساعات المكتبية" ltr />
         )}
@@ -210,7 +211,7 @@ export default function Settings() {
               onPress={async () => {
                 const s = useStore.getState();
                 const r = await shareBackup(
-                  buildBackup({ settings: s.settings, courses: s.courses, slots: s.slots, tasks: s.tasks, sessions: s.sessions, decks: s.decks, assessments: s.assessments, sections: s.sections, students: s.students, attendance: s.attendance, gradeItems: s.gradeItems, scores: s.scores, gpa: s.gpa }),
+                  buildBackup({ settings: s.settings, courses: s.courses, slots: s.slots, tasks: s.tasks, sessions: s.sessions, decks: s.decks, summaries: s.summaries, assessments: s.assessments, sections: s.sections, students: s.students, attendance: s.attendance, gradeItems: s.gradeItems, scores: s.scores, gpa: s.gpa }),
                 );
                 setBackupMsg(r.ok ? undefined : r.message);
               }}

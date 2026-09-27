@@ -11,16 +11,12 @@ import { formatShortDate } from '@/lib/dates';
 import { normalizeFeedUrl, parseIcs } from '@/lib/ical';
 import { fetchIcs } from '@/lib/icsFetch';
 import { pickTextFile, textFileSupported } from '@/lib/textFile';
+import { detectLms, feedLabel, LMS_INFO, LMS_ORDER, type Lms } from '@/lib/universities';
+import { Chip, ChipRow } from '@/components/Chip';
 import { useStore } from '@/store/useStore';
 import { spacing, useTheme } from '@/theme';
 
-const STEPS = [
-  'افتح Blackboard من المتصفح، ثم «التقويم».',
-  'اضغط أيقونة الإعدادات أو «مشاركة التقويم»، ثم انسخ الرابط.',
-  'الصق الرابط هنا واضغط «استيراد».',
-];
-
-/** استيراد الواجبات والاختبارات من تقويم Blackboard (أو أي نظام يعطي رابط iCal). */
+/** ربط نظام التعلم في الجامعة (Blackboard وMoodle وCanvas وD2L أو أي تقويم iCal): الواجبات والاختبارات تدخل المهام. */
 export default function CalendarImport() {
   const { colors } = useTheme();
   const feeds = useStore((s) => s.feeds);
@@ -28,6 +24,12 @@ export default function CalendarImport() {
   const removeFeed = useStore((s) => s.removeFeed);
   const applyIcs = useStore((s) => s.applyIcs);
   const [url, setUrl] = useState('');
+  const [lms, setLms] = useState<Lms>('blackboard');
+  const onUrl = (t: string) => {
+    setUrl(t);
+    const d = detectLms(t);
+    if (d && d !== 'other') setLms(d);
+  };
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
 
@@ -36,12 +38,12 @@ export default function CalendarImport() {
 
   const importUrl = async (raw: string, existingId?: string) => {
     const u = normalizeFeedUrl(raw);
-    if (!u) return setMsg({ ok: false, text: 'الرابط غير صحيح. انسخ رابط «مشاركة التقويم» كما هو من Blackboard (يبدأ بـ https أو webcal).' });
+    if (!u) return setMsg({ ok: false, text: `الرابط غير صحيح. انسخ رابط التقويم كما هو من ${LMS_INFO[lms].name === 'نظام آخر' ? 'نظامك' : LMS_INFO[lms].name} (يبدأ بـ https أو webcal).` });
     setBusy(existingId ?? 'new');
     setMsg(undefined);
     try {
       const events = await fetchIcs(u);
-      const id = existingId ?? addFeed(u, new URL(u).hostname);
+      const id = existingId ?? addFeed(u, feedLabel(u));
       report(applyIcs(id, events));
       haptic.success();
       if (!existingId) setUrl('');
@@ -64,9 +66,15 @@ export default function CalendarImport() {
   };
 
   return (
-    <Screen back title="مواعيد Blackboard" subtitle="واجباتك واختباراتك تدخل المهام تلقائياً">
+    <Screen back title="ربط نظام الجامعة" subtitle="واجباتك واختباراتك تدخل المهام تلقائياً">
+      <SectionHeader title="ما نظام التعلم في جامعتك؟" />
+      <ChipRow>
+        {LMS_ORDER.map((k) => (
+          <Chip key={k} label={LMS_INFO[k].name} selected={lms === k} onPress={() => setLms(k)} />
+        ))}
+      </ChipRow>
       <Card style={{ gap: spacing.sm }}>
-        {STEPS.map((s, i) => (
+        {LMS_INFO[lms].steps.map((s, i) => (
           <View key={s} style={{ flexDirection: 'row', gap: spacing.sm }}>
             <AppText variant="label" color={colors.primary}>
               {i + 1}.
@@ -82,7 +90,7 @@ export default function CalendarImport() {
       </Card>
 
       <Card style={{ gap: spacing.md }}>
-        <Field label="رابط التقويم" placeholder="https://… أو webcal://…" value={url} onChangeText={setUrl} autoCapitalize="none" autoCorrect={false} keyboardType="url" ltr />
+        <Field label="رابط التقويم" placeholder="https://… أو webcal://…" value={url} onChangeText={onUrl} autoCapitalize="none" autoCorrect={false} keyboardType="url" ltr />
         <Button title="استيراد" icon="cloud-download-outline" loading={busy === 'new'} disabled={!url.trim()} onPress={() => importUrl(url)} />
         {textFileSupported && <Button title="أو من ملف ‎.ics" variant="ghost" size="sm" icon="document-outline" onPress={importFile} />}
       </Card>

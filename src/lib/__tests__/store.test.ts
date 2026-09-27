@@ -6,6 +6,8 @@ jest.mock('@react-native-async-storage/async-storage', () => require('@react-nat
 // eslint-disable-next-line import/first
 import { parseSchedule } from '../scheduleImport';
 // eslint-disable-next-line import/first
+import { structureText } from '../summaries';
+// eslint-disable-next-line import/first
 import { useStore } from '@/store/useStore';
 
 describe('store: faculty features', () => {
@@ -97,5 +99,37 @@ describe('store: leave a section channel', () => {
     // إعادة الانضمام لا تكرر الاختبار القديم لأنه صار مهمة عادية؟ بل تضيف نسخة مرتبطة جديدة: المهم ألا تحذف مواعيد الطالب
     useStore.getState().applyChannel({ ...ch, slots: [] });
     expect(useStore.getState().slots).toHaveLength(1);
+  });
+});
+
+describe('store: summaries', () => {
+  beforeEach(() => useStore.getState().resetAll());
+
+  it('turns a summary into one deck and only adds new cards on later runs', () => {
+    const { addCourse, addSummary, summaryToDeck, updateSummary, deleteCourse } = useStore.getState();
+    const cid = addCourse({ name: 'هياكل', code: '', color: '#000', credits: 3, instructor: '' });
+    const id = addSummary('الأشجار', cid, structureText('الجذر: أول عقدة\nما الورقة؟\nعقدة بلا أبناء\n- نقطة'));
+    const r1 = summaryToDeck(id)!;
+    expect(r1.added).toBe(2);
+    const deck = useStore.getState().decks.find((d) => d.id === r1.deckId)!;
+    expect(deck).toMatchObject({ title: 'ملخص: الأشجار', courseId: cid });
+    expect(useStore.getState().summaries[0].deckId).toBe(r1.deckId);
+
+    updateSummary(id, { blocks: [...useStore.getState().summaries[0].blocks, ...structureText('المكدس: آخر داخل أول خارج')] });
+    const r2 = summaryToDeck(id)!;
+    expect(r2).toEqual({ deckId: r1.deckId, added: 1 });
+    expect(useStore.getState().decks).toHaveLength(1);
+    expect(useStore.getState().decks[0].cards).toHaveLength(3);
+
+    deleteCourse(cid);
+    expect(useStore.getState().summaries[0].courseId).toBeNull();
+  });
+
+  it('tags imported calendar tasks with the detected system', () => {
+    const { addFeed, applyIcs } = useStore.getState();
+    const fid = addFeed('https://moodle.example.edu.sa/calendar/export_execute.php?x=1', 'Moodle');
+    const soon = new Date(Date.now() + 3 * 86_400_000);
+    applyIcs(fid, [{ uid: 'e1', summary: 'Quiz 1', start: soon, allDay: true, location: '', description: '', categories: '' }]);
+    expect(useStore.getState().tasks[0].notes).toBe('من تقويم Moodle');
   });
 });

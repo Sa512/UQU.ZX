@@ -10,6 +10,7 @@ import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { SlotRow, TaskRow } from '@/components/Rows';
 import { HeaderButton, Screen, SectionHeader } from '@/components/Screen';
+import { ar, SUMMARIES } from '@/lib/plural';
 import { DAY_NAMES, formatDuration } from '@/lib/dates';
 import { summarize } from '@/lib/grades';
 import { useStore } from '@/store/useStore';
@@ -37,6 +38,7 @@ export default function CourseDetail() {
   const role = useStore((s) => s.settings.role);
   const assessments = useStore((s) => s.assessments);
   const hasSections = useStore((s) => s.sections.some((x) => x.courseId === id));
+  const notes = useStore((s) => s.summaries.filter((x) => x.courseId === id).length);
   const { colors } = useTheme();
 
   if (!course) {
@@ -77,6 +79,16 @@ export default function CourseDetail() {
           <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
         </Card>
       )}
+      <Card onPress={() => router.push({ pathname: '/notes', params: { course: course.id } })} accessibilityLabel="ملخصات المادة" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <Ionicons name="document-text-outline" size={26} color={course.color} />
+        <View style={{ flex: 1 }}>
+          <AppText variant="h3">ملخصات المادة</AppText>
+          <AppText variant="caption" muted>
+            {notes ? `${ar(notes, SUMMARIES)} · المصطلحات تتحول لبطاقات` : 'لخّص المحاضرات أو الصق ملاحظاتك ونظّمها'}
+          </AppText>
+        </View>
+        <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+      </Card>
       {role === 'student' && course.channel && <ChannelCard course={course} />}
       {role === 'student' && <AbsenceCard course={course} />}
 

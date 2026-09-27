@@ -1,5 +1,5 @@
 /**
- * استيراد مواعيد Blackboard (أو أي نظام تعليم) من رابط التقويم iCal الخاص بالطالب.
+ * استيراد المواعيد من نظام التعلم (Blackboard أو Moodle أو Canvas أو D2L أو أي تقويم) عبر رابط iCal الخاص بالطالب.
  * الرابط يُجلب من جوال الطالب مباشرة ولا يمر بخادمنا لأنه رابط خاص به.
  * دوال نقية: قراءة ملف ics، وتحويل أحداثه إلى مهام، ودمجها دون تكرار.
  */
@@ -81,7 +81,7 @@ export type IcsImport = { tasks: Task[]; added: number; updated: number; skipped
  * يدمج الأحداث في المهام: المواعيد القادمة فقط (خلال 180 يوماً)، دون تكرار (بمعرّف الحدث)،
  * ويحدّث التاريخ أو العنوان إن تغيّر في Blackboard، ولا يلمس ما أنجزه الطالب أو كتبه بنفسه.
  */
-export function mergeIcs(tasks: Task[], events: IcsEvent[], courses: Course[], feedId: string, now: Date): IcsImport {
+export function mergeIcs(tasks: Task[], events: IcsEvent[], courses: Course[], feedId: string, now: Date, source = 'Blackboard'): IcsImport {
   const today = toDateKey(now);
   const horizon = toDateKey(new Date(now.getTime() + 180 * 86_400_000));
   const next = [...tasks];
@@ -105,7 +105,7 @@ export function mergeIcs(tasks: Task[], events: IcsEvent[], courses: Course[], f
       }
       continue;
     }
-    next.push({ id: uid(), title: e.summary, courseId: matchCourse(e, courses), type, due, priority: type === 'exam' ? 3 : 2, notes: 'من تقويم Blackboard', done: false, createdAt: now.getTime(), sourceKey: key });
+    next.push({ id: uid(), title: e.summary, courseId: matchCourse(e, courses), type, due, priority: type === 'exam' ? 3 : 2, notes: `من تقويم ${source}`, done: false, createdAt: now.getTime(), sourceKey: key });
     added++;
   }
   return { tasks: next, added, updated, skipped };
