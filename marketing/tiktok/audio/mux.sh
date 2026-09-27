@@ -11,3 +11,9 @@ for id in 00-teaser 01-final-grade 02-absence 03-qr-attendance; do
     echo "$D/$id$kind.mp4"
   done
 done
+# مقطع الموشن الكامل (72 ث): موسيقاه من motion_music.py (طبول بلا صوت بشري)
+if [ -f "$D/silent/motion.mp4" ] && [ -f "$A/motion.wav" ]; then
+  "$FF" -y -loglevel error -i "$D/silent/motion.mp4" -i "$A/motion.wav" -map 0:v -map 1:a -c:v copy \
+    -af "loudnorm=I=-14:TP=-1.5:LRA=11" -ar 44100 -c:a aac -b:a 192k -shortest -movflags +faststart "$D/mudhaker-motion.mp4"
+  echo "$D/mudhaker-motion.mp4"
+fi
