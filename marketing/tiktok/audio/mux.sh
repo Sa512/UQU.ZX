@@ -17,3 +17,9 @@ if [ -f "$D/silent/motion.mp4" ] && [ -f "$A/motion.wav" ]; then
     -af "loudnorm=I=-14:TP=-1.5:LRA=11" -ar 44100 -c:a aac -b:a 192k -shortest -movflags +faststart "$D/mudhaker-motion.mp4"
   echo "$D/mudhaker-motion.mp4"
 fi
+# نسخة الأغنية + التعليق: موسيقاها من motion_song.py
+if [ -f "$D/silent/motion.mp4" ] && [ -f "$A/motion-song.wav" ]; then
+  "$FF" -y -loglevel error -i "$D/silent/motion.mp4" -i "$A/motion-song.wav" -map 0:v -map 1:a -c:v copy \
+    -af "loudnorm=I=-14:TP=-1.5:LRA=11" -ar 44100 -c:a aac -b:a 192k -shortest -movflags +faststart "$D/mudhaker-motion-song.mp4"
+  echo "$D/mudhaker-motion-song.mp4"
+fi
