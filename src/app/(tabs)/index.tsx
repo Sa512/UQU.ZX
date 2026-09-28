@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { haptic } from '@/components/haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { Pressable, View } from 'react-native';
@@ -48,7 +49,7 @@ function QuickAction({ icon, label, color, href }: { icon: IconName; label: stri
 }
 
 export default function Home() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
   const slots = useStore((s) => s.slots);
@@ -103,6 +104,17 @@ export default function Home() {
             {greeting(now)}، {firstName} 👋
           </AppText>
         </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isDark ? 'الوضع النهاري' : 'الوضع الليلي'}
+          onPress={() => {
+            haptic.tap();
+            updateSettings({ theme: isDark ? 'light' : 'dark' });
+          }}
+          style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginLeft: spacing.sm }}
+        >
+          <Ionicons name={isDark ? 'sunny' : 'moon'} size={22} color={isDark ? '#FCD34D' : colors.primary} />
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="الإعدادات"

@@ -1,6 +1,8 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import { useStore } from '@/store/useStore';
+import { resolveDark } from '@/lib/themeMode';
+import { useNow } from '@/lib/useNow';
 import { dark, light, type Palette } from './colors';
 
 export const fonts = {
@@ -20,7 +22,9 @@ const ThemeContext = createContext<Theme>({ colors: light, isDark: false });
 export function AppThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
   const pref = useStore((s) => s.settings.theme);
-  const isDark = pref === 'system' ? system === 'dark' : pref === 'dark';
+  // «حسب الوقت» يعيد الحساب كل دقيقة فيتحول التطبيق وحده عند 6 مساءً و6 صباحاً
+  const now = useNow(60_000);
+  const isDark = resolveDark(pref, system === 'dark', new Date(now));
   const value = useMemo(() => ({ colors: isDark ? dark : light, isDark }), [isDark]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

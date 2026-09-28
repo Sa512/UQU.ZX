@@ -82,11 +82,15 @@ export default function Settings() {
           value={settings.theme}
           onChange={(theme) => update({ theme })}
           options={[
-            { value: 'system', label: 'تلقائي' },
-            { value: 'light', label: 'فاتح' },
-            { value: 'dark', label: 'داكن' },
+            { value: 'light', label: 'نهاري ☀️' },
+            { value: 'dark', label: 'ليلي 🌙' },
+            { value: 'time', label: 'حسب الوقت' },
+            { value: 'system', label: 'الجوال' },
           ]}
         />
+        <AppText variant="caption" muted>
+          {settings.theme === 'time' ? 'ليلي من 6 مساءً حتى 6 صباحاً، ونهاري باقي اليوم.' : settings.theme === 'system' ? 'يتبع إعداد المظهر في جوالك.' : 'تقدر تبدّل بسرعة من زر الشمس والقمر في الرئيسية.'}
+        </AppText>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
             <AppText variant="label">الاهتزاز عند اللمس</AppText>

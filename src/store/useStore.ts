@@ -19,10 +19,11 @@ import type { ChannelPost, SectionChannel } from '@/lib/cloud/types';
 import { syncChannel, type SyncResult } from '@/lib/sectionChannel';
 import { mergeIcs, type IcsEvent } from '@/lib/ical';
 import { detectLms, LMS_INFO } from '@/lib/universities';
+import type { ThemePref } from '@/lib/themeMode';
 import { toCards, type Block, type Summary } from '@/lib/summaries';
 
 export type Role = 'student' | 'professor';
-export type ThemePref = 'system' | 'light' | 'dark';
+export type { ThemePref };
 
 export type Settings = {
   name: string;
