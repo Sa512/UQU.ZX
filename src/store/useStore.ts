@@ -20,6 +20,7 @@ import { syncChannel, type SyncResult } from '@/lib/sectionChannel';
 import { mergeIcs, type IcsEvent } from '@/lib/ical';
 import { detectLms, LMS_INFO } from '@/lib/universities';
 import type { ThemePref } from '@/lib/themeMode';
+import type { Profile } from '@/lib/accounts';
 import { toCards, type Block, type Summary } from '@/lib/summaries';
 
 export type Role = 'student' | 'professor';
@@ -55,6 +56,8 @@ export type Settings = {
   appLock: boolean;
   /** وضع «وقت مفتوح» في المذاكرة: يعدّ تصاعدياً بلا نهاية محددة. */
   focusOpen: boolean;
+  /** آخر حساب دخل من هذا الجهاز: دخول حساب مختلف يبدأ ببيانات نظيفة حتى لا يرى بيانات غيره. */
+  lastAccountId: string | null;
 };
 
 export type Course = {
@@ -159,6 +162,8 @@ type State = {
   myBookings: MyBooking[];
   feeds: CalendarFeed[];
   summaries: Summary[];
+  /** حساب المستخدم على الخادم (الإيميل الجامعي). null = لم يسجّل دخوله. */
+  account: Profile | null;
   gpa: GpaState;
   subscription: Subscription;
   transactions: Transaction[];
@@ -166,6 +171,8 @@ type State = {
 
 type Actions = {
   updateSettings: (p: Partial<Settings>) => void;
+  /** يحفظ ملف الحساب، ويضبط الدور والاسم والجامعة في الإعدادات منه. */
+  setAccount: (p: Profile | null) => void;
   addCourse: (c: Omit<Course, 'id'>) => string;
   updateCourse: (id: string, p: Partial<Course>) => void;
   deleteCourse: (id: string) => void;
@@ -250,6 +257,7 @@ const defaultSettings: Settings = {
   semesterStartedAt: null,
   appLock: false,
   focusOpen: false,
+  lastAccountId: null,
 };
 
 const initialState: State = {
@@ -269,6 +277,7 @@ const initialState: State = {
   myBookings: [],
   feeds: [],
   summaries: [],
+  account: null,
   gpa: { prevGpa: 0, prevCredits: 0, rows: [] },
   subscription: { plan: 'free', until: null },
   transactions: [],
@@ -283,6 +292,16 @@ export const useStore = create<State & Actions>()(
       ...initialState,
 
       updateSettings: (p) => set((s) => ({ settings: { ...s.settings, ...p } })),
+      setAccount: (p) =>
+        set((s) => {
+          if (!p) return { account: null };
+          const fromProfile = { role: p.role, name: p.full_name, university: p.university || s.settings.university, lastAccountId: p.id };
+          // حساب آخر على نفس الجهاز: تُمسح بيانات الجهاز المحلية (الاشتراك مرتبط بحساب المتجر فيبقى)
+          if (s.settings.lastAccountId && s.settings.lastAccountId !== p.id) {
+            return { ...initialState, account: p, settings: { ...defaultSettings, theme: s.settings.theme, ...fromProfile }, subscription: s.subscription, transactions: s.transactions };
+          }
+          return { account: p, settings: { ...s.settings, ...fromProfile } };
+        }),
 
       addCourse: (c) => {
         const id = uid();

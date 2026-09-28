@@ -36,6 +36,7 @@ export default function More() {
   const courses = useStore((s) => s.courses.length);
   const decks = useStore((s) => s.decks.length);
   const summaries = useStore((s) => s.summaries.length);
+  const isAdmin = useStore((s) => !!s.account?.is_admin);
   const slots = useStore((s) => s.slots);
   const allCourses = useStore((s) => s.courses);
   const sections = useStore((s) => s.sections);
@@ -56,10 +57,11 @@ export default function More() {
   if (!isProf) {
     items.splice(1, 0, { icon: 'qr-code', title: 'التحضير بالـ QR', subtitle: 'امسح رمز الدكتور', color: '#DB2777', href: '/checkin' });
     items.splice(1, 0, { icon: 'enter', title: 'انضم لشعبة', subtitle: 'مواعيد وإعلانات الدكتور', color: '#4F46E5', href: '/join' });
-    items.splice(2, 0, { icon: 'calendar-clear', title: 'حجز ساعة مكتبية', subtitle: 'احجز موعدك مع الدكتور', color: '#0F766E', href: '/book' });
+    items.splice(2, 0, { icon: 'calendar-clear', title: 'حجز ساعة مكتبية', subtitle: 'دكاترة جامعتك ومواعيدهم', color: '#0F766E', href: '/book' });
   }
   items.splice(2, 0, { icon: 'document-text', title: isProf ? 'ملخصات المحاضرات' : 'ملخصاتي', subtitle: `${summaries ? `${ar(summaries, SUMMARIES)} · ` : ''}مصطلحات وأسئلة تتحول لبطاقات`, color: '#C026D3', href: '/notes' });
   if (!isProf) items.push({ icon: 'school', title: 'ربط نظام الجامعة', subtitle: 'Blackboard وMoodle وCanvas وD2L', color: '#0369A1', href: '/calendar-import' });
+  if (isAdmin) items.unshift({ icon: 'shield-checkmark', title: 'لوحة المشرف', subtitle: 'المستخدمون والموافقات وتصدير Excel', color: '#0F172A', href: '/admin' });
   items.push({ icon: 'cloud-download', title: 'استيراد الجدول', subtitle: 'من بوابة الجامعة أو Excel', color: '#7C3AED', href: '/schedule-import' });
   items.push({ icon: 'sparkles', title: 'ملخص فصلك', subtitle: 'فصلك بالأرقام وشاركه', color: '#7C3AED', href: '/wrapped' });
   items.push({ icon: 'image', title: 'خلفية الجدول', subtitle: 'جدولك كخلفية للجوال', color: '#B45309', href: '/wallpaper' });

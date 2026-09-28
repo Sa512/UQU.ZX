@@ -1,4 +1,5 @@
 import type { Window } from '../officeHours';
+import type { AccountRole, AccountStatus, ExportRow, Profile } from '../accounts';
 
 export type PageInfo = { id: string; title: string; host_name: string; slot_minutes: number; is_open: boolean; windows: Window[]; taken: string[] };
 export type Booking = { id: string; page_id: string; starts_at: string; ends_at: string; student_name: string; uni_id: string; topic: string; status: 'booked' | 'cancelled' };
@@ -19,6 +20,12 @@ export type ChannelInput = {
   exams: ChannelExam[];
 };
 export type SectionChannel = ChannelInput & { id: string; code: string; updated_at: string; posts: ChannelPost[] };
+
+/** دكتور فتح الحجز في جامعة الطالب (من دليل الساعات المكتبية). */
+export type OfficeHost = { code: string; title: string; host_name: string; slot_minutes: number };
+export type AdminUser = Profile & { created_at: string; last_seen_at: string };
+export type AdminOverview = { students: number; professors: number; pending: number; new_week: number; active_week: number; open_pages: number; bookings_week: number; universities: { university: string; users: number }[] };
+export type AdminRules = { domains: { domain: string; university: string; kind: 'student' | 'staff' }[]; overrides: { email: string; role: AccountRole | null; is_admin: boolean; note: string }[] };
 
 export interface CloudApi {
   /** true = خادم Supabase حقيقي، false = وضع تجريبي على هذا الجهاز. */
@@ -42,5 +49,25 @@ export interface CloudApi {
   /** يحذف كل ما يخص هذا المستخدم على الخادم (حق الحذف في نظام حماية البيانات الشخصية). */
   deleteMyData(): Promise<void>;
   subscribeChannel(code: string, token: string): Promise<void>;
+  // ——— الحساب (الإيميل الجامعي) ———
+  signUp(email: string, password: string): Promise<void>;
+  /** يؤكد الإيميل بالرمز المرسل (6 أرقام) ويفتح الجلسة. */
+  verifyEmail(email: string, code: string): Promise<void>;
+  signIn(email: string, password: string): Promise<void>;
+  sendReset(email: string): Promise<void>;
+  resetPassword(email: string, code: string, password: string): Promise<void>;
+  signOut(): Promise<void>;
+  completeProfile(name: string, role: AccountRole, university: string): Promise<Profile>;
+  myProfile(): Promise<Profile | null>;
+  deleteAccount(): Promise<void>;
+  listOfficeHosts(query: string): Promise<OfficeHost[]>;
+  // ——— لوحة المشرف ———
+  adminOverview(): Promise<AdminOverview>;
+  adminUsers(query: string, role: AccountRole | null, status: AccountStatus | null): Promise<AdminUser[]>;
+  adminSetUser(id: string, role: AccountRole, status: AccountStatus): Promise<void>;
+  adminExport(): Promise<ExportRow[]>;
+  adminRules(): Promise<AdminRules>;
+  adminSetRule(domain: string, university: string, kind: 'student' | 'staff' | null): Promise<void>;
+  adminSetOverride(email: string, role: AccountRole | null, admin: boolean, note: string): Promise<void>;
   unsubscribeChannel(code: string, token: string): Promise<void>;
 }

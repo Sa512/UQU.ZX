@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 import appJson from '../../app.json';
@@ -15,6 +16,7 @@ import { Toggle } from '@/components/Toggle';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { APP_INFO } from '@/content/app';
+import { ROLE_LABEL, STATUS_LABEL } from '@/lib/accounts';
 import { buildBackup } from '@/lib/backup';
 import { cloud } from '@/lib/cloud';
 import { lockAvailable, unlock } from '@/lib/appLock';
@@ -51,14 +53,63 @@ export default function Settings() {
   const [backupMsg, setBackupMsg] = useState<string>();
   const restoreBackup = useStore((s) => s.restoreBackup);
 
-  const saveProfile = () => update({ name: name.trim() || settings.name, university: university.trim(), major: major.trim() });
+  const account = useStore((s) => s.account);
+  const setAccount = useStore((s) => s.setAccount);
+  const [accountMsg, setAccountMsg] = useState<string>();
+  /** يحدّث الاسم والجامعة والدور على الخادم (هو من يحسم الدور حسب الإيميل). */
+  const syncProfile = async (p: { name?: string; role?: Role; university?: string }) => {
+    if (!account) return;
+    setAccountMsg(undefined);
+    try {
+      setAccount(await cloud.completeProfile(p.name ?? account.full_name, p.role ?? account.role, p.university ?? account.university));
+    } catch (e) {
+      setAccountMsg((e as Error).message);
+    }
+  };
+  const saveProfile = () => {
+    update({ name: name.trim() || settings.name, university: university.trim(), major: major.trim() });
+    if (account && name.trim().length >= 2 && name.trim() !== account.full_name) syncProfile({ name: name.trim() });
+  };
 
   return (
     <Screen back title="الإعدادات">
       <SectionHeader title="الملف الشخصي" />
       <Card style={{ gap: spacing.md }}>
+        {account && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <Ionicons name="person-circle" size={40} color={colors.primary} />
+            <View style={{ flex: 1 }}>
+              <AppText variant="label" style={{ writingDirection: 'ltr', textAlign: 'right' }} numberOfLines={1}>
+                {account.email}
+              </AppText>
+              <AppText variant="caption" muted>
+                {ROLE_LABEL[account.role]}
+                {account.role === 'professor' ? ` · ${STATUS_LABEL[account.status]}` : ''}
+                {account.is_admin ? ' · مشرف' : ''}
+              </AppText>
+            </View>
+            <Button
+              title="خروج"
+              size="sm"
+              variant="ghost"
+              icon="log-out-outline"
+              onPress={() =>
+                confirm('تسجيل الخروج؟', 'بيانات جهازك تبقى، وتحتاج تسجيل الدخول لاستخدام التطبيق.', async () => {
+                  await cloud.signOut();
+                  setAccount(null);
+                  router.replace('/auth');
+                }, 'تسجيل الخروج')
+              }
+            />
+          </View>
+        )}
+        {account?.role === 'professor' && account.status === 'pending' && (
+          <AppText variant="caption" color={colors.warning}>
+            حسابك كعضو هيئة تدريس بانتظار موافقة المشرف، لأن نطاق إيميلك غير معروف لدينا. تستخدم كل الأدوات الآن، ويظهر اسمك في دليل الساعات المكتبية بعد الموافقة.
+          </AppText>
+        )}
         <Field label="الاسم" value={name} onChangeText={setName} onBlur={saveProfile} onEndEditing={saveProfile} />
-        <UniversityField value={university} onChange={(v) => { setUniversity(v); update({ university: v.trim() }); }} />
+        <UniversityField value={university} onChange={(v) => { setUniversity(v); update({ university: v.trim() }); }} onPick={(v) => syncProfile({ university: v })} />
         {settings.role === 'student' && (
           <Field label="الرقم الجامعي" value={uniIdText} onChangeText={setUniIdText} onBlur={() => update({ uniId: uniIdText.replace(/\D/g, '') })} onEndEditing={() => update({ uniId: uniIdText.replace(/\D/g, '') })} keyboardType="number-pad" hint="يُستخدم للتحضير بالـ QR وحجز الساعات المكتبية" ltr />
         )}
@@ -67,13 +118,18 @@ export default function Settings() {
           <AppText variant="label">الدور</AppText>
           <Segmented<Role>
             value={settings.role}
-            onChange={(role) => update({ role })}
+            onChange={(role) => (account ? syncProfile({ role }) : update({ role }))}
             options={[
               { value: 'student', label: 'طالب' },
               { value: 'professor', label: 'عضو هيئة تدريس' },
             ]}
           />
         </View>
+        {accountMsg && (
+          <AppText variant="caption" color={colors.danger}>
+            {accountMsg}
+          </AppText>
+        )}
       </Card>
 
       <SectionHeader title="المظهر" />
@@ -271,6 +327,24 @@ export default function Settings() {
             {cloudMsg.text}
           </AppText>
         )}
+        {account && (
+          <Button
+            title="حذف حسابي نهائياً"
+            variant="ghost"
+            icon="person-remove-outline"
+            onPress={() =>
+              confirm('حذف حسابك نهائياً؟', 'يُحذف حسابك وكل بياناتك على الخادم (حجوزات، صفحات، قنوات)، وتُمسح بيانات هذا الجهاز. لا يمكن التراجع.', async () => {
+                try {
+                  await cloud.deleteAccount();
+                  resetAll();
+                  router.replace('/onboarding');
+                } catch (e) {
+                  setCloudMsg({ ok: false, text: (e as Error).message });
+                }
+              }, 'حذف الحساب')
+            }
+          />
+        )}
         <Button
           title="حذف جميع البيانات"
           variant="danger"
@@ -279,6 +353,7 @@ export default function Settings() {
             confirm('حذف جميع البيانات؟', 'سيُحذف كل شيء من جهازك ومن الخادم نهائياً ولا يمكن التراجع.', async () => {
               // نحاول الخادم أولاً؛ إن لم يتوفر إنترنت تبقى بيانات الخادم وتُحذف تلقائياً حسب مدد الحفظ
               await cloud.deleteMyData().catch(() => {});
+              await cloud.signOut();
               resetAll();
               router.replace('/onboarding');
             })

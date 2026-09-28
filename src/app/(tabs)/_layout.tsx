@@ -19,7 +19,10 @@ export default function TabsLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const onboarded = useStore((s) => s.settings.onboarded);
-  if (!onboarded) return <Redirect href="/onboarding" />;
+  const signedIn = useStore((s) => !!s.account);
+  // الدخول بالإيميل الجامعي إجباري: المستخدم الجديد يبدأ بالترحيب ثم الحساب، ومن حدّث التطبيق يسجّل دخوله مباشرة
+  if (!signedIn) return <Redirect href={onboarded ? '/auth' : '/onboarding'} />;
+  if (!onboarded) return <Redirect href={{ pathname: '/onboarding', params: { step: '2' } }} />;
 
   const bottom = Math.max(insets.bottom, Platform.OS === 'web' ? 10 : 8);
   return (

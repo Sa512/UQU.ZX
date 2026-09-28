@@ -60,8 +60,13 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
 
 1. أنشئ مشروعاً في https://supabase.com (الخطة المجانية تكفي للبداية).
    - **المنطقة:** اختر الأقرب للمملكة. بيانات الطلاب (الاسم والرقم الجامعي) بيانات شخصية؛ راجع مع جامعتك متطلبات نظام حماية البيانات الشخصية لنقلها خارج المملكة.
-2. Authentication ← Sign In / Providers ← فعّل **Anonymous Sign-Ins** (ويُفضّل تفعيل CAPTCHA لاحقاً للحد من الإساءة).
-3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql`) ← Run.
+2. **الدخول بالإيميل الجامعي (من الإصدار 1.6):**
+   - Authentication ← Sign In / Providers ← **Email**: فعّل Email و**Confirm email**، وأوقف **Anonymous sign-ins** (لم تعد مستخدمة).
+   - Authentication ← Emails ← Templates: في قالبي **Confirm signup** و**Reset password** ضع الرمز بدل الرابط، مثلاً: `رمز تأكيد حسابك في مذاكر: {{ .Token }}` (التطبيق يطلب الرمز المكوّن من 6 أرقام).
+   - Authentication ← Emails ← **SMTP Settings**: اربط مزوّد إرسال خاص (مثل Resend أو Amazon SES أو Brevo) باسم نطاقك. مزوّد Supabase الافتراضي محدود جداً ولا يصلح للإطلاق، وبعض إيميلات الجامعات ترفض الرسائل غير الموثّقة.
+   - Authentication ← Attack Protection: فعّل **CAPTCHA** وراجع **Rate Limits** للتسجيل وإرسال الرموز.
+3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql` ثم `20260929000000_accounts.sql`) ← Run.
+   - الهجرة الأخيرة تجعل `asd1911147@gmail.com` مشرفاً (سجّل به من التطبيق لتظهر لك «لوحة المشرف» في المزيد). لإضافة مشرف آخر: من اللوحة ← استثناءات الإيميل ← مشرف.
 4. التنظيف التلقائي: Database ← Extensions ← فعّل `pg_cron`، ثم نفّذ:
    ```sql
    select cron.schedule('mudhaker-cleanup', '0 3 * * *', 'select public.cleanup_old_data()');
@@ -72,7 +77,8 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "eyJ..." --environment production --visibility plaintext
    ```
    (مفتاح anon عام بطبيعته؛ الحماية في قواعد RLS والدوال المختبرة في `supabase/tests`.)
-6. **حماية الدخول المجهول:** Authentication ← Sign In / Providers ← فعّل **Anonymous sign-ins**، ثم Authentication ← Attack Protection ← فعّل **CAPTCHA** (Cloudflare Turnstile)، وراجع **Rate Limits** (مثلاً 30 تسجيلاً مجهولاً في الساعة لكل عنوان IP).
+6. **حساب مراجعة Apple وGoogle:** المراجع لا يملك إيميلاً جامعياً. من لوحة المشرف ← استثناءات الإيميل أضف مثلاً `review@yourdomain.com` كطالب، ثم أنشئ الحساب من Supabase ← Authentication ← Users ← Add user (مع Auto Confirm)، وضع الإيميل وكلمة المرور في «App Review Information» و«App access» في Google Play.
+   > ⚠️ Apple (الإرشاد 5.1.1) قد ترفض التطبيق إن طلب تسجيل الدخول لميزات لا تحتاج حساباً (الجدول والمهام والملخصات). إن حصل ذلك فالحل الأسرع: السماح بتصفح التطبيق دون حساب وطلب الدخول عند الحجز والتحضير والقنوات فقط.
 7. **إشعارات إعلانات الدكاترة (اختياري لكنه موصى به):**
    ```bash
    npx eas-cli@latest init                       # يضيف projectId إلى app.json (مطلوب لعناوين الإشعارات)

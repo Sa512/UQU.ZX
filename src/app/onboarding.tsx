@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,8 +68,11 @@ export default function Onboarding() {
   const update = useStore((s) => s.updateSettings);
   const loadSample = useStore((s) => s.loadSampleData);
   const current = useStore((s) => s.settings);
-  const [step, setStep] = useState(0);
-  const [role, setRole] = useState<Role>(current.role);
+  const account = useStore((s) => s.account);
+  const params = useLocalSearchParams<{ step?: string }>();
+  // بعد تسجيل الدخول نكمل من صفحة «عرّفنا بنفسك»؛ الدور والاسم والجامعة من الحساب
+  const [step, setStep] = useState(account && params.step === '2' ? 2 : 0);
+  const [role, setRole] = useState<Role>(account?.role ?? current.role);
   const [name, setName] = useState(current.name);
   const [university, setUniversity] = useState(current.university || 'جامعة أم القرى');
   const [major, setMajor] = useState(current.major);
@@ -77,7 +80,7 @@ export default function Onboarding() {
   const [nameError, setNameError] = useState<string>();
 
   const finish = (withSample: boolean) => {
-    update({ role, name: name.trim(), university: university.trim(), major: major.trim(), gradeScale: scale, onboarded: true, lastSeenVersion: WHATS_NEW.version });
+    update({ ...(account ? {} : { role, name: name.trim(), university: university.trim() }), major: major.trim(), gradeScale: scale, onboarded: true, lastSeenVersion: WHATS_NEW.version });
     if (withSample) loadSample();
     haptic.success();
     router.replace('/');
@@ -113,7 +116,7 @@ export default function Onboarding() {
           ))}
         </ScrollView>
         <View style={{ padding: spacing.xl, paddingBottom: insets.bottom + spacing.lg }}>
-          <Button title="لنبدأ" size="lg" icon="arrow-back" onPress={() => setStep(1)} />
+          <Button title="لنبدأ" size="lg" icon="arrow-back" onPress={() => (account ? setStep(2) : router.push('/auth'))} />
         </View>
       </View>
     );
@@ -122,7 +125,7 @@ export default function Onboarding() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.md }}>
-        <Pressable accessibilityRole="button" accessibilityLabel="رجوع" hitSlop={10} onPress={() => setStep(step - 1)}>
+        <Pressable accessibilityRole="button" accessibilityLabel="رجوع" hitSlop={10} onPress={() => setStep(account ? 0 : step - 1)}>
           <Ionicons name="chevron-forward" size={26} color={colors.text} />
         </Pressable>
         <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
@@ -146,6 +149,15 @@ export default function Onboarding() {
         ) : (
           <>
             <AppText variant="title">عرّفنا بنفسك</AppText>
+            {account ? (
+              <View style={{ backgroundColor: colors.primarySoft, borderRadius: radius.lg, padding: spacing.lg, gap: 2 }}>
+                <AppText variant="h3">أهلاً {account.full_name} 👋</AppText>
+                <AppText variant="caption" muted>
+                  {[account.role === 'professor' ? 'عضو هيئة تدريس' : 'طالب', account.university, account.email].filter(Boolean).join(' · ')}
+                </AppText>
+              </View>
+            ) : (
+              <>
             <Field
               label="الاسم"
               placeholder={role === 'student' ? 'مثال: عبدالله' : 'مثال: د. سارة'}
@@ -159,6 +171,8 @@ export default function Onboarding() {
               returnKeyType="next"
             />
             <UniversityField value={university} onChange={setUniversity} />
+              </>
+            )}
             <Field label={role === 'student' ? 'التخصص' : 'القسم'} placeholder={role === 'student' ? 'مثال: علوم الحاسب' : 'مثال: قسم الرياضيات'} value={major} onChangeText={setMajor} />
             <View style={{ gap: 6 }}>
               <AppText variant="label">نظام المعدل في جامعتك</AppText>
@@ -184,12 +198,12 @@ export default function Onboarding() {
               title="ابدأ بجدول تجريبي"
               size="lg"
               icon="sparkles"
-              onPress={() => (name.trim().length < 2 ? setNameError('اكتب اسمك (حرفان على الأقل)') : finish(true))}
+              onPress={() => (!account && name.trim().length < 2 ? setNameError('اكتب اسمك (حرفان على الأقل)') : finish(true))}
             />
             <Button
               title="ابدأ من الصفر"
               variant="ghost"
-              onPress={() => (name.trim().length < 2 ? setNameError('اكتب اسمك (حرفان على الأقل)') : finish(false))}
+              onPress={() => (!account && name.trim().length < 2 ? setNameError('اكتب اسمك (حرفان على الأقل)') : finish(false))}
             />
           </>
         )}

@@ -133,3 +133,23 @@ describe('store: summaries', () => {
     expect(useStore.getState().tasks[0].notes).toBe('من تقويم Moodle');
   });
 });
+
+describe('store: accounts on a shared device', () => {
+  beforeEach(() => useStore.getState().resetAll());
+  const prof = (id: string, role: 'student' | 'professor' = 'student') => ({ id, email: `${id}@uqu.edu.sa`, full_name: `مستخدم ${id}`, university: 'جامعة أم القرى', role, status: 'active' as const, is_admin: false });
+
+  it('keeps data for the same account and starts clean for a different one', () => {
+    const s = useStore.getState();
+    s.setAccount(prof('a', 'professor'));
+    s.updateSettings({ onboarded: true });
+    s.addCourse({ name: 'مادة', code: '', color: '#000', credits: 3, instructor: '' });
+    expect(useStore.getState().settings).toMatchObject({ role: 'professor', name: 'مستخدم a', university: 'جامعة أم القرى' });
+    useStore.getState().setAccount(null);
+    useStore.getState().setAccount(prof('a', 'professor'));
+    expect(useStore.getState().courses).toHaveLength(1);
+    useStore.getState().setAccount(null);
+    useStore.getState().setAccount(prof('b'));
+    expect(useStore.getState().courses).toHaveLength(0);
+    expect(useStore.getState().settings).toMatchObject({ onboarded: false, role: 'student', lastAccountId: 'b' });
+  });
+});

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Share, View } from 'react-native';
@@ -22,6 +23,7 @@ import { radius, spacing, useTheme } from '@/theme';
 export default function OfficeHours() {
   const { colors } = useTheme();
   const settings = useStore((s) => s.settings);
+  const account = useStore((s) => s.account);
   const slots = useStore((s) => s.slots);
   const page = useStore((s) => s.officePage);
   const setOfficePage = useStore((s) => s.setOfficePage);
@@ -53,7 +55,7 @@ export default function OfficeHours() {
       const r = await cloud.publishPage({
         id: page?.id,
         title: title.trim() || 'الساعات المكتبية',
-        host_name: settings.name.trim() || 'عضو هيئة التدريس',
+        host_name: account?.full_name || settings.name.trim() || 'عضو هيئة التدريس',
         slot_minutes: minutes,
         windows: office.map((s) => ({ weekday: s.day, start_min: s.start, end_min: s.end, location: s.room })),
       });
@@ -85,6 +87,18 @@ export default function OfficeHours() {
       ) : (
         <>
           {page && (
+            <Card style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center', backgroundColor: account?.status === 'active' ? colors.successSoft : colors.warningSoft }}>
+              <Ionicons name={account?.status === 'active' ? 'megaphone' : 'hourglass'} size={24} color={account?.status === 'active' ? colors.success : colors.warning} />
+              <AppText variant="caption" style={{ flex: 1 }} color={account?.status === 'active' ? colors.success : colors.warning}>
+                {account?.status === 'active'
+                  ? page.open
+                    ? `معلنة لكل طلاب ${account.university || 'جامعتك'}: يلقونك باسمك في «حجز ساعة مكتبية» ويحجزون مباشرة.`
+                    : 'الحجز موقوف: لا تظهر للطلاب حتى تعيد تشغيله.'
+                  : 'حسابك بانتظار موافقة المشرف؛ حتى ذلك الحين يحجز الطلاب بالرمز فقط.'}
+              </AppText>
+            </Card>
+          )}
+          {page && (
             <Card style={{ alignItems: 'center', gap: spacing.md }}>
               <QrCode value={bookLink(page.code)} size={180} />
               <View style={{ backgroundColor: colors.surfaceAlt, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }}>
@@ -93,7 +107,7 @@ export default function OfficeHours() {
                 </AppText>
               </View>
               <AppText variant="caption" muted center>
-                يمسحه الطالب أو يكتبه في «المزيد ← حجز ساعة مكتبية». ضعه في المنهج أو على باب المكتب.
+                رمز احتياطي للطلاب من خارج الدليل: يمسحونه أو يكتبونه في «حجز ساعة مكتبية».
               </AppText>
               <View style={{ flexDirection: 'row', gap: spacing.sm, alignSelf: 'stretch' }}>
                 <Button style={{ flex: 1 }} title="مشاركة" icon="share-outline" variant="secondary" onPress={() => Share.share({ message: shareMsg }).catch(() => {})} />

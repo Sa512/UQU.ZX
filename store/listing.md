@@ -96,17 +96,18 @@
 
 **App Store — App Privacy** (بعد إضافة الحجز والتحضير بالـ QR وقناة الشعبة):
 - **Contact Info → Name:** نعم — App Functionality — Linked to user — لا يُستخدم للتتبّع.
-- **Identifiers → User ID:** نعم (الرقم الجامعي + معرّف الجهاز المجهول) — App Functionality — Linked to user — لا تتبّع.
+- **Contact Info → Email Address:** نعم (الإيميل الجامعي للحساب) — App Functionality — Linked to user — لا تتبّع.
+- **Identifiers → User ID:** نعم (الرقم الجامعي + معرّف الحساب) — App Functionality — Linked to user — لا تتبّع.
 - **Identifiers → Device ID:** نعم (عنوان إشعارات Expo لقنوات الشعب التي انضم إليها الطالب) — App Functionality — Not linked to identity — لا تتبّع.
 - **User Content → Other User Content:** نعم (موضوع الزيارة، وإعلانات قناة الشعبة ومواعيدها التي ينشرها عضو هيئة التدريس) — App Functionality — Linked to user.
 - **Purchases → Purchase History:** نعم (عبر RevenueCat) — App Functionality — Not linked to identity.
 - باقي الفئات (الموقع، جهات الاتصال، الصحة، البيانات المالية، سجل التصفح، التشخيص): **لا**.
 
 **Google Play — Data safety:**
-- هل يجمع التطبيق بيانات؟ **نعم** — Personal info: *Name* و*User IDs* (الرقم الجامعي)، وApp activity: *Other user-generated content* (موضوع الزيارة، وإعلانات قناة الشعبة). الغرض: App functionality. اختياري (فقط عند استخدام الحجز أو التحضير بالـ QR أو نشر قناة شعبة).
+- هل يجمع التطبيق بيانات؟ **نعم** — Personal info: *Name* و*Email address* (الإيميل الجامعي، مطلوب لإنشاء الحساب) و*User IDs* (الرقم الجامعي)، وApp activity: *Other user-generated content* (موضوع الزيارة، وإعلانات قناة الشعبة). الغرض: App functionality. اختياري (فقط عند استخدام الحجز أو التحضير بالـ QR أو نشر قناة شعبة).
 - هل تُشارك مع أطراف ثالثة؟ **لا** (Supabase معالج بيانات نيابة عنا، وليس مشاركة).
 - هل البيانات مشفرة أثناء النقل؟ **نعم** (HTTPS).
-- هل يمكن حذفها؟ **نعم** — من داخل التطبيق: الإعدادات ← حذف بياناتي من الخادم، وتلقائياً (التحضير 30 يوماً، الحجوزات 90، الإعلانات 180).
+- هل يمكن حذفها؟ **نعم** — من داخل التطبيق: الإعدادات ← حذف حسابي نهائياً (الحساب وكل بياناته)، أو حذف بياناتي من الخادم، وتلقائياً (التحضير 30 يوماً، الحجوزات 90، الإعلانات 180).
 - الإعلانات: **لا يحتوي على إعلانات**.
 - الجمهور المستهدف: 18 سنة فأكثر (طلاب الجامعات).
 

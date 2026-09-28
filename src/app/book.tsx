@@ -10,7 +10,8 @@ import { haptic } from '@/components/haptics';
 import { QrScanner } from '@/components/QrScanner';
 import { Pill } from '@/components/Rows';
 import { Screen, SectionHeader } from '@/components/Screen';
-import { cloud, type PageInfo } from '@/lib/cloud';
+import { cloud, type OfficeHost, type PageInfo } from '@/lib/cloud';
+import { Ionicons } from '@expo/vector-icons';
 import { latinDigits } from '@/lib/csv';
 import { DAY_NAMES, formatMinutes, formatShortDate, fromDateKey } from '@/lib/dates';
 import { generateSlots, parseQr, riyadhDay, type OfficeSlot } from '@/lib/officeHours';
@@ -35,9 +36,28 @@ export default function Book() {
   const [topic, setTopic] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
   const [scan, setScan] = useState(false);
+  const [hosts, setHosts] = useState<OfficeHost[] | null>(null);
+  const [query, setQuery] = useState('');
+  const [codeOpen, setCodeOpen] = useState(!!params.c);
+  const university = useStore((s) => s.account?.university || s.settings.university);
   const now = useNow();
 
-  const load = useCallback(async (c: string) => {
+  // دليل الساعات المكتبية: كل دكتور معتمد في جامعتك فتح الحجز يظهر هنا (دون رمز)
+  useEffect(() => {
+    let alive = true;
+    const t = setTimeout(() => {
+      cloud
+        .listOfficeHosts(query)
+        .then((h) => alive && setHosts(h))
+        .catch(() => alive && setHosts([]));
+    }, query ? 300 : 0);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [query]);
+
+  const load = useCallback(async (c: string, verifiedName?: string) => {
     const q = parseQr(c);
     const clean = (q.code || c).trim().toUpperCase();
     if (!/^[A-Z0-9]{6}$/.test(clean)) return setMsg({ ok: false, text: 'الرمز من 6 خانات، تجده عند الدكتور.' });
@@ -47,7 +67,8 @@ export default function Book() {
     try {
       const p = await cloud.getPage(clean);
       if (!p) setMsg({ ok: false, text: 'الرمز غير صحيح. تأكد منه مع الدكتور.' });
-      setPage(p);
+      // من الدليل: الاسم المعتمد في حساب الدكتور، لا ما كُتب في الصفحة
+      setPage(p && verifiedName ? { ...p, host_name: verifiedName } : p);
       setCode(clean);
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
@@ -75,19 +96,19 @@ export default function Book() {
       update({ uniId: id || settings.uniId });
       saveMyBooking({ id: bid, code, title: page.title, host: page.host_name, startsAt: slot.startsAt, location: slot.location, status: 'booked' });
       haptic.success();
-      setMsg({ ok: true, text: `تم الحجز: ${DAY_NAMES[slot.weekday]} ${formatShortDate(fromDateKey(slot.dayKey))} الساعة ${formatMinutes(slot.minute)} ✓ سنذكّرك قبلها بنصف ساعة.` });
-      setSlot(null);
       setTopic('');
-      load(code);
+      // التحديث يمسح الرسالة، فنعرض نتيجة الحجز بعده
+      await load(code, page.host_name);
+      setMsg({ ok: true, text: `تم الحجز: ${DAY_NAMES[slot.weekday]} ${formatShortDate(fromDateKey(slot.dayKey))} الساعة ${formatMinutes(slot.minute)} ✓ سنذكّرك قبلها بنصف ساعة.` });
     } catch (e) {
       haptic.warn();
+      await load(code, page.host_name);
       setMsg({ ok: false, text: (e as Error).message });
-      load(code);
     }
   };
 
   return (
-    <Screen back title="حجز ساعة مكتبية" subtitle={page ? `${page.host_name} · ${page.title}` : 'أدخل رمز الدكتور أو امسحه'}>
+    <Screen back title="حجز ساعة مكتبية" subtitle={page ? `${page.host_name} · ${page.title}` : 'اختر الدكتور وشوف مواعيده'}>
       {upcoming.length > 0 && !page && (
         <>
           <SectionHeader title="حجوزاتي القادمة" />
@@ -123,7 +144,42 @@ export default function Book() {
         </>
       )}
 
+      {!page && (
+        <>
+          <SectionHeader title={university ? `دكاترة ${university}` : 'الدكاترة'} />
+          <Field placeholder="ابحث باسم الدكتور أو المادة…" value={query} onChangeText={setQuery} returnKeyType="search" />
+          {hosts === null ? (
+            <AppText variant="caption" muted center>
+              جاري التحميل…
+            </AppText>
+          ) : hosts.length === 0 ? (
+            <Card>
+              <AppText variant="caption" muted center>
+                {query ? 'لا نتائج. جرّب جزءاً من الاسم.' : 'لم يفتح أي دكتور في جامعتك الحجز بعد. تظهر ساعاتهم هنا تلقائياً أول ما يفتحونها.'}
+              </AppText>
+            </Card>
+          ) : (
+            hosts.map((h) => (
+              <Card key={h.code} onPress={() => load(h.code, h.host_name)} accessibilityLabel={`${h.host_name}، ${h.title}`} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="person" size={22} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <AppText variant="h3">{h.host_name}</AppText>
+                  <AppText variant="caption" muted numberOfLines={1}>
+                    {h.title} · مواعيد {h.slot_minutes} دقيقة
+                  </AppText>
+                </View>
+                <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+              </Card>
+            ))
+          )}
+          {!codeOpen && <Button title="عندي رمز من الدكتور" variant="ghost" size="sm" icon="keypad-outline" onPress={() => setCodeOpen(true)} />}
+        </>
+      )}
+
       {!page ? (
+        codeOpen && (
         <Card style={{ gap: spacing.md }}>
           <AppText variant="h3">رمز الدكتور</AppText>
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
@@ -134,6 +190,7 @@ export default function Book() {
           </View>
           {scan ? <QrScanner onScan={(d) => { setScan(false); load(d); }} height={260} /> : <Button title="مسح رمز QR" variant="ghost" icon="qr-code-outline" onPress={() => setScan(true)} />}
         </Card>
+        )
       ) : (
         <>
           {!page.is_open && (
@@ -206,7 +263,7 @@ export default function Book() {
               <Button title="احجز الموعد" icon="checkmark" onPress={book} />
             </Card>
           )}
-          <Button title="رمز آخر" variant="ghost" onPress={() => { setPage(null); setMsg(undefined); }} />
+          <Button title="دكتور آخر" variant="ghost" onPress={() => { setPage(null); setMsg(undefined); }} />
         </>
       )}
       {msg && (

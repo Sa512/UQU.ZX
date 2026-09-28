@@ -1,11 +1,12 @@
-/** التنفيذ الحقيقي على Supabase (تسجيل دخول مجهول + دوال RPC محمية). */
+/** التنفيذ الحقيقي على Supabase (حساب بالإيميل الجامعي + دوال RPC محمية). */
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { toCloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { Booking, CheckIn, CloudApi, PageInfo, Session } from './types';
+import type { AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
+import { normalizeEmail, type ExportRow, type Profile } from '../accounts';
 
 export function createSupabaseApi(url: string, anonKey: string): CloudApi {
   const sb: SupabaseClient = createClient(url, anonKey, {
@@ -15,17 +16,25 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     AppState.addEventListener('change', (s) => (s === 'active' ? sb.auth.startAutoRefresh() : sb.auth.stopAutoRefresh()));
   }
 
-  let authPromise: Promise<void> | null = null;
-  const ensureAuth = () =>
-    (authPromise ??= (async () => {
-      const { data } = await sb.auth.getSession();
-      if (data.session) return;
-      const { error } = await sb.auth.signInAnonymously();
+  // كل الدوال تحتاج جلسة حساب (الإيميل الجامعي)؛ لا دخول مجهول بعد الإصدار 1.6
+  const ensureAuth = async () => {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) throw new Error('not_signed_in');
+  };
+  const authCall = async (fn: () => PromiseLike<{ error: unknown }>) => {
+    try {
+      const { error } = await fn();
       if (error) throw error;
-    })().catch((e) => {
-      authPromise = null;
-      throw e;
-    }));
+    } catch (e) {
+      throw toCloudError(e);
+    }
+  };
+  /** دوال ترجع {error} قيمةً بدل رفعه. */
+  const checked = <T>(r: T) => {
+    const e = (r as { error?: string } | null)?.error;
+    if (e) throw toCloudError(e);
+    return r;
+  };
 
   const call = async <T>(fn: () => PromiseLike<{ data: T; error: unknown }>): Promise<T> => {
     try {
@@ -115,6 +124,61 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     },
     async unsubscribeChannel(code, token) {
       await call(() => sb.rpc('unsubscribe_channel', { p_code: code, p_token: token }));
+    },
+    async signUp(email, password) {
+      await authCall(() => sb.auth.signUp({ email: normalizeEmail(email), password }));
+    },
+    async verifyEmail(email, code) {
+      await authCall(() => sb.auth.verifyOtp({ email: normalizeEmail(email), token: code.trim(), type: 'signup' }));
+    },
+    async signIn(email, password) {
+      await authCall(() => sb.auth.signInWithPassword({ email: normalizeEmail(email), password }));
+    },
+    async sendReset(email) {
+      await authCall(() => sb.auth.resetPasswordForEmail(normalizeEmail(email)));
+    },
+    async resetPassword(email, code, password) {
+      await authCall(() => sb.auth.verifyOtp({ email: normalizeEmail(email), token: code.trim(), type: 'recovery' }));
+      await authCall(() => sb.auth.updateUser({ password }));
+    },
+    async signOut() {
+      await sb.auth.signOut().catch(() => {});
+    },
+    async completeProfile(name, role, university) {
+      return (await call(() => sb.rpc('complete_profile', { p_name: name.trim(), p_role: role, p_university: university.trim() }))) as Profile;
+    },
+    async myProfile() {
+      const { data } = await sb.auth.getSession();
+      if (!data.session) return null;
+      return (await call(() => sb.rpc('my_profile'))) as Profile | null;
+    },
+    async deleteAccount() {
+      await call(() => sb.rpc('delete_my_account'));
+      await sb.auth.signOut().catch(() => {});
+    },
+    async listOfficeHosts(query) {
+      return (await call(() => sb.rpc('list_office_hosts', { p_query: query.trim() }))) as OfficeHost[];
+    },
+    async adminOverview() {
+      return checked(await call(() => sb.rpc('admin_overview'))) as AdminOverview;
+    },
+    async adminUsers(query, role, status) {
+      return (await call(() => sb.rpc('admin_users', { p_query: query.trim(), p_role: role, p_status: status, p_limit: 200, p_offset: 0 }))) as AdminUser[];
+    },
+    async adminSetUser(id, role, status) {
+      await call(() => sb.rpc('admin_set_user', { p_id: id, p_role: role, p_status: status }));
+    },
+    async adminExport() {
+      return (await call(() => sb.rpc('admin_export'))) as ExportRow[];
+    },
+    async adminRules() {
+      return (await call(() => sb.rpc('admin_rules'))) as AdminRules;
+    },
+    async adminSetRule(domain, university, kind) {
+      await call(() => sb.rpc('admin_set_rule', { p_domain: domain, p_university: university, p_kind: kind }));
+    },
+    async adminSetOverride(email, role, admin, note) {
+      await call(() => sb.rpc('admin_set_override', { p_email: email, p_role: role, p_admin: admin, p_note: note }));
     },
   };
 }

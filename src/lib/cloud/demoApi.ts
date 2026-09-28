@@ -6,14 +6,27 @@
 import { generateSlots, type Window } from '../officeHours';
 import { CloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, PageInfo } from './types';
+import type { AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
+import { emailKind, normalizeEmail, type AccountRole, type Profile } from '../accounts';
+
+/** رمز التحقق في الوضع التجريبي (لا يُرسل إيميل فعلي). */
+export const DEMO_CODE = '123456';
+/** المشرف في الوضع التجريبي (مثل الخادم: إيميل الدعم المعلن). */
+export const DEMO_ADMIN = 'asd1911147@gmail.com';
+type User = { id: string; email: string; password: string; verified: boolean; created_at: string; last_seen_at: string; profile: Profile | null };
+/** دكاترة تجريبيون يظهرون في دليل الساعات المكتبية لأي جامعة، حتى تُجرَّب الميزة على جهاز واحد. */
+const DEMO_HOSTS = [
+  { code: 'DMSR01', name: 'د. فهد الزهراني', title: 'ساعات مكتبية · هياكل البيانات', windows: [{ weekday: 0, start_min: 600, end_min: 720, location: 'مبنى 5 · مكتب 214' }, { weekday: 2, start_min: 600, end_min: 660, location: 'مبنى 5 · مكتب 214' }] },
+  { code: 'DMKH02', name: 'د. خالد العتيبي', title: 'ساعات مكتبية · التفاضل والتكامل', windows: [{ weekday: 1, start_min: 780, end_min: 900, location: 'مبنى 3 · مكتب 110' }] },
+  { code: 'DMNQ03', name: 'د. نورة القحطاني', title: 'ساعات مكتبية · مهارات الكتابة', windows: [{ weekday: 3, start_min: 540, end_min: 660, location: 'مبنى 1 · مكتب 8' }] },
+];
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const code = (n: number) => Array.from({ length: n }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join('');
 const id = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const delay = <T>(v: T) => new Promise<T>((r) => setTimeout(() => r(v), 250));
 
-type Page = { id: string; code: string; title: string; host_name: string; slot_minutes: number; is_open: boolean; windows: Window[] };
+type Page = { id: string; code: string; title: string; host_name: string; slot_minutes: number; is_open: boolean; windows: Window[]; owner?: string };
 type Channel = ChannelInput & { id: string; code: string; updated_at: string; posts: ChannelPost[] };
 type Sess = { id: string; code: string; label: string; nonce: string; nonce_prev: string | null; nonce_at: number; open: boolean; checkins: CheckIn[]; devices: Set<string> };
 
@@ -26,19 +39,35 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
   const bookings: (Booking & { student: string })[] = [];
   const sessions = new Map<string, Sess>();
   const channels = new Map<string, Channel>();
+  const users = new Map<string, User>();
+  let current: string | null = null; // إيميل الجلسة
   const ready = storage
     ? storage
         .getItem(KEY)
         .then((raw) => {
           if (!raw) return;
-          const d = JSON.parse(raw) as { pages: Page[]; bookings: (Booking & { student: string })[]; channels?: Channel[] };
+          const d = JSON.parse(raw) as { pages: Page[]; bookings: (Booking & { student: string })[]; channels?: Channel[]; users?: User[]; current?: string | null };
           d.pages.forEach((p) => pages.set(p.id, p));
+          d.users?.forEach((u) => users.set(u.email, u));
+          current = d.current ?? null;
           bookings.push(...d.bookings);
           d.channels?.forEach((c) => channels.set(c.id, c));
         })
         .catch(() => {})
     : Promise.resolve();
-  const save = () => storage?.setItem(KEY, JSON.stringify({ pages: [...pages.values()], bookings, channels: [...channels.values()] })).catch(() => {});
+  const save = () => storage?.setItem(KEY, JSON.stringify({ pages: [...pages.values()], bookings, channels: [...channels.values()], users: [...users.values()], current })).catch(() => {});
+  const me = () => (current ? users.get(current) : undefined);
+  const mustUser = () => {
+    const u = me();
+    if (!u) throw new CloudError('not_signed_in');
+    return u;
+  };
+  const admin = () => {
+    const u = mustUser();
+    if (!u.profile?.is_admin) throw new CloudError('not_allowed');
+    return u;
+  };
+  const stamp = () => new Date(now()).toISOString();
   const byCode = <T extends { code: string }>(m: Map<string, T>, c: string) => [...m.values()].find((x) => x.code === c.trim().toUpperCase());
 
   return {
@@ -48,7 +77,7 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       const existing = pid ? pages.get(pid) : undefined;
       const p: Page = existing
         ? { ...existing, title, host_name, slot_minutes, windows }
-        : { id: id(), code: code(6), title, host_name, slot_minutes, is_open: true, windows };
+        : { id: id(), code: code(6), title, host_name, slot_minutes, is_open: true, windows, owner: me()?.id };
       await ready;
       pages.set(p.id, p);
       save();
@@ -183,6 +212,178 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       sessions.clear();
       channels.clear();
       save();
+      await delay(null);
+    },
+    // ——— الحسابات: نفس قواعد الخادم (complete_profile) ———
+    async signUp(email, password) {
+      await ready;
+      const e = normalizeEmail(email);
+      if (password.length < 8) throw new CloudError('weak_password');
+      const u = users.get(e);
+      if (u?.verified) throw new CloudError('user_exists');
+      users.set(e, { id: u?.id ?? id(), email: e, password, verified: false, created_at: stamp(), last_seen_at: stamp(), profile: null });
+      save();
+      await delay(null);
+    },
+    async verifyEmail(email, c) {
+      await ready;
+      const u = users.get(normalizeEmail(email));
+      if (!u || c.trim() !== DEMO_CODE) throw new CloudError('bad_code');
+      u.verified = true;
+      current = u.email;
+      save();
+      await delay(null);
+    },
+    async signIn(email, password) {
+      await ready;
+      const u = users.get(normalizeEmail(email));
+      if (!u || u.password !== password) throw new CloudError('invalid_credentials');
+      if (!u.verified) throw new CloudError('email_not_confirmed');
+      current = u.email;
+      save();
+      await delay(null);
+    },
+    async sendReset(email) {
+      await ready;
+      await delay(users.has(normalizeEmail(email)));
+    },
+    async resetPassword(email, c, password) {
+      await ready;
+      const u = users.get(normalizeEmail(email));
+      if (!u || c.trim() !== DEMO_CODE) throw new CloudError('bad_code');
+      if (password.length < 8) throw new CloudError('weak_password');
+      u.password = password;
+      u.verified = true;
+      current = u.email;
+      save();
+      await delay(null);
+    },
+    async signOut() {
+      await ready;
+      current = null;
+      save();
+    },
+    async completeProfile(name, role: AccountRole, university) {
+      await ready;
+      const u = mustUser();
+      const n = name.trim();
+      if (n.length < 2 || n.length > 80) throw new CloudError('bad_name');
+      const k = emailKind(u.email);
+      const isAdmin = u.email === DEMO_ADMIN;
+      if (k.kind === 'not_university' && !isAdmin) throw new CloudError('not_university_email');
+      let status: Profile['status'] = 'active';
+      if (role === 'professor' && !isAdmin) {
+        if (k.kind === 'student') throw new CloudError('student_email');
+        if (k.kind !== 'staff') status = 'pending';
+      }
+      const prev = u.profile;
+      if (prev?.status === 'rejected' && role === 'professor') status = 'rejected';
+      if (prev?.role === 'professor' && prev.status === 'active' && role === 'professor') status = 'active';
+      u.profile = { id: u.id, email: u.email, full_name: n, university: (k.university ?? university.trim()).slice(0, 120), role, status, is_admin: prev?.is_admin ?? isAdmin };
+      u.last_seen_at = stamp();
+      save();
+      return delay({ ...u.profile });
+    },
+    async myProfile() {
+      await ready;
+      const u = me();
+      if (!u) return null;
+      u.last_seen_at = stamp();
+      return delay(u.profile ? { ...u.profile } : null);
+    },
+    async deleteAccount() {
+      await ready;
+      const u = mustUser();
+      for (const [k, p] of pages) if (p.owner === u.id) pages.delete(k);
+      users.delete(u.email);
+      current = null;
+      save();
+      await delay(null);
+    },
+    async listOfficeHosts(query) {
+      await ready;
+      const u = mustUser();
+      const uni = u.profile?.university;
+      if (!u.profile) throw new CloudError('no_profile');
+      // الدكاترة التجريبيون: صفحاتهم تُنشأ مرة واحدة بنفس الرموز فيعمل الحجز عليها
+      for (const h of DEMO_HOSTS) {
+        if (![...pages.values()].some((p) => p.code === h.code)) pages.set(`demo-${h.code}`, { id: `demo-${h.code}`, code: h.code, title: h.title, host_name: h.name, slot_minutes: 15, is_open: true, windows: h.windows, owner: `demo-${h.code}` });
+      }
+      const owners = new Map([...users.values()].filter((x) => x.profile).map((x) => [x.id, x.profile!]));
+      const q = query.trim();
+      const list: OfficeHost[] = [...pages.values()]
+        .filter((p) => p.is_open)
+        .map((p) => {
+          const demo = DEMO_HOSTS.find((h) => `demo-${h.code}` === p.owner);
+          const prof = p.owner ? owners.get(p.owner) : undefined;
+          if (demo) return { code: p.code, title: p.title, host_name: demo.name, slot_minutes: p.slot_minutes };
+          if (prof && prof.role === 'professor' && prof.status === 'active' && prof.university === uni && uni) return { code: p.code, title: p.title, host_name: prof.full_name, slot_minutes: p.slot_minutes };
+          return null;
+        })
+        .filter((x): x is OfficeHost => !!x && (!q || x.host_name.includes(q) || x.title.includes(q)))
+        .sort((a, b) => a.host_name.localeCompare(b.host_name, 'ar'));
+      save();
+      return delay(list);
+    },
+    async adminOverview() {
+      await ready;
+      admin();
+      const ps = [...users.values()].map((u) => u.profile).filter((p): p is Profile => !!p);
+      const week = now() - 7 * 86_400_000;
+      const unis = new Map<string, number>();
+      ps.forEach((p) => unis.set(p.university, (unis.get(p.university) ?? 0) + 1));
+      return delay({
+        students: ps.filter((p) => p.role === 'student').length,
+        professors: ps.filter((p) => p.role === 'professor' && p.status === 'active').length,
+        pending: ps.filter((p) => p.role === 'professor' && p.status === 'pending').length,
+        new_week: [...users.values()].filter((u) => u.profile && Date.parse(u.created_at) > week).length,
+        active_week: [...users.values()].filter((u) => u.profile && Date.parse(u.last_seen_at) > week).length,
+        open_pages: [...pages.values()].filter((p) => p.is_open && !p.owner?.startsWith('demo-')).length,
+        bookings_week: bookings.length,
+        universities: [...unis].map(([university, n]) => ({ university, users: n })).sort((a, b) => b.users - a.users).slice(0, 10),
+      });
+    },
+    async adminUsers(query, role, status) {
+      await ready;
+      admin();
+      const q = query.trim();
+      const rows: AdminUser[] = [...users.values()]
+        .filter((u) => u.profile)
+        .map((u) => ({ ...u.profile!, created_at: u.created_at, last_seen_at: u.last_seen_at }))
+        .filter((p) => (!q || p.full_name.includes(q) || p.email.includes(q.toLowerCase()) || p.university.includes(q)) && (!role || p.role === role) && (!status || p.status === status))
+        .sort((a, b) => Number(b.status === 'pending') - Number(a.status === 'pending') || b.created_at.localeCompare(a.created_at));
+      return delay(rows);
+    },
+    async adminSetUser(uid, role, status) {
+      await ready;
+      admin();
+      const u = [...users.values()].find((x) => x.id === uid && x.profile);
+      if (!u?.profile) throw new CloudError('not_found');
+      u.profile = { ...u.profile, role, status };
+      if (!(role === 'professor' && status === 'active')) for (const p of pages.values()) if (p.owner === uid) p.is_open = false;
+      save();
+      await delay(null);
+    },
+    async adminExport() {
+      await ready;
+      admin();
+      return delay(
+        [...users.values()]
+          .filter((u) => u.profile)
+          .map((u) => ({ email: u.email, full_name: u.profile!.full_name, university: u.profile!.university, role: u.profile!.role, status: u.profile!.status, created_at: u.created_at, last_seen_at: u.last_seen_at, bookings: bookings.filter((b) => b.student === device).length, open_pages: [...pages.values()].filter((p) => p.owner === u.id && p.is_open).length })),
+      );
+    },
+    async adminRules() {
+      await ready;
+      admin();
+      return delay({ domains: [], overrides: [{ email: DEMO_ADMIN, role: null, is_admin: true, note: 'مالك التطبيق' }] });
+    },
+    async adminSetRule() {
+      admin();
+      await delay(null);
+    },
+    async adminSetOverride() {
+      admin();
       await delay(null);
     },
     async deletePost(pid) {

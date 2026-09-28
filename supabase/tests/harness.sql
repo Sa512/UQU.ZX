@@ -11,6 +11,8 @@ create schema if not exists auth;
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claims', true)::json ->> 'sub', '')::uuid
 $$;
+-- جدول المستخدمين كما في Supabase (الحذف منه يحذف الملف بالتتابع)
+create table if not exists auth.users (id uuid primary key, email text);
 grant usage on schema auth, extensions, public to anon, authenticated;
 grant execute on function auth.uid() to anon, authenticated;
 -- كما في Supabase: صلاحيات افتراضية على public (وتقيّدها RLS والهجرة)

@@ -9,5 +9,5 @@ export const APP_INFO = {
   siteUrl: 'https://sa512.github.io/UQU.ZX',
   privacyUrl: 'https://sa512.github.io/UQU.ZX/privacy.html',
   termsUrl: 'https://sa512.github.io/UQU.ZX/terms.html',
-  lastUpdated: '22 سبتمبر 2026',
+  lastUpdated: '28 سبتمبر 2026',
 } as const;
