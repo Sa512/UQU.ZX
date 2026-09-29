@@ -1,5 +1,7 @@
 # دليل الإطلاق — ما تبقى عليك فقط ✅
 
+> الخطة الزمنية الكاملة لإطلاق نوفمبر والتكاليف والامتثال: `reports/launch-plan-november.md`
+
 كل الكود والصفحات والصور والنصوص جاهزة. هذه خطوات إدارية لا يمكن عملها إلا بحساباتك.
 الوقت المتوقع: **يوم واحد** + مدة مراجعة المتاجر (عادة 1–3 أيام).
 
@@ -66,7 +68,7 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    - Authentication ← Emails ← **SMTP Settings**: اربط مزوّد إرسال خاص (مثل Resend أو Amazon SES أو Brevo) باسم نطاقك. مزوّد Supabase الافتراضي محدود جداً ولا يصلح للإطلاق، وبعض إيميلات الجامعات ترفض الرسائل غير الموثّقة.
    - Authentication ← Attack Protection: فعّل **CAPTCHA** وراجع **Rate Limits** للتسجيل وإرسال الرموز.
    - Authentication ← Providers ← Email: اجعل **Minimum password length = 8** (مثل التطبيق)، وفعّل **Secure email change**. الخادم يرفض أي إيميل غير مؤكَّد حتى لو عُطّل التأكيد خطأً.
-3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql` ثم `20260929000000_accounts.sql` ثم `20260930000000_security.sql`) ← Run.
+3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql` ثم `20260929000000_accounts.sql` ثم `20260930000000_security.sql` ثم `20261001000000_hardening2.sql`) ← Run.
    - الهجرة الأخيرة تجعل `asd1911147@gmail.com` مشرفاً (سجّل به من التطبيق لتظهر لك «لوحة المشرف» في المزيد). لإضافة مشرف آخر: من اللوحة ← استثناءات الإيميل ← مشرف.
 4. التنظيف التلقائي: Database ← Extensions ← فعّل `pg_cron`، ثم نفّذ:
    ```sql

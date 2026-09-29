@@ -13,12 +13,13 @@ import { SlotRow, TaskRow } from '@/components/Rows';
 import { Screen, SectionHeader } from '@/components/Screen';
 import { WHATS_NEW } from '@/content/whatsNew';
 import { absenceStatus } from '@/lib/absence';
-import { diffDays, formatDate, formatDuration, fromDateKey, greeting, shortName } from '@/lib/dates';
+import { DAY_NAMES, diffDays, formatDate, formatDuration, formatMinutes, fromDateKey, greeting, shortName } from '@/lib/dates';
 import { formatHijri } from '@/lib/hijri';
 import { minutesOn, streak } from '@/lib/stats';
 import { ar, DAYS } from '@/lib/plural';
 import { remindersSupported } from '@/lib/notifications';
 import { useNow } from '@/lib/useNow';
+import { riyadhDay } from '@/lib/officeHours';
 import { wrappedReady } from '@/lib/wrapped';
 import { unreadPosts } from '@/lib/sectionChannel';
 import { useChannelSync } from '@/lib/useChannelSync';
@@ -63,6 +64,11 @@ export default function Home() {
   const weekday = now.getDay();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const isProf = settings.role === 'professor';
+  // أقرب حجز ساعة مكتبية قادم (للطالب)
+  const nextBooking = useStore((s) => s.myBookings).filter((b) => b.status === 'booked' && new Date(b.startsAt).getTime() > nowMs).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
+  // الدكتور يحمل بيانات طلابه على جواله: نقترح قفل التطبيق مرة حتى يفعّله أو يخفي الاقتراح
+  const hasStudents = useStore((s) => s.students.length > 0);
+  const suggestLock = isProf && !settings.appLock && !settings.lockPromptDismissed && hasStudents;
 
   const todaySlots = slots.filter((s) => s.day === weekday).sort((a, b) => a.start - b.start);
   const current = todaySlots.find((s) => s.start <= nowMin && s.end > nowMin);
@@ -134,6 +140,42 @@ export default function Home() {
           <AppText variant="caption" color={colors.warning} style={{ flex: 1 }}>
             حسابك كعضو هيئة تدريس بانتظار موافقة المشرف. كل الأدوات متاحة الآن، ويظهر اسمك في دليل الساعات المكتبية بعد الموافقة.
           </AppText>
+        </Card>
+      )}
+
+      {nextBooking && (
+        <Card onPress={() => router.push('/book')} accessibilityLabel="حجزك القادم" style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
+          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.successSoft, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="calendar-clear" size={22} color={colors.success} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText variant="h3">موعدك مع {nextBooking.host}</AppText>
+            <AppText variant="caption" muted>
+              {(() => {
+                const d = riyadhDay(new Date(nextBooking.startsAt).getTime());
+                return `${DAY_NAMES[d.weekday]} · ${formatMinutes(d.minute)}${nextBooking.location ? ` · ${nextBooking.location}` : ''}`;
+              })()}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+        </Card>
+      )}
+
+      {suggestLock && (
+        <Card style={{ gap: spacing.sm, borderWidth: 1.5, borderColor: colors.primary }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+            <Ionicons name="shield-checkmark" size={22} color={colors.primary} />
+            <AppText variant="h3" style={{ flex: 1 }}>
+              احمِ بيانات طلابك
+            </AppText>
+          </View>
+          <AppText variant="caption" muted>
+            جوالك فيه أسماء طلابك وأرقامهم ودرجاتهم. فعّل قفل التطبيق ببصمة الوجه حتى لا يفتحه أحد غيرك.
+          </AppText>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <Button title="فعّل القفل" size="sm" icon="finger-print" onPress={() => router.push('/settings')} />
+            <Button title="لاحقاً" size="sm" variant="ghost" onPress={() => updateSettings({ lockPromptDismissed: true })} />
+          </View>
         </Card>
       )}
 

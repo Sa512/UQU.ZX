@@ -58,7 +58,8 @@ export interface CloudApi {
   signIn(email: string, password: string): Promise<void>;
   sendReset(email: string): Promise<void>;
   resetPassword(email: string, code: string, password: string): Promise<void>;
-  signOut(): Promise<void>;
+  /** global = إنهاء الجلسة على كل الأجهزة. */
+  signOut(global?: boolean): Promise<void>;
   completeProfile(name: string, role: AccountRole, university: string): Promise<Profile>;
   myProfile(): Promise<Profile | null>;
   deleteAccount(): Promise<void>;

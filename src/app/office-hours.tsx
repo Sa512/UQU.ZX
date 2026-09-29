@@ -209,7 +209,7 @@ export default function OfficeHours() {
       )}
       {!cloud.real && (
         <AppText variant="tiny" muted center>
-          وضع تجريبي: الحجز يعمل على هذا الجهاز فقط حتى يُربط الخادم (انظر LAUNCH.md).
+          نسخة تجريبية: الحجز يعمل على هذا الجهاز فقط.
         </AppText>
       )}
     </Screen>

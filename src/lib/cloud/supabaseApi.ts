@@ -141,8 +141,8 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
       await authCall(() => sb.auth.verifyOtp({ email: normalizeEmail(email), token: code.trim(), type: 'recovery' }));
       await authCall(() => sb.auth.updateUser({ password }));
     },
-    async signOut() {
-      await sb.auth.signOut().catch(() => {});
+    async signOut(global) {
+      await sb.auth.signOut(global ? { scope: 'global' } : undefined).catch(() => {});
     },
     async completeProfile(name, role, university) {
       return (await call(() => sb.rpc('complete_profile', { p_name: name.trim(), p_role: role, p_university: university.trim() }))) as Profile;

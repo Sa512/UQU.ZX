@@ -153,3 +153,24 @@ describe('store: accounts on a shared device', () => {
     expect(useStore.getState().settings).toMatchObject({ onboarded: false, role: 'student', lastAccountId: 'b' });
   });
 });
+
+describe('store: professor sample', () => {
+  beforeEach(() => useStore.getState().resetAll());
+  it('gives professors their own courses, sections, students, attendance and grades', () => {
+    useStore.getState().updateSettings({ role: 'professor', name: 'د. سارة الحربي' });
+    useStore.getState().loadSampleData();
+    const s = useStore.getState();
+    expect(s.courses.every((c) => c.instructor === 'د. سارة الحربي')).toBe(true);
+    expect(s.sections).toHaveLength(4);
+    expect(s.students.length).toBeGreaterThanOrEqual(30);
+    expect(new Set(s.students.map((x) => x.uniId)).size).toBe(s.students.length);
+    expect(s.attendance.length).toBeGreaterThan(0);
+    const t = new Date();
+    const todayKey = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    expect(s.attendance.every((r) => r.date < todayKey)).toBe(true);
+    expect(s.gradeItems).toHaveLength(2);
+    expect(Object.keys(s.scores).length).toBe(14);
+    expect(s.tasks.some((t) => t.type === 'grading')).toBe(true);
+    expect(s.slots.every((x) => x.courseId === '' || s.courses.some((c) => c.id === x.courseId))).toBe(true);
+  });
+});

@@ -58,6 +58,8 @@ export type Settings = {
   focusOpen: boolean;
   /** آخر حساب دخل من هذا الجهاز: دخول حساب مختلف يبدأ ببيانات نظيفة حتى لا يرى بيانات غيره. */
   lastAccountId: string | null;
+  /** أخفى الدكتور اقتراح تفعيل القفل في الرئيسية. */
+  lockPromptDismissed: boolean;
 };
 
 export type Course = {
@@ -258,6 +260,7 @@ const defaultSettings: Settings = {
   appLock: false,
   focusOpen: false,
   lastAccountId: null,
+  lockPromptDismissed: false,
 };
 
 const initialState: State = {
@@ -615,6 +618,7 @@ export const useStore = create<State & Actions>()(
         }),
 
       loadSampleData: () => {
+        if (get().settings.role === 'professor') return set(professorSample(get().settings.name));
         const today = new Date();
         const c1 = uid(), c2 = uid(), c3 = uid(), c4 = uid();
         const courses: Course[] = [
@@ -716,4 +720,86 @@ export function useHydrated() {
     () => useStore.persist.hasHydrated(),
     () => false,
   );
+}
+
+/**
+ * جدول تجريبي لعضو هيئة التدريس: مقرراته هو (باسمه)، وشعب بطلاب وهميين، وتحضير أسابيع سابقة،
+ * ودرجات، ومهام تصحيح، وبنك أسئلة؛ حتى يجرّب كل أدوات الدكتور من أول دقيقة.
+ */
+function professorSample(name: string): Partial<State> {
+  const today = new Date();
+  const me = name.trim() || 'عضو هيئة التدريس';
+  const c1 = uid(), c2 = uid(), c3 = uid();
+  const courses: Course[] = [
+    { id: c1, name: 'هياكل البيانات', code: 'CS 2301', color: courseColors[0], credits: 3, instructor: me },
+    { id: c2, name: 'الخوارزميات', code: 'CS 3302', color: courseColors[1], credits: 3, instructor: me },
+    { id: c3, name: 'مقدمة في البرمجة', code: 'CS 1101', color: courseColors[2], credits: 4, instructor: me },
+  ];
+  const s1 = uid(), s2 = uid(), s3 = uid(), s4 = uid();
+  const sections: Section[] = [
+    { id: s1, courseId: c1, code: '1041' },
+    { id: s2, courseId: c1, code: '1042' },
+    { id: s3, courseId: c2, code: '2051' },
+    { id: s4, courseId: c3, code: '3061' },
+  ];
+  const first = ['عبدالله', 'نورة', 'فهد', 'سارة', 'محمد', 'ريم', 'خالد', 'هند', 'تركي', 'لمى', 'سلطان', 'جود'];
+  const last = ['العتيبي', 'الحربي', 'الغامدي', 'القحطاني', 'الزهراني', 'الشهري', 'المطيري', 'الدوسري'];
+  const students: Student[] = [];
+  sections.forEach((sec, si) =>
+    first.slice(0, si === 3 ? 10 : 8).forEach((f, i) => {
+      const uniId = `44${si}${String(100100 + i * 37 + si * 11)}`;
+      students.push({ id: uid(), sectionId: sec.id, name: `${f} ${last[(i + si) % last.length]}`, uniId, email: `s${uniId}@st.example.edu.sa`, phone: '' });
+    }),
+  );
+  const sl = (courseId: string, sectionId: string, day: number, h: number, room: string, type: SlotType = 'lecture'): Slot => ({ id: uid(), courseId, sectionId, day, start: h * 60, end: h * 60 + 100, room, type });
+  const slots: Slot[] = [
+    sl(c1, s1, 0, 8, 'مبنى 5 · قاعة 204'), sl(c1, s1, 2, 8, 'مبنى 5 · قاعة 204'),
+    sl(c1, s2, 0, 10, 'مبنى 5 · قاعة 206'), sl(c1, s2, 2, 10, 'مبنى 5 · قاعة 206'),
+    sl(c2, s3, 1, 11, 'مبنى 5 · قاعة 110'), sl(c2, s3, 3, 11, 'مبنى 5 · قاعة 110'),
+    sl(c3, s4, 1, 13, 'معمل الحاسب 3', 'lab'),
+    { id: uid(), courseId: '', day: 0, start: 12 * 60, end: 13 * 60 + 30, room: 'مبنى 5 · مكتب 214', type: 'office' },
+    { id: uid(), courseId: '', day: 2, start: 12 * 60, end: 13 * 60 + 30, room: 'مبنى 5 · مكتب 214', type: 'office' },
+  ];
+  // محاضرة اليوم حتى تظهر «الآن / التالية» واختصار التحضير في الرئيسية
+  const d = today.getDay();
+  if (!slots.some((x) => x.day === d && x.type !== 'office')) slots.push(sl(c1, s1, d, Math.min(20, Math.max(8, today.getHours())), 'مبنى 5 · قاعة 204'));
+  // تحضير الأسابيع الأربعة الماضية لشعبة 1041 (طالب قريب من الحرمان)
+  const s1Students = students.filter((x) => x.sectionId === s1);
+  const attendance: AttendanceRecord[] = [];
+  for (let w = 1; w <= 4; w++) {
+    for (const day of [0, 2]) {
+      const date = addDays(today, -7 * w + ((day - d + 7) % 7) - 7);
+      attendance.push({ id: uid(), sectionId: s1, date: toDateKey(date), absent: [s1Students[2].id, ...(w % 2 ? [s1Students[5].id] : [])] });
+    }
+  }
+  const g1 = uid(), g2 = uid();
+  const gradeItems: GradeItem[] = [
+    { id: g1, sectionId: s1, name: 'الواجب الأول', outOf: 10 },
+    { id: g2, sectionId: s1, name: 'الاختبار الفصلي الأول', outOf: 20 },
+  ];
+  const scores: Scores = {};
+  s1Students.forEach((st, i) => {
+    scores[scoreKey(g1, st.id)] = [10, 9, 6, 8, 7.5, 10, 9, 8][i] ?? 8;
+    if (i < 6) scores[scoreKey(g2, st.id)] = [18, 15.5, 9, 17, 12, 19][i];
+  });
+  const k = (n: number) => toDateKey(addDays(today, n));
+  const tasks: Task[] = [
+    { id: uid(), title: 'تصحيح الواجب الأول · 1042', courseId: c1, type: 'grading', due: k(1), priority: 3, notes: '8 أوراق', done: false, createdAt: Date.now() },
+    { id: uid(), title: 'إعداد الاختبار الفصلي', courseId: c2, type: 'exam', due: k(6), priority: 3, notes: 'الفصول 1 – 4', done: false, createdAt: Date.now() },
+    { id: uid(), title: 'رفع درجات الفصلي على النظام', courseId: c1, type: 'grading', due: k(3), priority: 2, notes: '', done: false, createdAt: Date.now() },
+    { id: uid(), title: 'تجهيز شرائح المحاضرة 7', courseId: c3, type: 'reading', due: k(0), priority: 1, notes: '', done: false, createdAt: Date.now() },
+  ];
+  const sessions: Session[] = [];
+  for (let i = 6; i >= 0; i--) sessions.push({ id: uid(), courseId: [c1, c2, c3][i % 3], minutes: [40, 70, 30, 90, 55, 60, 45][i], at: addDays(today, -i).getTime() });
+  const now = Date.now();
+  const decks: Deck[] = [
+    {
+      id: uid(), title: 'بنك أسئلة هياكل البيانات', courseId: c1, createdAt: now,
+      cards: [
+        { id: uid(), front: 'ما تعقيد البحث الثنائي؟', back: 'O(log n)', box: 0, due: now },
+        { id: uid(), front: 'متى نستخدم الطابور بدل المكدس؟', back: 'عند المعالجة بترتيب الوصول (FIFO)', box: 0, due: now },
+      ],
+    },
+  ];
+  return { courses, sections, students, slots, attendance, gradeItems, scores, tasks, sessions, decks };
 }

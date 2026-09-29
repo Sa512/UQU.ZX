@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -23,8 +23,10 @@ export default function Auth() {
   const { colors } = useTheme();
   const settings = useStore((s) => s.settings);
   const setAccount = useStore((s) => s.setAccount);
-  const [mode, setMode] = useState<Mode>('signup');
-  const [email, setEmail] = useState('');
+  // «تغيير كلمة المرور» من الإعدادات يفتح هنا على الاستعادة بالإيميل نفسه
+  const params = useLocalSearchParams<{ mode?: string; email?: string }>();
+  const [mode, setMode] = useState<Mode>(params.mode === 'forgot' ? 'forgot' : 'signup');
+  const [email, setEmail] = useState(params.email ?? '');
   const [password, setPassword] = useState('');
   const [name, setName] = useState(settings.name);
   const [role, setRole] = useState<AccountRole>(settings.role);
@@ -74,7 +76,7 @@ export default function Auth() {
   const title = { signin: 'تسجيل الدخول', signup: 'حساب جديد', verify: 'تأكيد الإيميل', forgot: 'نسيت كلمة المرور', reset: 'كلمة مرور جديدة', profile: 'أكمل ملفك' }[mode];
 
   return (
-    <Screen title={title} subtitle="بإيميلك الجامعي · للطالب وعضو هيئة التدريس">
+    <Screen back={!!params.mode} title={title} subtitle="بإيميلك الجامعي · للطالب وعضو هيئة التدريس">
       {(mode === 'signin' || mode === 'signup') && (
         <Segmented<'signup' | 'signin'>
           value={mode}

@@ -160,7 +160,7 @@ export default function Focus() {
     .reverse();
 
   return (
-    <Screen inTabs title="وقت المذاكرة" subtitle={`اليوم: ${formatDuration(todayMin)} · جولات: ${rounds}`}>
+    <Screen inTabs title={settings.role === 'professor' ? 'وقت التحضير والعمل' : 'وقت المذاكرة'} subtitle={`اليوم: ${formatDuration(todayMin)} · جولات: ${rounds}`}>
       <Card style={{ alignItems: 'center', gap: spacing.lg, paddingVertical: spacing.xxl }}>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Chip label="تركيز" icon="flash" selected={mode === 'focus'} color={colors.fill} onPress={() => status === 'idle' && setMode('focus')} />
@@ -171,7 +171,7 @@ export default function Focus() {
             {formatClock(remaining)}
           </AppText>
           <AppText variant="label" muted>
-            {mode === 'focus' ? course?.name ?? 'مذاكرة عامة' : 'خذ نفساً عميقاً ☕'}
+            {mode === 'focus' ? course?.name ?? (settings.role === 'professor' ? 'عمل عام' : 'مذاكرة عامة') : 'خذ نفساً عميقاً ☕'}
           </AppText>
           {open && (
             <AppText variant="tiny" muted>

@@ -114,6 +114,7 @@ export default function Settings() {
           <Field label="الرقم الجامعي" value={uniIdText} onChangeText={setUniIdText} onBlur={() => update({ uniId: uniIdText.replace(/\D/g, '') })} onEndEditing={() => update({ uniId: uniIdText.replace(/\D/g, '') })} keyboardType="number-pad" hint="يُستخدم للتحضير بالـ QR وحجز الساعات المكتبية" ltr />
         )}
         <Field label={settings.role === 'student' ? 'التخصص' : 'القسم'} value={major} onChangeText={setMajor} onBlur={saveProfile} onEndEditing={saveProfile} />
+        {!account && (
         <View style={{ gap: 6 }}>
           <AppText variant="label">الدور</AppText>
           <Segmented<Role>
@@ -125,6 +126,7 @@ export default function Settings() {
             ]}
           />
         </View>
+        )}
         {accountMsg && (
           <AppText variant="caption" color={colors.danger}>
             {accountMsg}
@@ -326,6 +328,23 @@ export default function Settings() {
           <AppText variant="caption" center color={cloudMsg.ok ? colors.success : colors.danger}>
             {cloudMsg.text}
           </AppText>
+        )}
+        {account && (
+          <>
+            <Button title="تغيير كلمة المرور" variant="ghost" icon="key-outline" onPress={() => router.push({ pathname: '/auth', params: { mode: 'forgot', email: account.email } })} />
+            <Button
+              title="الخروج من كل الأجهزة"
+              variant="ghost"
+              icon="phone-portrait-outline"
+              onPress={() =>
+                confirm('الخروج من كل الأجهزة؟', 'تُنهى جلسات حسابك على كل الأجوال والمتصفحات، بما فيها هذا الجوال. استخدمه إن فقدت جوالاً أو شككت أن أحداً دخل حسابك.', async () => {
+                  await cloud.signOut(true);
+                  setAccount(null);
+                  router.replace('/auth');
+                }, 'خروج من الكل')
+              }
+            />
+          </>
         )}
         {account && (
           <Button
