@@ -125,6 +125,12 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     async unsubscribeChannel(code, token) {
       await call(() => sb.rpc('unsubscribe_channel', { p_code: code, p_token: token }));
     },
+    async registerHostPush(token) {
+      checked(await call(() => sb.rpc('register_host_push', { p_token: token })));
+    },
+    async unregisterHostPush(token) {
+      await call(() => sb.rpc('unregister_host_push', { p_token: token }));
+    },
     async signUp(email, password) {
       await authCall(() => sb.auth.signUp({ email: normalizeEmail(email), password }));
     },

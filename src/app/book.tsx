@@ -19,8 +19,9 @@ import { useNow } from '@/lib/useNow';
 import { useStore } from '@/store/useStore';
 import { sameName } from '@/lib/accounts';
 import { radius, spacing, useTheme } from '@/theme';
+import { SignInNeeded } from '@/components/SignInNeeded';
 
-export default function Book() {
+function BookInner() {
   const { colors } = useTheme();
   const params = useLocalSearchParams<{ c?: string }>();
   const settings = useStore((s) => s.settings);
@@ -295,5 +296,14 @@ export default function Book() {
         <Button title="حجوزاتي" variant="secondary" onPress={() => { setPage(null); setMsg(undefined); router.setParams({ c: '' }); }} />
       )}
     </Screen>
+  );
+}
+
+/** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
+export default function Book() {
+  return (
+    <SignInNeeded title="حجز ساعة مكتبية">
+      <BookInner />
+    </SignInNeeded>
   );
 }

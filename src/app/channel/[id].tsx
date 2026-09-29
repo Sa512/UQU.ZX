@@ -17,11 +17,12 @@ import { ar, LECTURES } from '@/lib/plural';
 import { buildChannel, joinLink } from '@/lib/sectionChannel';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
+import { SignInNeeded } from '@/components/SignInNeeded';
 
 const EXAMS = { one: 'اختبار واحد', two: 'اختبارين', few: 'اختبارات', many: 'اختباراً' };
 
 /** قناة الشعبة (للدكتور): نشر الجدول والاختبارات برمز، وإرسال الإعلانات للطلاب. */
-export default function ChannelScreen() {
+function ChannelScreenInner() {
   const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const section = useStore((s) => s.sections.find((x) => x.id === id));
@@ -192,5 +193,14 @@ export default function ChannelScreen() {
         </AppText>
       )}
     </Screen>
+  );
+}
+
+/** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
+export default function ChannelScreen() {
+  return (
+    <SignInNeeded title="قناة الشعبة">
+      <ChannelScreenInner />
+    </SignInNeeded>
   );
 }

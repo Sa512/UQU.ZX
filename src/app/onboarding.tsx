@@ -11,6 +11,7 @@ import { UniversityField } from '@/components/UniversityField';
 import { haptic } from '@/components/haptics';
 import { Segmented } from '@/components/Segmented';
 import { WHATS_NEW } from '@/content/whatsNew';
+import { REQUIRE_LOGIN } from '@/lib/config';
 import type { GradeScale } from '@/lib/gpa';
 import { useStore, type Role } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
@@ -116,7 +117,8 @@ export default function Onboarding() {
           ))}
         </ScrollView>
         <View style={{ padding: spacing.xl, paddingBottom: insets.bottom + spacing.lg }}>
-          <Button title="لنبدأ" size="lg" icon="arrow-back" onPress={() => (account ? setStep(2) : router.push('/auth'))} />
+          <Button title="لنبدأ" size="lg" icon="arrow-back" onPress={() => (account ? setStep(2) : REQUIRE_LOGIN ? router.push('/auth') : setStep(1))} />
+          {!account && !REQUIRE_LOGIN && <Button title="سجّل بإيميلك الجامعي" variant="ghost" icon="person-circle-outline" onPress={() => router.push('/auth')} />}
         </View>
       </View>
     );

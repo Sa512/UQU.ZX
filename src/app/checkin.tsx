@@ -14,8 +14,9 @@ import { latinDigits } from '@/lib/csv';
 import { parseQr } from '@/lib/officeHours';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
+import { SignInNeeded } from '@/components/SignInNeeded';
 
-export default function StudentCheckin() {
+function StudentCheckinInner() {
   const { colors } = useTheme();
   // يدعم الفتح من رابط الـ QR مباشرة: mudhaker://checkin?c=…&n=…
   const params = useLocalSearchParams<{ c?: string; n?: string }>();
@@ -95,5 +96,14 @@ export default function StudentCheckin() {
         </AppText>
       )}
     </Screen>
+  );
+}
+
+/** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
+export default function StudentCheckin() {
+  return (
+    <SignInNeeded title="التحضير بالـ QR">
+      <StudentCheckinInner />
+    </SignInNeeded>
   );
 }

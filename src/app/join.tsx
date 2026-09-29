@@ -14,11 +14,12 @@ import { ensureChannelPush } from '@/lib/channelPush';
 import { parseQr } from '@/lib/officeHours';
 import { useStore } from '@/store/useStore';
 import { radius, spacing } from '@/theme';
+import { SignInNeeded } from '@/components/SignInNeeded';
 
 const TYPE_AR = { exam: 'اختبار', quiz: 'اختبار قصير', assignment: 'واجب', project: 'مشروع' } as const;
 
 /** انضمام الطالب لشعبة برمز الدكتور: معاينة ثم إضافة المادة بمحاضراتها واختباراتها. */
-export default function Join() {
+function JoinInner() {
   const params = useLocalSearchParams<{ c?: string }>();
   const applyChannel = useStore((s) => s.applyChannel);
   // نختار المصفوفة نفسها ثم نشتق منها (اختيار مصفوفة جديدة كل مرة يسبب إعادة رسم لا تنتهي)
@@ -123,5 +124,14 @@ export default function Join() {
         </>
       )}
     </Screen>
+  );
+}
+
+/** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
+export default function Join() {
+  return (
+    <SignInNeeded title="انضم لشعبة">
+      <JoinInner />
+    </SignInNeeded>
   );
 }

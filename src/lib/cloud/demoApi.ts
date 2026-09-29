@@ -206,6 +206,12 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
     async unsubscribeChannel() {
       await delay(null);
     },
+    async registerHostPush() {
+      await delay(null);
+    },
+    async unregisterHostPush() {
+      await delay(null);
+    },
     async deleteMyData() {
       // الوضع التجريبي على جهاز واحد: كل البيانات تخص هذا الجهاز
       await ready;

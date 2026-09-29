@@ -75,4 +75,7 @@ export interface CloudApi {
   /** سجل إجراءات المشرفين (الأحدث أولاً). */
   adminLog(): Promise<AdminLogEntry[]>;
   unsubscribeChannel(code: string, token: string): Promise<void>;
+  /** الدكتور يسجّل جهازه لإشعارات الحجوزات الجديدة. */
+  registerHostPush(token: string): Promise<void>;
+  unregisterHostPush(token: string): Promise<void>;
 }

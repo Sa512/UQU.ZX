@@ -18,6 +18,7 @@ export async function getPushToken(): Promise<string | null> {
   try {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('announcements', { name: 'إعلانات الدكاترة', description: 'إعلانات قنوات الشعب', importance: Notifications.AndroidImportance.HIGH });
+      await Notifications.setNotificationChannelAsync('bookings', { name: 'حجوزات الساعات المكتبية', description: 'حجز جديد من طالب', importance: Notifications.AndroidImportance.HIGH });
     }
     if (!(await requestReminderPermission())) return null;
     cached = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
@@ -27,12 +28,13 @@ export async function getPushToken(): Promise<string | null> {
   }
 }
 
-/** فتح المادة عند الضغط على إشعار إعلان. يعيد دالة إلغاء الاستماع. */
-export function onAnnouncementTap(cb: (code: string) => void): () => void {
+/** الضغط على إشعار: إعلان قناة (يفتح المادة) أو حجز جديد (يفتح الساعات المكتبية). يعيد دالة إلغاء الاستماع. */
+export function onAnnouncementTap(cb: (code: string) => void, onBooking?: () => void): () => void {
   if (Platform.OS === 'web') return () => {};
   const sub = Notifications.addNotificationResponseReceivedListener((r) => {
     const d = r.notification.request.content.data as { type?: string; code?: string } | undefined;
     if (d?.type === 'channel_post' && typeof d.code === 'string') cb(d.code);
+    if (d?.type === 'booking') onBooking?.();
   });
   return () => sub.remove();
 }

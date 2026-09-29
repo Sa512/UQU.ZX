@@ -16,16 +16,23 @@ import { Toggle } from '@/components/Toggle';
 import { cloud, type Booking } from '@/lib/cloud';
 import { DAY_NAMES, formatMinutes, formatShortDate, fromDateKey } from '@/lib/dates';
 import { bookLink, riyadhDay } from '@/lib/officeHours';
+import { ensureHostPush } from '@/lib/hostPush';
 import { ar, MINUTES } from '@/lib/plural';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
+import { SignInNeeded } from '@/components/SignInNeeded';
 
-export default function OfficeHours() {
+function OfficeHoursInner() {
   const { colors } = useTheme();
   const settings = useStore((s) => s.settings);
   const account = useStore((s) => s.account);
   const slots = useStore((s) => s.slots);
   const page = useStore((s) => s.officePage);
+  const pageId = page?.id;
+  // يجدد تسجيل الجهاز لإشعارات الحجز (العنوان قد يتغير بعد إعادة تثبيت التطبيق)
+  useEffect(() => {
+    if (pageId) Promise.resolve().then(ensureHostPush);
+  }, [pageId]);
   const setOfficePage = useStore((s) => s.setOfficePage);
   const office = slots.filter((s) => s.type === 'office').sort((a, b) => a.day - b.day || a.start - b.start);
   const [title, setTitle] = useState(page?.title ?? 'الساعات المكتبية');
@@ -60,6 +67,8 @@ export default function OfficeHours() {
         windows: office.map((s) => ({ weekday: s.day, start_min: s.start, end_min: s.end, location: s.room })),
       });
       setOfficePage({ id: r.id, code: r.code, title: title.trim(), slotMinutes: minutes, open: page?.open ?? true });
+      // إشعار فوري عند كل حجز جديد
+      ensureHostPush();
       haptic.success();
       setMsg({ ok: true, text: page ? 'حُدّثت المواعيد ✓' : 'نُشرت ساعاتك المكتبية ✓ شارك الرمز مع طلابك.' });
     } catch (e) {
@@ -213,5 +222,14 @@ export default function OfficeHours() {
         </AppText>
       )}
     </Screen>
+  );
+}
+
+/** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
+export default function OfficeHours() {
+  return (
+    <SignInNeeded title="حجز الساعات المكتبية">
+      <OfficeHoursInner />
+    </SignInNeeded>
   );
 }

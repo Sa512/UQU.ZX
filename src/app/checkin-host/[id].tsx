@@ -16,11 +16,12 @@ import { checkinLink } from '@/lib/officeHours';
 import { ar, STUDENTS } from '@/lib/plural';
 import { useStore } from '@/store/useStore';
 import { radius, spacing, useTheme } from '@/theme';
+import { SignInNeeded } from '@/components/SignInNeeded';
 
 const ROTATE_MS = 15_000;
 const POLL_MS = 3_000;
 
-export default function CheckinHost() {
+function CheckinHostInner() {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -238,5 +239,14 @@ export default function CheckinHost() {
         </AppText>
       )}
     </Screen>
+  );
+}
+
+/** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
+export default function CheckinHost() {
+  return (
+    <SignInNeeded title="التحضير">
+      <CheckinHostInner />
+    </SignInNeeded>
   );
 }

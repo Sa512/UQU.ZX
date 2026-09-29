@@ -3,6 +3,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '@/store/useStore';
+import { REQUIRE_LOGIN } from '@/lib/config';
 import { fonts, useTheme } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -21,7 +22,7 @@ export default function TabsLayout() {
   const onboarded = useStore((s) => s.settings.onboarded);
   const signedIn = useStore((s) => !!s.account);
   // الدخول بالإيميل الجامعي إجباري: المستخدم الجديد يبدأ بالترحيب ثم الحساب، ومن حدّث التطبيق يسجّل دخوله مباشرة
-  if (!signedIn) return <Redirect href={onboarded ? '/auth' : '/onboarding'} />;
+  if (!signedIn && REQUIRE_LOGIN) return <Redirect href={onboarded ? '/auth' : '/onboarding'} />;
   if (!onboarded) return <Redirect href={{ pathname: '/onboarding', params: { step: '2' } }} />;
 
   const bottom = Math.max(insets.bottom, Platform.OS === 'web' ? 10 : 8);

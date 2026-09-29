@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { buildMessages, chunk, deadTokens } from '../../../supabase/functions/_shared/push';
+import { buildBookingMessages, buildMessages, chunk, deadTokens, riyadhLabel } from '../../../supabase/functions/_shared/push';
 
 const t = { code: 'ABC234', course_name: 'هياكل البيانات', instructor: 'د. سارة', body: 'تأجّل  الاختبار\nللأحد', tokens: ['ExponentPushToken[abcdefghij1234567890]', 'ExponentPushToken[abcdefghij1234567890]', 'bad-token', 'ExpoPushToken[zyxwvutsrq0987654321]'] };
 
@@ -21,5 +21,15 @@ describe('channel announcement notifications', () => {
     const m = buildMessages(t);
     expect(deadTokens(m, [{ status: 'ok', id: '1' }, { status: 'error', details: { error: 'DeviceNotRegistered' } }])).toEqual(['ExpoPushToken[zyxwvutsrq0987654321]']);
     expect(deadTokens(m, [{ status: 'error', details: { error: 'MessageRateExceeded' } }])).toEqual([]);
+  });
+});
+
+describe('booking notifications for professors', () => {
+  it('builds a short Riyadh-time message without private details', () => {
+    const m = buildBookingMessages({ title: 'ساعات د. هند المكتبية', student_name: '  ريم   الشهري ', starts_at: '2026-10-06T07:30:00Z', tokens: ['ExponentPushToken[abcdefghijklmnop]', 'ExponentPushToken[abcdefghijklmnop]', 'bad'] });
+    expect(m).toHaveLength(1);
+    expect(m[0]).toMatchObject({ title: '📅 حجز جديد · ساعات د. هند المكتبية', body: 'ريم الشهري · الثلاثاء 10:30 ص', channelId: 'bookings', data: { type: 'booking' } });
+    expect(riyadhLabel('2026-10-06T21:05:00Z')).toBe('الأربعاء 12:05 ص');
+    expect(riyadhLabel('2026-10-06T10:00:00Z')).toBe('الثلاثاء 1:00 م');
   });
 });

@@ -48,7 +48,7 @@ function Navigator() {
       onAnnouncementTap((code) => {
         const c = useStore.getState().courses.find((x) => x.channel?.code === code);
         if (c) router.push({ pathname: '/course/[id]', params: { id: c.id } });
-      }),
+      }, () => router.push('/office-hours')),
     [],
   );
   useEffect(() => {

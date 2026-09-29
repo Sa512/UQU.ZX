@@ -17,10 +17,11 @@ import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { APP_INFO } from '@/content/app';
 import { ROLE_LABEL, STATUS_LABEL } from '@/lib/accounts';
-import { buildBackup } from '@/lib/backup';
+import { buildBackup, parseBackup, type ParseResult } from '@/lib/backup';
 import { cloud } from '@/lib/cloud';
 import { lockAvailable, unlock } from '@/lib/appLock';
-import { backupSupported, pickBackup, shareBackup } from '@/lib/backupIO';
+import { backupSupported, pickBackup, secureRandom, shareBackup } from '@/lib/backupIO';
+import { decryptBackup, encryptBackup, isEncryptedBackup, MIN_BACKUP_PASSWORD } from '@/lib/backupCrypto';
 import { formatDuration } from '@/lib/dates';
 import type { GradeScale } from '@/lib/gpa';
 import { remindersSupported, sendTestReminder } from '@/lib/notifications';
@@ -51,6 +52,22 @@ export default function Settings() {
   const [uniIdText, setUniIdText] = useState(settings.uniId);
   const [reminderMsg, setReminderMsg] = useState<string>();
   const [backupMsg, setBackupMsg] = useState<string>();
+  const [backupPw, setBackupPw] = useState('');
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [lockedBackup, setLockedBackup] = useState<string | null>(null); // نسخة مشفّرة تنتظر كلمة المرور
+  const hasStudentData = useStore((s) => s.students.length > 0);
+  const askRestore = (r: ParseResult) => {
+    if (!r.ok) return setBackupMsg(r.message);
+    confirm(
+      'استعادة النسخة؟',
+      `سيتم استبدال بياناتك الحالية بـ: ${r.summary}.`,
+      () => {
+        restoreBackup(r.data);
+        setBackupMsg('تمت استعادة بياناتك بنجاح ✓');
+      },
+      'استعادة',
+    );
+  };
   const restoreBackup = useStore((s) => s.restoreBackup);
 
   const account = useStore((s) => s.account);
@@ -266,16 +283,34 @@ export default function Settings() {
         {!hasData && <Button title="تحميل جدول تجريبي" variant="secondary" icon="sparkles" onPress={loadSample} />}
         {backupSupported && (
           <>
+            <Field
+              label="كلمة مرور للنسخة"
+              placeholder={hasStudentData ? 'مطلوبة: النسخة فيها بيانات طلابك' : 'اختيارية (8 خانات على الأقل)'}
+              value={backupPw}
+              onChangeText={setBackupPw}
+              secureTextEntry
+              hint="تُشفَّر النسخة بها (AES-256). احفظها جيداً: بدونها لا يمكن استعادة الملف."
+              ltr
+            />
             <Button
-              title="تصدير نسخة احتياطية"
+              title={backupPw ? 'تصدير نسخة مشفّرة' : 'تصدير نسخة احتياطية'}
               variant="secondary"
-              icon="cloud-upload-outline"
+              icon={backupPw ? 'lock-closed-outline' : 'cloud-upload-outline'}
+              loading={backupBusy}
+              disabled={(hasStudentData || !!backupPw) && backupPw.length < MIN_BACKUP_PASSWORD}
               onPress={async () => {
                 const s = useStore.getState();
-                const r = await shareBackup(
+                const text = JSON.stringify(
                   buildBackup({ settings: s.settings, courses: s.courses, slots: s.slots, tasks: s.tasks, sessions: s.sessions, decks: s.decks, summaries: s.summaries, assessments: s.assessments, sections: s.sections, students: s.students, attendance: s.attendance, gradeItems: s.gradeItems, scores: s.scores, gpa: s.gpa }),
                 );
-                setBackupMsg(r.ok ? undefined : r.message);
+                setBackupBusy(true);
+                try {
+                  const out = backupPw ? JSON.stringify(await encryptBackup(text, backupPw, secureRandom)) : text;
+                  const r = await shareBackup(out);
+                  setBackupMsg(r.ok ? undefined : r.message);
+                } finally {
+                  setBackupBusy(false);
+                }
               }}
             />
             <Button
@@ -283,20 +318,42 @@ export default function Settings() {
               variant="ghost"
               icon="cloud-download-outline"
               onPress={async () => {
-                const r = await pickBackup();
-                if (!r) return;
-                if (!r.ok) return setBackupMsg(r.message);
-                confirm(
-                  'استعادة النسخة؟',
-                  `سيتم استبدال بياناتك الحالية بـ: ${r.summary}.`,
-                  () => {
-                    restoreBackup(r.data);
-                    setBackupMsg('تمت استعادة بياناتك بنجاح ✓');
-                  },
-                  'استعادة',
-                );
+                setBackupMsg(undefined);
+                let text: string | null;
+                try {
+                  text = await pickBackup();
+                } catch {
+                  return setBackupMsg('تعذّر قراءة الملف.');
+                }
+                if (!text) return;
+                if (isEncryptedBackup(text)) {
+                  setLockedBackup(text);
+                  setBackupPw('');
+                  return setBackupMsg('النسخة مشفّرة: اكتب كلمة مرورها في الحقل أعلاه ثم اضغط «فك التشفير».');
+                }
+                askRestore(parseBackup(text));
               }}
             />
+            {lockedBackup && (
+              <Button
+                title="فك التشفير والاستعادة"
+                icon="key-outline"
+                loading={backupBusy}
+                disabled={!backupPw}
+                onPress={async () => {
+                  setBackupBusy(true);
+                  try {
+                    const plain = await decryptBackup(lockedBackup, backupPw);
+                    setLockedBackup(null);
+                    askRestore(parseBackup(plain));
+                  } catch (e) {
+                    setBackupMsg((e as Error).message === 'bad_file' ? 'الملف تالف.' : 'كلمة المرور غير صحيحة أو الملف معدّل.');
+                  } finally {
+                    setBackupBusy(false);
+                  }
+                }}
+              />
+            )}
             {backupMsg && (
               <AppText variant="caption" color={backupMsg.includes('✓') ? colors.success : colors.danger}>
                 {backupMsg}
