@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -30,6 +30,7 @@ export default function Auth() {
   const [role, setRole] = useState<AccountRole>(settings.role);
   const [university, setUniversity] = useState(settings.university);
   const [code, setCode] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
 
@@ -108,7 +109,8 @@ export default function Auth() {
             </AppText>
           )}
           {isEmail(email) && !detected.university && detected.kind !== 'not_university' && <UniversityField value={university} onChange={setUniversity} />}
-          <Field label="كلمة المرور" placeholder="8 خانات على الأقل" value={password} onChangeText={setPassword} secureTextEntry ltr />
+          <Field label="كلمة المرور" placeholder="8 خانات على الأقل" value={password} onChangeText={setPassword} secureTextEntry={!showPw} ltr />
+          <ShowPassword on={showPw} onToggle={() => setShowPw(!showPw)} />
           <Button title="إنشاء الحساب" icon="person-add" loading={busy} onPress={signup} />
           <AppText variant="tiny" muted>
             نحفظ اسمك وإيميلك الجامعي وجامعتك ودورك فقط. لا نطلب تاريخ ميلادك ولا كلمة مرور بوابة الجامعة.
@@ -119,7 +121,8 @@ export default function Auth() {
       {mode === 'signin' && (
         <Card style={{ gap: spacing.md }}>
           <Field label="الإيميل الجامعي" value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" ltr />
-          <Field label="كلمة المرور" value={password} onChangeText={setPassword} secureTextEntry ltr />
+          <Field label="كلمة المرور" value={password} onChangeText={setPassword} secureTextEntry={!showPw} ltr />
+          <ShowPassword on={showPw} onToggle={() => setShowPw(!showPw)} />
           <Button title="دخول" icon="log-in" loading={busy} onPress={() => run(async () => { await cloud.signIn(email, password); await afterSession(false); })} />
           <Button title="نسيت كلمة المرور؟" variant="ghost" size="sm" onPress={() => { setMode('forgot'); setMsg(undefined); }} />
         </Card>
@@ -155,7 +158,8 @@ export default function Auth() {
             أدخل الرمز المرسل إلى {email.trim()} وكلمة مرور جديدة.
           </AppText>
           <Field label="الرمز" value={code} onChangeText={(t) => setCode(t.replace(/\D/g, ''))} keyboardType="number-pad" maxLength={6} ltr />
-          <Field label="كلمة المرور الجديدة" placeholder="8 خانات على الأقل" value={password} onChangeText={setPassword} secureTextEntry ltr />
+          <Field label="كلمة المرور الجديدة" placeholder="8 خانات على الأقل" value={password} onChangeText={setPassword} secureTextEntry={!showPw} ltr />
+          <ShowPassword on={showPw} onToggle={() => setShowPw(!showPw)} />
           <Button title="حفظ والدخول" icon="key" loading={busy} disabled={code.length !== 6 || password.length < 8} onPress={() => run(async () => { await cloud.resetPassword(email, code, password); await afterSession(false); })} />
         </Card>
       )}
@@ -187,5 +191,17 @@ export default function Auth() {
         </AppText>
       )}
     </Screen>
+  );
+}
+
+function ShowPassword({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: on }} accessibilityLabel="إظهار كلمة المرور" hitSlop={8} onPress={onToggle} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: -6 }}>
+      <Ionicons name={on ? 'eye-off-outline' : 'eye-outline'} size={16} color={colors.primary} />
+      <AppText variant="caption" color={colors.primary}>
+        {on ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+      </AppText>
+    </Pressable>
   );
 }

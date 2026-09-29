@@ -13,7 +13,7 @@ import { Pill } from '@/components/Rows';
 import { HeaderButton, Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { ROLE_LABEL, STATUS_LABEL, usersCsv, type AccountRole, type AccountStatus } from '@/lib/accounts';
-import { cloud, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
+import { cloud, type AdminLogEntry, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
 import { formatShortDate, toDateKey } from '@/lib/dates';
 import { shareCsv } from '@/lib/exportIO';
 import { useStore } from '@/store/useStore';
@@ -28,6 +28,7 @@ export default function Admin() {
   const [ov, setOv] = useState<AdminOverview | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [rules, setRules] = useState<AdminRules | null>(null);
+  const [log, setLog] = useState<AdminLogEntry[]>([]);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [open, setOpen] = useState<string | null>(null);
@@ -46,9 +47,10 @@ export default function Admin() {
   }, []);
   const refresh = useCallback(async () => {
     try {
-      const [o, r] = await Promise.all([cloud.adminOverview(), cloud.adminRules()]);
+      const [o, r, l] = await Promise.all([cloud.adminOverview(), cloud.adminRules(), cloud.adminLog()]);
       setOv(o);
       setRules(r);
+      setLog(l);
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
     }
@@ -221,6 +223,33 @@ export default function Admin() {
         />
       </Card>
 
+      <SectionHeader title="سجل الإجراءات" />
+      <Card style={{ gap: spacing.sm }}>
+        <AppText variant="caption" muted>
+          كل اعتماد أو رفض أو تصدير أو تعديل قاعدة يُسجَّل باسم المشرف ووقته، ويُحفظ سنة.
+        </AppText>
+        {log.length === 0 ? (
+          <AppText variant="caption" muted>
+            لا إجراءات بعد
+          </AppText>
+        ) : (
+          log.slice(0, 20).map((l, i) => (
+            <View key={`${l.at}-${i}`} style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+              <Ionicons name="time-outline" size={14} color={colors.textMuted} style={{ marginTop: 3 }} />
+              <View style={{ flex: 1 }}>
+                <AppText variant="caption">
+                  {actionLabel(l.action)}
+                  {l.target ? ` · ${l.target}` : ''}
+                </AppText>
+                <AppText variant="tiny" muted>
+                  {l.admin_email} · {formatShortDate(new Date(l.at))} {new Date(l.at).toTimeString().slice(0, 5)}
+                </AppText>
+              </View>
+            </View>
+          ))
+        )}
+      </Card>
+
       <SectionHeader title={`نطاقات الجامعات (${rules?.domains.length ?? 0})`} />
       <Card style={{ gap: spacing.md }}>
         <AppText variant="caption" muted>
@@ -250,4 +279,20 @@ export default function Admin() {
       </Card>
     </Screen>
   );
+}
+
+/** وصف عربي لرمز الإجراء في السجل. */
+function actionLabel(a: string): string {
+  if (a === 'export') return 'تصدير Excel';
+  if (a === 'rule_delete') return 'حذف نطاق';
+  if (a.startsWith('rule:')) return 'حفظ نطاق';
+  if (a === 'override_delete') return 'إزالة استثناء';
+  if (a === 'override:admin') return 'إضافة مشرف';
+  if (a.startsWith('override:')) return `استثناء: ${a.endsWith('professor') ? 'دكتور' : 'طالب'}`;
+  if (a.startsWith('set_user:')) {
+    const [role, status] = a.slice(9).split('/');
+    if (role === 'student') return 'تحويل لطالب';
+    return status === 'active' ? 'اعتماد دكتور' : status === 'rejected' ? 'رفض دكتور' : 'تعليق دكتور';
+  }
+  return a;
 }

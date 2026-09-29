@@ -101,3 +101,24 @@ export function usersCsv(rows: ExportRow[]): string {
   // BOM حتى يفتح Excel العربية صحيحة
   return '﻿' + [head.join(','), ...lines].join('\n');
 }
+
+const normName = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[ً-ْـ]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/(^|\s)(د\.?|دكتور|دكتوره|الدكتور|الدكتوره|أ\.?|ا\.?|استاذ|الاستاذ|أستاذ|بروفيسور|prof\.?|dr\.?)(?=\s|$)/gi, ' ')
+    .replace(/[^\p{L}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 1);
+
+/** هل الاسمان لنفس الشخص؟ («د. سارة الحربي» و«سارة محمد الحربي»): كل كلمات الاسم الأقصر موجودة في الأطول، وكلمتان على الأقل. */
+export function sameName(a: string, b: string): boolean {
+  const x = normName(a);
+  const y = normName(b);
+  if (!x.length || !y.length) return false;
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x];
+  return short.length >= 2 && short.every((w) => long.includes(w));
+}

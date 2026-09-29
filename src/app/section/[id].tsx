@@ -52,7 +52,8 @@ export default function SectionScreen() {
   const statOf = new Map(stats.map((x) => [x.studentId, x]));
   const atRisk = stats.filter((x) => x.status.level === 'danger' || x.status.level === 'barred').length;
   const filtered = q.trim() ? students.filter((x) => `${x.name} ${x.uniId} ${x.email}`.toLowerCase().includes(q.trim().toLowerCase())) : students;
-  const emails = students.map((x) => x.email).filter(Boolean);
+  // البريد من ملف الطلاب (مدخل غير موثوق): نقبل الصيغة الصحيحة فقط ونرمّزها حتى لا تُحقن معاملات في رابط البريد
+  const emails = students.map((x) => x.email.trim()).filter((e) => /^[^\s@,;&?=]+@[^\s@,;&?=]+\.[^\s@,;&?=]+$/.test(e));
 
   const exportSheet = async () => {
     const rows: (string | number)[][] = [['الاسم', 'الرقم الجامعي', 'البريد', 'الجوال', 'مرات الغياب', 'نسبة الغياب', 'الحالة']];
@@ -179,7 +180,7 @@ export default function SectionScreen() {
                   title="مراسلة الكل"
                   icon="mail-outline"
                   variant="secondary"
-                  onPress={() => Linking.openURL(`mailto:?bcc=${emails.join(',')}&subject=${encodeURIComponent(`${course.name} - شعبة ${section.code}`)}`).catch(() => setMsg('لا يوجد تطبيق بريد مهيأ على الجهاز.'))}
+                  onPress={() => Linking.openURL(`mailto:?bcc=${emails.map(encodeURIComponent).join(',')}&subject=${encodeURIComponent(`${course.name} - شعبة ${section.code}`)}`).catch(() => setMsg('لا يوجد تطبيق بريد مهيأ على الجهاز.'))}
                 />
                 <Button style={{ flex: 1 }} title="مشاركة الإيميلات" icon="copy-outline" variant="ghost" onPress={() => Share.share({ message: emails.join(', ') }).catch(() => {})} />
               </View>

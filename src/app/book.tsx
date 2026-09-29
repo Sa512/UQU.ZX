@@ -17,6 +17,7 @@ import { DAY_NAMES, formatMinutes, formatShortDate, fromDateKey } from '@/lib/da
 import { generateSlots, parseQr, riyadhDay, type OfficeSlot } from '@/lib/officeHours';
 import { useNow } from '@/lib/useNow';
 import { useStore } from '@/store/useStore';
+import { sameName } from '@/lib/accounts';
 import { radius, spacing, useTheme } from '@/theme';
 
 export default function Book() {
@@ -40,6 +41,11 @@ export default function Book() {
   const [query, setQuery] = useState('');
   const [codeOpen, setCodeOpen] = useState(!!params.c);
   const university = useStore((s) => s.account?.university || s.settings.university);
+  const accountName = useStore((s) => s.account?.full_name);
+  const courses = useStore((s) => s.courses);
+  // دكاترة موادك أولاً (بمطابقة اسم المحاضر في مقرراتك)
+  const mine = (h: OfficeHost) => courses.find((c) => c.instructor && sameName(c.instructor, h.host_name));
+  const sortedHosts = hosts ? [...hosts].sort((a, b) => Number(!!mine(b)) - Number(!!mine(a))) : null;
   const now = useNow();
 
   // دليل الساعات المكتبية: كل دكتور معتمد في جامعتك فتح الحجز يظهر هنا (دون رمز)
@@ -89,10 +95,10 @@ export default function Book() {
   const book = async () => {
     if (!page || !slot) return;
     const id = latinDigits(uniId.trim());
-    if (name.trim().length < 2) return setMsg({ ok: false, text: 'اكتب اسمك' });
+    if (!accountName && name.trim().length < 2) return setMsg({ ok: false, text: 'اكتب اسمك' });
     if (id && !/^\d{4,12}$/.test(id)) return setMsg({ ok: false, text: 'الرقم الجامعي أرقام فقط' });
     try {
-      const bid = await cloud.book(code, slot.startsAt, name.trim(), id, topic.trim());
+      const bid = await cloud.book(code, slot.startsAt, accountName ?? name.trim(), id, topic.trim());
       update({ uniId: id || settings.uniId });
       saveMyBooking({ id: bid, code, title: page.title, host: page.host_name, startsAt: slot.startsAt, location: slot.location, status: 'booked' });
       haptic.success();
@@ -148,18 +154,20 @@ export default function Book() {
         <>
           <SectionHeader title={university ? `دكاترة ${university}` : 'الدكاترة'} />
           <Field placeholder="ابحث باسم الدكتور أو المادة…" value={query} onChangeText={setQuery} returnKeyType="search" />
-          {hosts === null ? (
+          {sortedHosts === null ? (
             <AppText variant="caption" muted center>
               جاري التحميل…
             </AppText>
-          ) : hosts.length === 0 ? (
+          ) : sortedHosts.length === 0 ? (
             <Card>
               <AppText variant="caption" muted center>
                 {query ? 'لا نتائج. جرّب جزءاً من الاسم.' : 'لم يفتح أي دكتور في جامعتك الحجز بعد. تظهر ساعاتهم هنا تلقائياً أول ما يفتحونها.'}
               </AppText>
             </Card>
           ) : (
-            hosts.map((h) => (
+            sortedHosts.map((h) => {
+              const course = mine(h);
+              return (
               <Card key={h.code} onPress={() => load(h.code, h.host_name)} accessibilityLabel={`${h.host_name}، ${h.title}`} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
                 <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
                   <Ionicons name="person" size={22} color={colors.primary} />
@@ -169,10 +177,16 @@ export default function Book() {
                   <AppText variant="caption" muted numberOfLines={1}>
                     {h.title} · مواعيد {h.slot_minutes} دقيقة
                   </AppText>
+                  {course && (
+                    <AppText variant="tiny" color={course.color}>
+                      ● دكتور مادتك: {course.name}
+                    </AppText>
+                  )}
                 </View>
                 <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
               </Card>
-            ))
+              );
+            })
           )}
           {!codeOpen && <Button title="عندي رمز من الدكتور" variant="ghost" size="sm" icon="keypad-outline" onPress={() => setCodeOpen(true)} />}
         </>
@@ -257,7 +271,13 @@ export default function Book() {
                 </AppText>
                 <Pill label={`${DAY_NAMES[slot.weekday]} ${formatMinutes(slot.minute)}`} tone="info" />
               </View>
-              <Field label="الاسم" value={name} onChangeText={setName} />
+              {accountName ? (
+                <AppText variant="caption" muted>
+                  الحجز باسم حسابك: <AppText variant="label">{accountName}</AppText>
+                </AppText>
+              ) : (
+                <Field label="الاسم" value={name} onChangeText={setName} />
+              )}
               <Field label="الرقم الجامعي" value={uniId} onChangeText={setUniId} keyboardType="number-pad" ltr />
               <Field label="موضوع الزيارة (اختياري)" placeholder="مثال: سؤال عن الواجب الثاني" value={topic} onChangeText={setTopic} maxLength={200} />
               <Button title="احجز الموعد" icon="checkmark" onPress={book} />

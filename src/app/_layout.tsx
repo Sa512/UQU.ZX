@@ -17,6 +17,7 @@ import { onAnnouncementTap } from '@/lib/push';
 import { ConfirmHost } from '@/components/ConfirmHost';
 import { LockGate } from '@/components/LockGate';
 import { useReminderSync } from '@/lib/useReminderSync';
+import { useAccountSync } from '@/lib/useAccountSync';
 import { useHydrated, useStore } from '@/store/useStore';
 import { AppThemeProvider, useTheme } from '@/theme';
 
@@ -38,6 +39,7 @@ export { ErrorBoundary } from 'expo-router';
 function Navigator() {
   const { colors, isDark } = useTheme();
   useReminderSync();
+  useAccountSync();
   // حالة الاشتراك الحقيقية تأتي من المتجر (عند تفعيل RevenueCat) وتتحدث تلقائياً.
   useEffect(() => initPurchases((status) => useStore.getState().setStoreSubscription(status)), []);
   // الضغط على إشعار إعلان يفتح صفحة المادة

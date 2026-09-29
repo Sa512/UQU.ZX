@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { emailKind, signupProblem, usersCsv } from '../accounts';
+import { emailKind, sameName, signupProblem, usersCsv } from '../accounts';
 import { createDemoApi, DEMO_ADMIN, DEMO_CODE } from '../cloud/demoApi';
 
 describe('university emails', () => {
@@ -72,5 +72,16 @@ describe('demo accounts and office-hours directory', () => {
     expect(await api.adminExport()).toHaveLength(2);
     await api.deleteAccount();
     await expect(api.myProfile()).resolves.toBeNull();
+  });
+});
+
+describe('matching instructors to professors', () => {
+  it('ignores titles, hamzas and middle names', () => {
+    expect(sameName('د. سارة الحربي', 'سارة محمد الحربي')).toBe(true);
+    expect(sameName('الدكتورة سارة الحربى', 'د.سارة الحربي')).toBe(true);
+    expect(sameName('Dr. Ahmed Ali', 'ahmed ali')).toBe(true);
+    expect(sameName('د. سارة الحربي', 'د. سارة العتيبي')).toBe(false);
+    expect(sameName('د. سارة', 'سارة الحربي')).toBe(false); // كلمة واحدة لا تكفي
+    expect(sameName('', 'سارة')).toBe(false);
   });
 });

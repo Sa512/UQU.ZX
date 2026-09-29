@@ -6,7 +6,7 @@
 import { generateSlots, type Window } from '../officeHours';
 import { CloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
+import type { AdminLogEntry, AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
 import { emailKind, normalizeEmail, type AccountRole, type Profile } from '../accounts';
 
 /** رمز التحقق في الوضع التجريبي (لا يُرسل إيميل فعلي). */
@@ -16,8 +16,8 @@ export const DEMO_ADMIN = 'asd1911147@gmail.com';
 type User = { id: string; email: string; password: string; verified: boolean; created_at: string; last_seen_at: string; profile: Profile | null };
 /** دكاترة تجريبيون يظهرون في دليل الساعات المكتبية لأي جامعة، حتى تُجرَّب الميزة على جهاز واحد. */
 const DEMO_HOSTS = [
-  { code: 'DMSR01', name: 'د. فهد الزهراني', title: 'ساعات مكتبية · هياكل البيانات', windows: [{ weekday: 0, start_min: 600, end_min: 720, location: 'مبنى 5 · مكتب 214' }, { weekday: 2, start_min: 600, end_min: 660, location: 'مبنى 5 · مكتب 214' }] },
-  { code: 'DMKH02', name: 'د. خالد العتيبي', title: 'ساعات مكتبية · التفاضل والتكامل', windows: [{ weekday: 1, start_min: 780, end_min: 900, location: 'مبنى 3 · مكتب 110' }] },
+  { code: 'DMSR01', name: 'د. فهد الزهراني', title: 'ساعات مكتبية · الفيزياء العامة', windows: [{ weekday: 0, start_min: 600, end_min: 720, location: 'مبنى 5 · مكتب 214' }, { weekday: 2, start_min: 600, end_min: 660, location: 'مبنى 5 · مكتب 214' }] },
+  { code: 'DMKH02', name: 'د. خالد العتيبي', title: 'ساعات مكتبية · هياكل البيانات', windows: [{ weekday: 1, start_min: 780, end_min: 900, location: 'مبنى 3 · مكتب 110' }] },
   { code: 'DMNQ03', name: 'د. نورة القحطاني', title: 'ساعات مكتبية · مهارات الكتابة', windows: [{ weekday: 3, start_min: 540, end_min: 660, location: 'مبنى 1 · مكتب 8' }] },
 ];
 
@@ -40,6 +40,8 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
   const sessions = new Map<string, Sess>();
   const channels = new Map<string, Channel>();
   const users = new Map<string, User>();
+  const adminLog: AdminLogEntry[] = [];
+  const logAdmin = (action: string, target: string) => adminLog.unshift({ admin_email: current ?? '?', action, target, at: stamp() });
   let current: string | null = null; // إيميل الجلسة
   const ready = storage
     ? storage
@@ -360,6 +362,7 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       const u = [...users.values()].find((x) => x.id === uid && x.profile);
       if (!u?.profile) throw new CloudError('not_found');
       u.profile = { ...u.profile, role, status };
+      logAdmin(`set_user:${role}/${status}`, u.email);
       if (!(role === 'professor' && status === 'active')) for (const p of pages.values()) if (p.owner === uid) p.is_open = false;
       save();
       await delay(null);
@@ -367,6 +370,7 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
     async adminExport() {
       await ready;
       admin();
+      logAdmin('export', `${[...users.values()].filter((u) => u.profile).length} rows`);
       return delay(
         [...users.values()]
           .filter((u) => u.profile)
@@ -385,6 +389,11 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
     async adminSetOverride() {
       admin();
       await delay(null);
+    },
+    async adminLog() {
+      await ready;
+      admin();
+      return delay(adminLog.slice(0, 50));
     },
     async deletePost(pid) {
       await ready;

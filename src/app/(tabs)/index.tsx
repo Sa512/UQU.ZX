@@ -52,6 +52,7 @@ export default function Home() {
   const { colors, isDark } = useTheme();
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
+  const pendingProf = useStore((s) => s.account?.role === 'professor' && s.account.status === 'pending');
   const slots = useStore((s) => s.slots);
   const tasks = useStore((s) => s.tasks);
   const sessions = useStore((s) => s.sessions);
@@ -126,6 +127,15 @@ export default function Home() {
           </AppText>
         </Pressable>
       </View>
+
+      {pendingProf && (
+        <Card onPress={() => router.push('/settings')} accessibilityLabel="حسابك بانتظار الموافقة" style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center', backgroundColor: colors.warningSoft }}>
+          <Ionicons name="hourglass" size={22} color={colors.warning} />
+          <AppText variant="caption" color={colors.warning} style={{ flex: 1 }}>
+            حسابك كعضو هيئة تدريس بانتظار موافقة المشرف. كل الأدوات متاحة الآن، ويظهر اسمك في دليل الساعات المكتبية بعد الموافقة.
+          </AppText>
+        </Card>
+      )}
 
       {/* بطاقة التقدم اليومي */}
       <LinearGradient colors={colors.gradient} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ borderRadius: radius.xl, padding: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: spacing.lg }}>

@@ -1,16 +1,16 @@
 /** التنفيذ الحقيقي على Supabase (حساب بالإيميل الجامعي + دوال RPC محمية). */
 import 'react-native-url-polyfill/auto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { secureStorage } from './secureStorage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { toCloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
+import type { AdminLogEntry, AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
 import { normalizeEmail, type ExportRow, type Profile } from '../accounts';
 
 export function createSupabaseApi(url: string, anonKey: string): CloudApi {
   const sb: SupabaseClient = createClient(url, anonKey, {
-    auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
+    auth: { storage: secureStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
   });
   if (Platform.OS !== 'web') {
     AppState.addEventListener('change', (s) => (s === 'active' ? sb.auth.startAutoRefresh() : sb.auth.stopAutoRefresh()));
@@ -179,6 +179,9 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     },
     async adminSetOverride(email, role, admin, note) {
       await call(() => sb.rpc('admin_set_override', { p_email: email, p_role: role, p_admin: admin, p_note: note }));
+    },
+    async adminLog() {
+      return (await call(() => sb.rpc('admin_log_recent', { p_limit: 50 }))) as AdminLogEntry[];
     },
   };
 }

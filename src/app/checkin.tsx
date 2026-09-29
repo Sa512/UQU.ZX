@@ -21,7 +21,8 @@ export default function StudentCheckin() {
   const params = useLocalSearchParams<{ c?: string; n?: string }>();
   const settings = useStore((s) => s.settings);
   const update = useStore((s) => s.updateSettings);
-  const [name, setName] = useState(settings.name);
+  const accountName = useStore((s) => s.account?.full_name);
+  const [name, setName] = useState(accountName ?? settings.name);
   const [uniId, setUniId] = useState(settings.uniId);
   const [typed, setTyped] = useState(params.c && params.n ? `${params.c} ${params.n}` : '');
   const [busy, setBusy] = useState(false);
@@ -54,7 +55,13 @@ export default function StudentCheckin() {
     <Screen back title="التحضير بالـ QR" subtitle="امسح الرمز الظاهر على شاشة الدكتور">
       <Card style={{ gap: spacing.md }}>
         <AppText variant="h3">بياناتك</AppText>
-        <Field label="الاسم" value={name} onChangeText={setName} />
+        {accountName ? (
+          <AppText variant="caption" muted>
+            التحضير باسم حسابك: <AppText variant="label">{accountName}</AppText>
+          </AppText>
+        ) : (
+          <Field label="الاسم" value={name} onChangeText={setName} />
+        )}
         <Field label="الرقم الجامعي" value={uniId} onChangeText={setUniId} keyboardType="number-pad" ltr />
       </Card>
 

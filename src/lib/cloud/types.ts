@@ -27,6 +27,8 @@ export type AdminUser = Profile & { created_at: string; last_seen_at: string };
 export type AdminOverview = { students: number; professors: number; pending: number; new_week: number; active_week: number; open_pages: number; bookings_week: number; universities: { university: string; users: number }[] };
 export type AdminRules = { domains: { domain: string; university: string; kind: 'student' | 'staff' }[]; overrides: { email: string; role: AccountRole | null; is_admin: boolean; note: string }[] };
 
+export type AdminLogEntry = { admin_email: string; action: string; target: string; at: string };
+
 export interface CloudApi {
   /** true = خادم Supabase حقيقي، false = وضع تجريبي على هذا الجهاز. */
   readonly real: boolean;
@@ -69,5 +71,7 @@ export interface CloudApi {
   adminRules(): Promise<AdminRules>;
   adminSetRule(domain: string, university: string, kind: 'student' | 'staff' | null): Promise<void>;
   adminSetOverride(email: string, role: AccountRole | null, admin: boolean, note: string): Promise<void>;
+  /** سجل إجراءات المشرفين (الأحدث أولاً). */
+  adminLog(): Promise<AdminLogEntry[]>;
   unsubscribeChannel(code: string, token: string): Promise<void>;
 }
