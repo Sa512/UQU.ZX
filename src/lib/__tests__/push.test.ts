@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { buildBookingMessages, buildMessages, chunk, deadTokens, riyadhLabel } from '../../../supabase/functions/_shared/push';
+import { buildBookingMessages, buildCancelMessages, buildMessages, chunk, deadTokens, riyadhLabel } from '../../../supabase/functions/_shared/push';
 
 const t = { code: 'ABC234', course_name: 'هياكل البيانات', instructor: 'د. سارة', body: 'تأجّل  الاختبار\nللأحد', tokens: ['ExponentPushToken[abcdefghij1234567890]', 'ExponentPushToken[abcdefghij1234567890]', 'bad-token', 'ExpoPushToken[zyxwvutsrq0987654321]'] };
 
@@ -31,5 +31,23 @@ describe('booking notifications for professors', () => {
     expect(m[0]).toMatchObject({ title: '📅 حجز جديد · ساعات د. هند المكتبية', body: 'ريم الشهري · الثلاثاء 10:30 ص', channelId: 'bookings', data: { type: 'booking' } });
     expect(riyadhLabel('2026-10-06T21:05:00Z')).toBe('الأربعاء 12:05 ص');
     expect(riyadhLabel('2026-10-06T10:00:00Z')).toBe('الثلاثاء 1:00 م');
+  });
+});
+
+describe('cancellation notice for students', () => {
+  it('tells the student who cancelled, when, and why', () => {
+    const m = buildCancelMessages({ title: 'ساعات د. هند', host_name: 'د. هند الزهراني', starts_at: '2026-10-06T07:30:00Z', note: ' اجتماع   قسم\n', tokens: ['ExponentPushToken[abcdefghijklmnop]', 'nope'] });
+    expect(m).toHaveLength(1);
+    expect(m[0]).toMatchObject({
+      title: '❌ د. هند الزهراني ألغى الموعد',
+      body: 'موعدك الثلاثاء 10:30 ص أُلغي · اجتماع قسم. احجز موعداً آخر من التطبيق.',
+      channelId: 'bookings',
+      data: { type: 'booking_cancelled' },
+    });
+  });
+
+  it('works without a note', () => {
+    const [m] = buildCancelMessages({ title: 'x', host_name: 'د. هند', starts_at: '2026-10-06T07:30:00Z', note: '', tokens: ['ExponentPushToken[abcdefghijklmnop]'] });
+    expect(m.body).toBe('موعدك الثلاثاء 10:30 ص أُلغي. احجز موعداً آخر من التطبيق.');
   });
 });

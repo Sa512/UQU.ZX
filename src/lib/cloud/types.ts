@@ -2,7 +2,7 @@ import type { Window } from '../officeHours';
 import type { AccountRole, AccountStatus, ExportRow, Profile } from '../accounts';
 
 export type PageInfo = { id: string; title: string; host_name: string; slot_minutes: number; is_open: boolean; windows: Window[]; taken: string[] };
-export type Booking = { id: string; page_id: string; starts_at: string; ends_at: string; student_name: string; uni_id: string; topic: string; status: 'booked' | 'cancelled' };
+export type Booking = { id: string; page_id: string; starts_at: string; ends_at: string; student_name: string; uni_id: string; topic: string; status: 'booked' | 'cancelled'; cancelled_by?: 'student' | 'host' | null; cancel_note?: string };
 export type CheckIn = { id: string; uni_id: string; student_name: string; at: string };
 export type Session = { id: string; code: string; nonce: string };
 
@@ -24,10 +24,12 @@ export type SectionChannel = ChannelInput & { id: string; code: string; updated_
 /** دكتور فتح الحجز في جامعة الطالب (من دليل الساعات المكتبية). */
 export type OfficeHost = { code: string; title: string; host_name: string; slot_minutes: number };
 export type AdminUser = Profile & { created_at: string; last_seen_at: string };
-export type AdminOverview = { students: number; professors: number; pending: number; new_week: number; active_week: number; open_pages: number; bookings_week: number; universities: { university: string; users: number }[] };
+export type AdminOverview = { students: number; professors: number; pending: number; new_week: number; active_week: number; open_pages: number; bookings_week: number; errors_week?: number; universities: { university: string; users: number }[] };
 export type AdminRules = { domains: { domain: string; university: string; kind: 'student' | 'staff' }[]; overrides: { email: string; role: AccountRole | null; is_admin: boolean; note: string }[] };
 
 export type AdminLogEntry = { admin_email: string; action: string; target: string; at: string };
+/** عطل متكرر (مجمّع، بلا هوية المستخدم). */
+export type AdminError = { message: string; screen: string; app_version: string; count: number; last_at: string };
 
 export interface CloudApi {
   /** true = خادم Supabase حقيقي، false = وضع تجريبي على هذا الجهاز. */
@@ -38,7 +40,8 @@ export interface CloudApi {
   pageBookings(pageId: string): Promise<Booking[]>;
   book(code: string, startsAt: string, name: string, uniId: string, topic: string): Promise<string>;
   myBookings(): Promise<Booking[]>;
-  cancel(id: string): Promise<void>;
+  /** note: سبب الإلغاء (يُحفظ فقط إن ألغى الدكتور، ويصل للطالب). */
+  cancel(id: string, note?: string): Promise<void>;
   startSession(label: string): Promise<Session>;
   rotate(sessionId: string): Promise<string>;
   checkins(sessionId: string): Promise<CheckIn[]>;
@@ -78,4 +81,9 @@ export interface CloudApi {
   /** الدكتور يسجّل جهازه لإشعارات الحجوزات الجديدة. */
   registerHostPush(token: string): Promise<void>;
   unregisterHostPush(token: string): Promise<void>;
+  /** الطالب يسجّل جهازه ليصله إشعار إن ألغى الدكتور موعده. */
+  registerStudentPush(token: string): Promise<void>;
+  /** بلاغ عطل مجهول الهوية (النص منقّى مسبقاً). */
+  reportError(version: string, platform: 'ios' | 'android' | 'web', screen: string, message: string): Promise<void>;
+  adminErrors(): Promise<AdminError[]>;
 }

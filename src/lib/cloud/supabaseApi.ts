@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { toCloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { AdminLogEntry, AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
+import type { AdminError, AdminLogEntry, AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
 import { normalizeEmail, type ExportRow, type Profile } from '../accounts';
 
 export function createSupabaseApi(url: string, anonKey: string): CloudApi {
@@ -78,8 +78,8 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
       const { data: u } = await sb.auth.getUser();
       return (await call(() => sb.from('bookings').select('*').eq('student', u.user?.id ?? '').order('starts_at'))) as Booking[];
     },
-    async cancel(id) {
-      await call(() => sb.rpc('cancel_booking', { p_id: id }));
+    async cancel(id, note = '') {
+      await call(() => sb.rpc('cancel_booking', { p_id: id, p_note: note.trim() }));
     },
     async startSession(label) {
       return (await call(() => sb.from('attendance_sessions').insert({ label }).select('id, code, nonce').single())) as Session;
@@ -130,6 +130,15 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     },
     async unregisterHostPush(token) {
       await call(() => sb.rpc('unregister_host_push', { p_token: token }));
+    },
+    async registerStudentPush(token) {
+      checked(await call(() => sb.rpc('register_student_push', { p_token: token })));
+    },
+    async reportError(version, platform, screen, message) {
+      checked(await call(() => sb.rpc('report_error', { p_version: version, p_platform: platform, p_screen: screen, p_message: message })));
+    },
+    async adminErrors() {
+      return (await call(() => sb.rpc('admin_errors'))) as AdminError[];
     },
     async signUp(email, password) {
       await authCall(() => sb.auth.signUp({ email: normalizeEmail(email), password }));

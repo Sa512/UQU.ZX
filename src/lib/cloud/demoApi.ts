@@ -6,7 +6,7 @@
 import { generateSlots, type Window } from '../officeHours';
 import { CloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { AdminLogEntry, AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
+import type { AdminError, AdminLogEntry, AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
 import { emailKind, normalizeEmail, type AccountRole, type Profile } from '../accounts';
 
 /** رمز التحقق في الوضع التجريبي (لا يُرسل إيميل فعلي). */
@@ -41,6 +41,7 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
   const channels = new Map<string, Channel>();
   const users = new Map<string, User>();
   const adminLog: AdminLogEntry[] = [];
+  const errors: AdminError[] = [];
   const logAdmin = (action: string, target: string) => adminLog.unshift({ admin_email: current ?? '?', action, target, at: stamp() });
   let current: string | null = null; // إيميل الجلسة
   const ready = storage
@@ -126,11 +127,14 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       await ready;
       return delay(bookings.filter((b) => b.student === device));
     },
-    async cancel(bid) {
+    async cancel(bid, note = '') {
       await ready;
       const b = bookings.find((x) => x.id === bid && x.status === 'booked');
       if (!b) throw new CloudError('not_allowed');
+      const host = [...pages.values()].some((p) => p.id === b.page_id && !!p.owner && p.owner === me()?.id);
       b.status = 'cancelled';
+      b.cancelled_by = host ? 'host' : 'student';
+      b.cancel_note = host ? note.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
       save();
       await delay(null);
     },
@@ -211,6 +215,19 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
     },
     async unregisterHostPush() {
       await delay(null);
+    },
+    async registerStudentPush() {
+      await delay(null);
+    },
+    async reportError(version, platform, screen, message) {
+      errors.unshift({ message: message.slice(0, 300), screen: screen.slice(0, 80), app_version: version, count: 1, last_at: stamp() });
+      errors.length = Math.min(errors.length, 50);
+      await delay(null);
+    },
+    async adminErrors() {
+      await ready;
+      admin();
+      return delay([...errors]);
     },
     async deleteMyData() {
       // الوضع التجريبي على جهاز واحد: كل البيانات تخص هذا الجهاز
@@ -348,6 +365,7 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
         active_week: [...users.values()].filter((u) => u.profile && Date.parse(u.last_seen_at) > week).length,
         open_pages: [...pages.values()].filter((p) => p.is_open && !p.owner?.startsWith('demo-')).length,
         bookings_week: bookings.length,
+        errors_week: errors.length,
         universities: [...unis].map(([university, n]) => ({ university, users: n })).sort((a, b) => b.users - a.users).slice(0, 10),
       });
     },

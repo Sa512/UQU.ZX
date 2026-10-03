@@ -68,7 +68,7 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    - Authentication ← Emails ← **SMTP Settings**: اربط مزوّد إرسال خاص (مثل Resend أو Amazon SES أو Brevo) باسم نطاقك. مزوّد Supabase الافتراضي محدود جداً ولا يصلح للإطلاق، وبعض إيميلات الجامعات ترفض الرسائل غير الموثّقة.
    - Authentication ← Attack Protection: فعّل **CAPTCHA** وراجع **Rate Limits** للتسجيل وإرسال الرموز.
    - Authentication ← Providers ← Email: اجعل **Minimum password length = 8** (مثل التطبيق)، وفعّل **Secure email change**. الخادم يرفض أي إيميل غير مؤكَّد حتى لو عُطّل التأكيد خطأً.
-3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql` ثم `20260929000000_accounts.sql` ثم `20260930000000_security.sql` ثم `20261001000000_hardening2.sql` ثم `20261002000000_booking_push.sql`) ← Run.
+3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql` ثم `20260929000000_accounts.sql` ثم `20260930000000_security.sql` ثم `20261001000000_hardening2.sql` ثم `20261002000000_booking_push.sql` ثم `20261003000000_cancel_notice.sql`) ← Run.
    - الهجرة الأخيرة تجعل `asd1911147@gmail.com` مشرفاً (سجّل به من التطبيق لتظهر لك «لوحة المشرف» في المزيد). لإضافة مشرف آخر: من اللوحة ← استثناءات الإيميل ← مشرف.
 4. التنظيف التلقائي: Database ← Extensions ← فعّل `pg_cron`، ثم نفّذ:
    ```sql
@@ -90,7 +90,7 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    ```
    ثم Database ← Webhooks ← Create: الجدول `section_posts`، الحدث **Insert**، النوع **Supabase Edge Function** ← `notify-section-post`، وأضف ترويسة `x-webhook-secret` بنفس القيمة.
    بدون هذه الخطوة تعمل القناة كما هي، ويصل الإعلان عند فتح التطبيق.
-   **إشعار الدكتور بالحجز الجديد:** `npx supabase functions deploy notify-booking --no-verify-jwt`، ثم Webhook ثانٍ: الجدول `bookings`، الحدث **Insert**، الدالة `notify-booking`، بنفس ترويسة `x-webhook-secret`.
+   **إشعار الدكتور بالحجز الجديد:** `npx supabase functions deploy notify-booking --no-verify-jwt`، ثم Webhook ثانٍ: الجدول `bookings`، الحدثان **Insert** و**Update** (2.0: الثاني لإشعار الطالب إذا ألغى الدكتور موعده)، الدالة `notify-booking`، بنفس ترويسة `x-webhook-secret`.
 8. **خطة بديلة إن رفضت Apple إلزامية التسجيل (5.1.1):** أضف في EAS المتغير `EXPO_PUBLIC_REQUIRE_LOGIN=false` وابنِ من جديد؛ يعمل التطبيق بلا حساب ويُطلب الحساب عند الحجز والتحضير والقنوات فقط:
    ```bash
    npx eas-cli@latest env:create --name EXPO_PUBLIC_REQUIRE_LOGIN --value "false" --environment production --visibility plaintext

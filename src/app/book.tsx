@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
+import { CancelNotice } from '@/components/CancelNotice';
 import { Card } from '@/components/Card';
 import { confirm } from '@/components/confirm';
 import { Field } from '@/components/Field';
@@ -20,6 +21,8 @@ import { useStore } from '@/store/useStore';
 import { sameName } from '@/lib/accounts';
 import { radius, spacing, useTheme } from '@/theme';
 import { SignInNeeded } from '@/components/SignInNeeded';
+import { ensureStudentPush } from '@/lib/hostPush';
+import { syncBookings } from '@/lib/useAccountSync';
 
 function BookInner() {
   const { colors } = useTheme();
@@ -84,6 +87,11 @@ function BookInner() {
     }
   }, []);
 
+  // هل ألغى الدكتور أحد مواعيدك؟ (يتحدّث عند فتح الصفحة)
+  useEffect(() => {
+    syncBookings().catch(() => {});
+  }, []);
+
   useEffect(() => {
     // يُفتح من رابط الـ QR مباشرة: mudhaker://book?c=…
     if (params.c) Promise.resolve(params.c).then(load);
@@ -104,6 +112,8 @@ function BookInner() {
       saveMyBooking({ id: bid, code, title: page.title, host: page.host_name, startsAt: slot.startsAt, location: slot.location, status: 'booked' });
       haptic.success();
       setTopic('');
+      // ليصلك إشعار إن ألغى الدكتور الموعد
+      ensureStudentPush();
       // التحديث يمسح الرسالة، فنعرض نتيجة الحجز بعده
       await load(code, page.host_name);
       setMsg({ ok: true, text: `تم الحجز: ${DAY_NAMES[slot.weekday]} ${formatShortDate(fromDateKey(slot.dayKey))} الساعة ${formatMinutes(slot.minute)} ✓ سنذكّرك قبلها بنصف ساعة.` });
@@ -116,6 +126,7 @@ function BookInner() {
 
   return (
     <Screen back title="حجز ساعة مكتبية" subtitle={page ? `${page.host_name} · ${page.title}` : 'اختر الدكتور وشوف مواعيده'}>
+      {!page && <CancelNotice now={now} rebook={false} />}
       {upcoming.length > 0 && !page && (
         <>
           <SectionHeader title="حجوزاتي القادمة" />

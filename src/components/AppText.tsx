@@ -14,6 +14,9 @@ const variants: Record<Variant, TextStyle> = {
   tiny: { fontSize: 11, lineHeight: 16, fontFamily: fonts.medium },
 };
 
+/** خط الجوال الكبير مدعوم: النص يكبر حتى 1.6×، والعناوين الكبيرة حتى 1.3× حتى لا تتكسر الشاشات. */
+const maxScale: Record<Variant, number> = { display: 1.3, title: 1.3, h2: 1.5, h3: 1.6, body: 1.6, label: 1.6, caption: 1.6, tiny: 1.8 };
+
 export type AppTextProps = TextProps & {
   variant?: Variant;
   color?: string;
@@ -26,6 +29,7 @@ export function AppText({ variant = 'body', color, muted, weight, center, style,
   const { colors } = useTheme();
   return (
     <Text
+      maxFontSizeMultiplier={maxScale[variant]}
       {...rest}
       style={[
         variants[variant],

@@ -12,3 +12,15 @@ export async function ensureHostPush(): Promise<boolean> {
     return false;
   }
 }
+
+/** الطالب بعد الحجز: ليصله إشعار إن ألغى الدكتور موعده. */
+export async function ensureStudentPush(): Promise<boolean> {
+  const token = await getPushToken();
+  if (!token) return false;
+  try {
+    await cloud.registerStudentPush(token);
+    return true;
+  } catch {
+    return false;
+  }
+}

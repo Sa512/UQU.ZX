@@ -53,3 +53,14 @@ export function buildBookingMessages(t: BookingTargets): BookingMessage[] {
   const body = clip(`${t.student_name.replace(/\s+/g, ' ').trim()} · ${riyadhLabel(t.starts_at)}`, 160);
   return tokens.map((to) => ({ to, title: `📅 حجز جديد · ${clip(t.title, 50)}`, body, sound: 'default', priority: 'high', channelId: 'bookings', data: { type: 'booking' } }));
 }
+
+// ——— إشعار الطالب بإلغاء الدكتور لموعده ———
+export type CancelTargets = { title: string; host_name: string; starts_at: string; note: string; tokens: string[] };
+export type CancelMessage = Omit<ExpoMessage, 'channelId' | 'data'> & { channelId: 'bookings'; data: { type: 'booking_cancelled' } };
+
+export function buildCancelMessages(t: CancelTargets): CancelMessage[] {
+  const tokens = [...new Set(t.tokens)].filter((x) => /^Expo(nent)?PushToken\[[A-Za-z0-9_-]{10,80}\]$/.test(x));
+  const note = t.note.replace(/\s+/g, ' ').trim();
+  const body = clip(`موعدك ${riyadhLabel(t.starts_at)} أُلغي${note ? ` · ${note}` : ''}. احجز موعداً آخر من التطبيق.`, 160);
+  return tokens.map((to) => ({ to, title: `❌ ${clip(t.host_name, 50)} ألغى الموعد`, body, sound: 'default', priority: 'high', channelId: 'bookings', data: { type: 'booking_cancelled' } }));
+}

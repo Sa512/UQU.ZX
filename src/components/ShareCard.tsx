@@ -49,20 +49,20 @@ export const ShareCard = forwardRef<View, { data: ShareCardData; width: number }
 
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 70 * k, gap: 10 * k }}>
           <View style={{ backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 999, paddingHorizontal: 16 * k, paddingVertical: 6 * k, maxWidth: '100%' }}>
-            <Text numberOfLines={1} style={txt(14, 'semibold')}>
+            <Text allowFontScaling={false} numberOfLines={1} style={txt(14, 'semibold')}>
               {data.eyebrow}
             </Text>
           </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 8 * k, marginTop: 8 * k }}>
-            <Text style={txt(bs, 'bold', '#FFFFFF', { lineHeight: bs * k * 1.15, textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 4 * k }, textShadowRadius: 12 * k })}>{data.big}</Text>
-            {data.suffix ? <Text numberOfLines={1} style={txt(24, 'semibold', 'rgba(255,255,255,0.85)', { flexShrink: 0 })}>{data.suffix}</Text> : null}
+            <Text allowFontScaling={false} style={txt(bs, 'bold', '#FFFFFF', { lineHeight: bs * k * 1.15, textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 4 * k }, textShadowRadius: 12 * k })}>{data.big}</Text>
+            {data.suffix ? <Text allowFontScaling={false} numberOfLines={1} style={txt(24, 'semibold', 'rgba(255,255,255,0.85)', { flexShrink: 0 })}>{data.suffix}</Text> : null}
           </View>
 
-          <Text style={txt(28, 'bold')}>{data.title}</Text>
+          <Text allowFontScaling={false} style={txt(28, 'bold')}>{data.title}</Text>
           {data.sub ? (
             <View style={{ backgroundColor: t.accent, borderRadius: 14 * k, paddingHorizontal: 14 * k, paddingVertical: 4 * k, marginTop: 6 * k, transform: [{ rotate: '-2deg' }] }}>
-              <Text style={txt(17, 'bold', '#1E1B4B')}>{data.sub}</Text>
+              <Text allowFontScaling={false} style={txt(17, 'bold', '#1E1B4B')}>{data.sub}</Text>
             </View>
           ) : null}
 
@@ -70,8 +70,8 @@ export const ShareCard = forwardRef<View, { data: ShareCardData; width: number }
             <View style={{ alignSelf: 'stretch', marginTop: 18 * k, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20 * k, padding: 16 * k, gap: 10 * k }}>
               {data.lines.map((l) => (
                 <View key={l.label} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 * k }}>
-                  <Text style={txt(15, 'regular', 'rgba(255,255,255,0.8)', { textAlign: 'left' })}>{l.label}</Text>
-                  <Text numberOfLines={1} style={txt(15, 'bold', '#FFFFFF', { flexShrink: 1, textAlign: 'right' })}>
+                  <Text allowFontScaling={false} style={txt(15, 'regular', 'rgba(255,255,255,0.8)', { textAlign: 'left' })}>{l.label}</Text>
+                  <Text allowFontScaling={false} numberOfLines={1} style={txt(15, 'bold', '#FFFFFF', { flexShrink: 1, textAlign: 'right' })}>
                     {l.value}
                   </Text>
                 </View>
@@ -85,11 +85,11 @@ export const ShareCard = forwardRef<View, { data: ShareCardData; width: number }
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 * k }}>
             <Image source={ICON} style={{ width: 40 * k, height: 40 * k, borderRadius: 11 * k }} />
             <View>
-              <Text style={txt(20, 'bold', '#FFFFFF', { textAlign: 'left', lineHeight: 24 * k })}>{APP_INFO.name}</Text>
-              <Text style={txt(11, 'medium', 'rgba(255,255,255,0.75)', { textAlign: 'left', lineHeight: 15 * k })}>رفيقك الجامعي</Text>
+              <Text allowFontScaling={false} style={txt(20, 'bold', '#FFFFFF', { textAlign: 'left', lineHeight: 24 * k })}>{APP_INFO.name}</Text>
+              <Text allowFontScaling={false} style={txt(11, 'medium', 'rgba(255,255,255,0.75)', { textAlign: 'left', lineHeight: 15 * k })}>رفيقك الجامعي</Text>
             </View>
           </View>
-          <Text style={txt(11, 'medium', 'rgba(255,255,255,0.65)', { writingDirection: 'ltr' })}>{SITE}</Text>
+          <Text allowFontScaling={false} style={txt(11, 'medium', 'rgba(255,255,255,0.65)', { writingDirection: 'ltr' })}>{SITE}</Text>
         </View>
       </LinearGradient>
     </View>

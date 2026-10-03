@@ -11,6 +11,7 @@ export const Field = forwardRef<TextInput, Props>(function Field({ label, error,
     <View style={{ gap: 6 }}>
       {label && <AppText variant="label">{label}</AppText>}
       <TextInput
+        maxFontSizeMultiplier={1.6}
         ref={ref}
         placeholderTextColor={colors.textMuted}
         multiline={multiline}

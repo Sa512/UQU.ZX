@@ -60,6 +60,8 @@ export type Settings = {
   lastAccountId: string | null;
   /** أخفى الدكتور اقتراح تفعيل القفل في الرئيسية. */
   lockPromptDismissed: boolean;
+  /** بلاغات الأعطال المجهولة (نص الخطأ فقط بعد تنقيته) — يمكن إيقافها من الإعدادات. */
+  crashReports: boolean;
 };
 
 export type Course = {
@@ -118,7 +120,20 @@ export type Student = { id: string; sectionId: string; name: string; uniId: stri
 /** صفحة الساعات المكتبية المنشورة للدكتور. */
 export type OfficePage = { id: string; code: string; title: string; slotMinutes: number; open: boolean };
 /** حجز الطالب محفوظ محلياً للعرض والتذكير دون اتصال. */
-export type MyBooking = { id: string; code: string; title: string; host: string; startsAt: string; location: string; status: 'booked' | 'cancelled' };
+export type MyBooking = {
+  id: string;
+  code: string;
+  title: string;
+  host: string;
+  startsAt: string;
+  location: string;
+  status: 'booked' | 'cancelled';
+  /** من ألغى (يُعرف من الخادم)، وسبب الدكتور إن كتبه. */
+  cancelledBy?: 'student' | 'host';
+  cancelNote?: string;
+  /** اطّلع الطالب على تنبيه الإلغاء. */
+  noticeSeen?: boolean;
+};
 
 export type Session = { id: string; courseId: string | null; minutes: number; at: number };
 
@@ -226,6 +241,8 @@ type Actions = {
   summaryToDeck: (id: string) => { deckId: string; added: number } | null;
   saveMyBooking: (b: MyBooking) => void;
   setBookingStatus: (id: string, status: MyBooking['status']) => void;
+  replaceMyBookings: (list: MyBooking[]) => void;
+  dismissBookingNotice: (id: string) => void;
   startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
   updateAssessment: (id: string, p: Partial<Assessment>) => void;
   deleteAssessment: (id: string) => void;
@@ -261,6 +278,7 @@ const defaultSettings: Settings = {
   focusOpen: false,
   lastAccountId: null,
   lockPromptDismissed: false,
+  crashReports: true,
 };
 
 const initialState: State = {
@@ -568,7 +586,9 @@ export const useStore = create<State & Actions>()(
         return { deckId, added: fresh.length };
       },
       saveMyBooking: (b) => set((s) => ({ myBookings: [...s.myBookings.filter((x) => x.id !== b.id), b].sort((a, c) => a.startsAt.localeCompare(c.startsAt)) })),
-      setBookingStatus: (id, status) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, status } : x)) })),
+      setBookingStatus: (id, status) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, status, ...(status === 'cancelled' ? { cancelledBy: 'student' as const, noticeSeen: true } : {}) } : x)) })),
+      replaceMyBookings: (list) => set({ myBookings: list }),
+      dismissBookingNotice: (id) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, noticeSeen: true } : x)) })),
       addTasks: (list) =>
         set((s) => ({ tasks: [...s.tasks, ...list.map((t) => ({ ...t, id: uid(), done: false, createdAt: Date.now() }))] })),
       startNewSemester: ({ mergeGpa, clearSchedule, clearTasks, clearCourses }) =>

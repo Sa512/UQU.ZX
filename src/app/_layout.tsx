@@ -13,11 +13,11 @@ import { useEffect } from 'react';
 import { I18nManager, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initPurchases } from '@/lib/purchases';
-import { onAnnouncementTap } from '@/lib/push';
+import { onAnnouncementTap, onPushReceived } from '@/lib/push';
 import { ConfirmHost } from '@/components/ConfirmHost';
 import { LockGate } from '@/components/LockGate';
 import { useReminderSync } from '@/lib/useReminderSync';
-import { useAccountSync } from '@/lib/useAccountSync';
+import { syncBookings, useAccountSync } from '@/lib/useAccountSync';
 import { useHydrated, useStore } from '@/store/useStore';
 import { AppThemeProvider, useTheme } from '@/theme';
 
@@ -34,7 +34,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export { ErrorBoundary } from 'expo-router';
+export { AppErrorBoundary as ErrorBoundary } from '@/components/AppErrorBoundary';
 
 function Navigator() {
   const { colors, isDark } = useTheme();
@@ -48,9 +48,14 @@ function Navigator() {
       onAnnouncementTap((code) => {
         const c = useStore.getState().courses.find((x) => x.channel?.code === code);
         if (c) router.push({ pathname: '/course/[id]', params: { id: c.id } });
-      }, () => router.push('/office-hours')),
+      }, () => router.push('/office-hours'), () => {
+        // يتحدّث الحجز من الخادم ثم تُفتح صفحة الحجوزات
+        syncBookings().catch(() => {});
+        router.push('/book');
+      }),
     [],
   );
+  useEffect(() => onPushReceived('booking_cancelled', () => void syncBookings().catch(() => {})), []);
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(colors.bg).catch(() => {});
   }, [colors.bg]);

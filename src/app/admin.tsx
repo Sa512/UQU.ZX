@@ -13,7 +13,7 @@ import { Pill } from '@/components/Rows';
 import { HeaderButton, Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { ROLE_LABEL, STATUS_LABEL, usersCsv, type AccountRole, type AccountStatus } from '@/lib/accounts';
-import { cloud, type AdminLogEntry, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
+import { cloud, type AdminError, type AdminLogEntry, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
 import { formatShortDate, toDateKey } from '@/lib/dates';
 import { shareCsv } from '@/lib/exportIO';
 import { useStore } from '@/store/useStore';
@@ -29,6 +29,7 @@ export default function Admin() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [rules, setRules] = useState<AdminRules | null>(null);
   const [log, setLog] = useState<AdminLogEntry[]>([]);
+  const [errors, setErrors] = useState<AdminError[]>([]);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [open, setOpen] = useState<string | null>(null);
@@ -47,10 +48,11 @@ export default function Admin() {
   }, []);
   const refresh = useCallback(async () => {
     try {
-      const [o, r, l] = await Promise.all([cloud.adminOverview(), cloud.adminRules(), cloud.adminLog()]);
+      const [o, r, l, e] = await Promise.all([cloud.adminOverview(), cloud.adminRules(), cloud.adminLog(), cloud.adminErrors()]);
       setOv(o);
       setRules(r);
       setLog(l);
+      setErrors(e);
     } catch (e) {
       setMsg({ ok: false, text: (e as Error).message });
     }
@@ -105,6 +107,8 @@ export default function Admin() {
     ['جديد هذا الأسبوع', ov?.new_week, 'person-add'],
     ['نشطون هذا الأسبوع', ov?.active_week, 'pulse'],
     ['صفحات حجز مفتوحة', ov?.open_pages, 'calendar'],
+    ['حجوزات الأسبوع', ov?.bookings_week, 'checkmark-done'],
+    ['أعطال الأسبوع', ov?.errors_week, 'bug'],
   ];
 
   return (
@@ -112,7 +116,7 @@ export default function Admin() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
         {stats.map(([label, n, icon]) => (
           <Card key={label} style={{ width: '31.5%', padding: spacing.md, gap: 2, alignItems: 'center' }}>
-            <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={label === 'بانتظار الموافقة' && n ? colors.warning : colors.primary} />
+            <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={18} color={(label === 'بانتظار الموافقة' || label === 'أعطال الأسبوع') && n ? colors.warning : colors.primary} />
             <AppText variant="h2">{n ?? '…'}</AppText>
             <AppText variant="tiny" muted center>
               {label}
@@ -243,6 +247,34 @@ export default function Admin() {
                 </AppText>
                 <AppText variant="tiny" muted>
                   {l.admin_email} · {formatShortDate(new Date(l.at))} {new Date(l.at).toTimeString().slice(0, 5)}
+                </AppText>
+              </View>
+            </View>
+          ))
+        )}
+      </Card>
+
+      <SectionHeader title="الأعطال (آخر 7 أيام)" />
+      <Card style={{ gap: spacing.sm }}>
+        <AppText variant="caption" muted>
+          بلاغات مجهولة الهوية: نص الخطأ والشاشة والإصدار فقط، مجمّعة حسب التكرار، وتُحذف بعد 30 يوماً.
+        </AppText>
+        {errors.length === 0 ? (
+          <AppText variant="caption" muted>
+            لا أعطال 🎉
+          </AppText>
+        ) : (
+          errors.slice(0, 15).map((e, i) => (
+            <View key={`${e.message}-${i}`} style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+              <AppText variant="label" color={colors.warning} style={{ minWidth: 28 }}>
+                ×{e.count}
+              </AppText>
+              <View style={{ flex: 1 }}>
+                <AppText variant="caption" style={{ writingDirection: 'ltr', textAlign: 'left' }}>
+                  {e.message}
+                </AppText>
+                <AppText variant="tiny" muted>
+                  {e.screen || '—'} · {e.app_version} · {formatShortDate(new Date(e.last_at))}
                 </AppText>
               </View>
             </View>

@@ -6,6 +6,7 @@ import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { weeklyMeetings } from '@/components/AbsenceCard';
 import { Button } from '@/components/Button';
+import { CancelNotice } from '@/components/CancelNotice';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -142,6 +143,8 @@ export default function Home() {
           </AppText>
         </Card>
       )}
+
+      <CancelNotice now={nowMs} />
 
       {nextBooking && (
         <Card onPress={() => router.push('/book')} accessibilityLabel="حجزك القادم" style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>

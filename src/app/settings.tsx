@@ -280,6 +280,15 @@ export default function Settings() {
             {lockMsg}
           </AppText>
         )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <AppText variant="label">بلاغات الأعطال</AppText>
+            <AppText variant="caption" muted>
+              عند حدوث خطأ يُرسل نصه فقط (بعد حذف الإيميلات والأرقام) بلا اسمك أو حسابك، لنصلحه بسرعة.
+            </AppText>
+          </View>
+          <Toggle accessibilityLabel="بلاغات الأعطال" value={settings.crashReports} onValueChange={(v) => update({ crashReports: v })} />
+        </View>
         {!hasData && <Button title="تحميل جدول تجريبي" variant="secondary" icon="sparkles" onPress={loadSample} />}
         {backupSupported && (
           <>

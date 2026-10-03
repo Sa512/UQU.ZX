@@ -6,7 +6,6 @@ import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Chip, ChipRow } from '@/components/Chip';
-import { confirm } from '@/components/confirm';
 import { EmptyState } from '@/components/EmptyState';
 import { Field } from '@/components/Field';
 import { haptic } from '@/components/haptics';
@@ -40,6 +39,9 @@ function OfficeHoursInner() {
   const [busy, setBusy] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+  // إلغاء موعد: سبب اختياري يصل للطالب في الإشعار
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const [note, setNote] = useState('');
 
   const refresh = useCallback(async () => {
     if (!page) return;
@@ -166,22 +168,48 @@ function OfficeHoursInner() {
                       <AppText variant="caption" muted>
                         {[b.uni_id, b.topic].filter(Boolean).join(' · ') || 'بدون موضوع'}
                       </AppText>
-                      <Button
-                        title="إلغاء الموعد"
-                        size="sm"
-                        variant="ghost"
-                        style={{ alignSelf: 'flex-start' }}
-                        onPress={() =>
-                          confirm('إلغاء الموعد؟', `موعد ${b.student_name}`, async () => {
-                            try {
-                              await cloud.cancel(b.id);
-                              refresh();
-                            } catch (e) {
-                              setMsg({ ok: false, text: (e as Error).message });
-                            }
-                          }, 'إلغاء الموعد')
-                        }
-                      />
+                      {cancelling === b.id ? (
+                        <View style={{ gap: spacing.sm }}>
+                          <Field
+                            label="سبب الإلغاء (اختياري، يصل للطالب)"
+                            value={note}
+                            onChangeText={setNote}
+                            maxLength={120}
+                            placeholder="مثال: اجتماع قسم طارئ"
+                          />
+                          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                            <Button
+                              title="تأكيد الإلغاء"
+                              size="sm"
+                              variant="danger"
+                              onPress={async () => {
+                                try {
+                                  await cloud.cancel(b.id, note);
+                                  haptic.success();
+                                  setCancelling(null);
+                                  setNote('');
+                                  await refresh();
+                                  setMsg({ ok: true, text: `أُلغي موعد ${b.student_name}، وسيصله إشعار ✓` });
+                                } catch (e) {
+                                  setMsg({ ok: false, text: (e as Error).message });
+                                }
+                              }}
+                            />
+                            <Button title="تراجع" size="sm" variant="ghost" onPress={() => setCancelling(null)} />
+                          </View>
+                        </View>
+                      ) : (
+                        <Button
+                          title="إلغاء الموعد"
+                          size="sm"
+                          variant="ghost"
+                          style={{ alignSelf: 'flex-start' }}
+                          onPress={() => {
+                            setNote('');
+                            setCancelling(b.id);
+                          }}
+                        />
+                      )}
                     </Card>
                   );
                 })

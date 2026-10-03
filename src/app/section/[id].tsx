@@ -107,7 +107,7 @@ export default function SectionScreen() {
           <AppText variant="label" color={colors.danger} style={{ flex: 1 }}>
             {ar(atRisk, STUDENTS)} قريبون من الحرمان أو تجاوزوه
           </AppText>
-          <Pressable onPress={() => setTab('absence')} hitSlop={8}>
+          <Pressable accessibilityRole="button" accessibilityLabel="عرض الطلاب القريبين من الحرمان" onPress={() => setTab('absence')} hitSlop={8}>
             <AppText variant="label" color={colors.primary}>
               عرض
             </AppText>
