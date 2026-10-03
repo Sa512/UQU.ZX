@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CONTENT_MAX } from '@/lib/useLayout';
 import { spacing, useTheme } from '@/theme';
 import { AppText } from './AppText';
 
@@ -46,13 +47,16 @@ export function HeaderButton({ icon, onPress, label }: { icon: keyof typeof Ioni
   );
 }
 
+// على الآيباد يتوسط المحتوى بعرض مريح للقراءة؛ على الجوال لا أثر له
+const center: ViewStyle = { width: '100%', maxWidth: CONTENT_MAX, alignSelf: 'center' };
+
 const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 export function Screen({ title, subtitle, back, close, right, children, scroll = true, footer, contentStyle, inTabs }: Props) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const header = (title || back || close || right) && (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md }}>
+    <View style={[center, { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md }]}>
       {back && <HeaderButton icon="chevron-forward" onPress={goBack} label="رجوع" />}
       <View style={{ flex: 1 }}>
         {title && (
@@ -73,14 +77,14 @@ export function Screen({ title, subtitle, back, close, right, children, scroll =
   const bottomPad = inTabs ? spacing.xl : insets.bottom + spacing.xl;
   const body = scroll ? (
     <ScrollView
-      contentContainerStyle={[{ paddingHorizontal: spacing.xl, paddingBottom: footer ? spacing.xl : bottomPad, gap: spacing.lg }, contentStyle]}
+      contentContainerStyle={[center, { paddingHorizontal: spacing.xl, paddingBottom: footer ? spacing.xl : bottomPad, gap: spacing.lg }, contentStyle]}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       {children}
     </ScrollView>
   ) : (
-    <View style={[{ flex: 1, paddingHorizontal: spacing.xl }, contentStyle]}>{children}</View>
+    <View style={[center, { flex: 1, paddingHorizontal: spacing.xl }, contentStyle]}>{children}</View>
   );
   return (
     <KeyboardAvoidingView
@@ -92,6 +96,7 @@ export function Screen({ title, subtitle, back, close, right, children, scroll =
       {footer && (
         <View
           style={{
+            ...center,
             paddingHorizontal: spacing.xl,
             paddingTop: spacing.md,
             paddingBottom: Math.max(insets.bottom, spacing.lg),

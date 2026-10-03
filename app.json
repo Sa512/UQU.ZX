@@ -3,16 +3,22 @@
     "name": "مذاكر",
     "slug": "mudhaker",
     "scheme": "mudhaker",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "sa.mudhaker.app",
       "infoPlist": {
         "CFBundleDevelopmentRegion": "ar",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       }
     },
     "android": {
@@ -74,6 +80,29 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "يستخدم مذاكر بصمة الوجه لقفل التطبيق وحماية بياناتك."
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "sa.mudhaker.app.widgets",
+          "groupIdentifier": "group.sa.mudhaker.app",
+          "widgets": [
+            {
+              "name": "MudhakerNext",
+              "displayName": "مذاكر: التالي",
+              "description": "محاضرتك القادمة وأقرب تسليم وتقدم مذاكرة اليوم",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "systemLarge",
+                "systemExtraLarge",
+                "accessoryRectangular",
+                "accessoryInline"
+              ],
+              "contentMarginsDisabled": false
+            }
+          ]
         }
       ]
     ],

@@ -27,6 +27,10 @@ export async function encryptBackup(plain: string, password: string, randomBytes
   return { app: 'mudhaker', encrypted: { v: 1, kdf: 'pbkdf2-sha256', iter, salt: bytesToHex(salt), iv: bytesToHex(iv), ct: bytesToHex(ct) } };
 }
 
+/** الشكل الدقيق الذي يقبله الخادم للنسخة السحابية (نفس الشرط في قاعدة البيانات). */
+export const CLOUD_BACKUP_RE = /^\{"app":"mudhaker","encrypted":\{"v":1,"kdf":"pbkdf2-sha256","iter":[0-9]{5,7},"salt":"[0-9a-f]{32}","iv":"[0-9a-f]{24}","ct":"[0-9a-f]{34,}"\}\}$/;
+export const CLOUD_BACKUP_MAX = 8_000_000;
+
 /** هل النص ملف نسخة مشفّرة؟ (لا يرمي أخطاء) */
 export function isEncryptedBackup(text: string): boolean {
   try {

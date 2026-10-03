@@ -35,6 +35,33 @@ export function buildBackup(data: BackupData, now = new Date()): BackupFile {
   return { app: BACKUP_APP, version: BACKUP_VERSION, exportedAt: now.toISOString(), data };
 }
 
+/** إعدادات تخص هذا الجهاز فقط ولا تنتقل في النسخة (الحساب، القفل، النسخ السحابي). */
+const DEVICE_ONLY = ['lastAccountId', 'appLock', 'cloudBackup', 'lastCloudBackupAt', 'lastCloudBackupHash', 'restorePromptDismissed'] as const;
+
+type StoreLike = Omit<BackupData, 'settings' | 'summaries'> & { settings: Settings; summaries: Summary[] };
+
+/** بيانات النسخة من حالة التطبيق (مصدر واحد للتصدير اليدوي والنسخة السحابية). */
+export function backupDataFrom(s: StoreLike): BackupData {
+  const settings: Partial<Settings> = { ...s.settings };
+  for (const k of DEVICE_ONLY) delete (settings as Record<string, unknown>)[k];
+  return {
+    settings,
+    courses: s.courses,
+    slots: s.slots,
+    tasks: s.tasks,
+    sessions: s.sessions,
+    decks: s.decks,
+    summaries: s.summaries,
+    assessments: s.assessments,
+    sections: s.sections,
+    students: s.students,
+    attendance: s.attendance,
+    gradeItems: s.gradeItems,
+    scores: s.scores,
+    gpa: s.gpa,
+  };
+}
+
 export const backupFileName = (now = new Date()) =>
   `mudhaker-backup-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}.json`;
 

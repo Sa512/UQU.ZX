@@ -6,7 +6,8 @@
 import { generateSlots, type Window } from '../officeHours';
 import { CloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { AdminError, AdminLogEntry, AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
+import { CLOUD_BACKUP_MAX, CLOUD_BACKUP_RE } from '../backupCrypto';
+import type { AdminError, AdminReport, BackupInfo, AdminLogEntry, AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
 import { emailKind, normalizeEmail, type AccountRole, type Profile } from '../accounts';
 
 /** رمز التحقق في الوضع التجريبي (لا يُرسل إيميل فعلي). */
@@ -42,6 +43,18 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
   const users = new Map<string, User>();
   const adminLog: AdminLogEntry[] = [];
   const errors: AdminError[] = [];
+  // النسخ السحابية: مفتاح منفصل (قد تكون كبيرة) — فشل الحفظ لا يمس باقي البيانات التجريبية
+  const backups = new Map<string, { blob: string; updated_at: string; device: string }>();
+  const BKEY = 'mudhaker-demo-backups';
+  const backupsReady = storage
+    ? storage
+        .getItem(BKEY)
+        .then((raw) => {
+          if (raw) for (const [k, v] of Object.entries(JSON.parse(raw) as Record<string, { blob: string; updated_at: string; device: string }>)) backups.set(k, v);
+        })
+        .catch(() => {})
+    : Promise.resolve();
+  const saveBackups = () => storage?.setItem(BKEY, JSON.stringify(Object.fromEntries(backups))).catch(() => {});
   const logAdmin = (action: string, target: string) => adminLog.unshift({ admin_email: current ?? '?', action, target, at: stamp() });
   let current: string | null = null; // إيميل الجلسة
   const ready = storage
@@ -229,6 +242,59 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       admin();
       return delay([...errors]);
     },
+    async saveBackup(encrypted, device) {
+      await ready;
+      await backupsReady;
+      const u = mustUser();
+      if (encrypted.length > CLOUD_BACKUP_MAX || !CLOUD_BACKUP_RE.test(encrypted)) throw new CloudError('bad_backup');
+      const b = { blob: encrypted, updated_at: stamp(), device };
+      backups.set(u.id, b);
+      saveBackups();
+      return delay<BackupInfo>({ updated_at: b.updated_at, size: encrypted.length, device });
+    },
+    async backupInfo() {
+      await ready;
+      await backupsReady;
+      const b = backups.get(mustUser().id);
+      return delay<BackupInfo | null>(b ? { updated_at: b.updated_at, size: b.blob.length, device: b.device } : null);
+    },
+    async getBackup() {
+      await ready;
+      await backupsReady;
+      const b = backups.get(mustUser().id);
+      return delay(b ? { blob: b.blob, updated_at: b.updated_at } : null);
+    },
+    async deleteBackup() {
+      await ready;
+      backups.delete(mustUser().id);
+      saveBackups();
+      await delay(null);
+    },
+    async adminReport(month) {
+      await ready;
+      admin();
+      const inMonth = (iso: string) => iso.slice(0, 7) === month;
+      const ps = [...users.values()].filter((u) => u.profile);
+      const unis = new Map<string, number>();
+      ps.filter((u) => inMonth(u.created_at)).forEach((u) => unis.set(u.profile!.university, (unis.get(u.profile!.university) ?? 0) + 1));
+      logAdmin('report', month);
+      return delay<AdminReport>({
+        month,
+        new_students: ps.filter((u) => u.profile!.role === 'student' && inMonth(u.created_at)).length,
+        new_professors: ps.filter((u) => u.profile!.role === 'professor' && inMonth(u.created_at)).length,
+        total_users: ps.filter((u) => u.created_at.slice(0, 7) <= month).length,
+        active_users: ps.filter((u) => u.last_seen_at.slice(0, 7) >= month && u.created_at.slice(0, 7) <= month).length,
+        bookings: bookings.length,
+        cancelled_by_host: bookings.filter((b) => b.cancelled_by === 'host').length,
+        cancelled_by_student: bookings.filter((b) => b.cancelled_by === 'student').length,
+        checkins: [...sessions.values()].reduce((a, x) => a + x.checkins.length, 0),
+        posts: [...channels.values()].reduce((a, c) => a + c.posts.filter((p) => inMonth(p.created_at)).length, 0),
+        backups: [...backups.values()].filter((b) => inMonth(b.updated_at)).length,
+        errors: errors.length,
+        universities: [...unis].map(([university, n]) => ({ university, users: n })).sort((a, b) => b.users - a.users).slice(0, 10),
+        weeks: [],
+      });
+    },
     async deleteMyData() {
       // الوضع التجريبي على جهاز واحد: كل البيانات تخص هذا الجهاز
       await ready;
@@ -236,6 +302,9 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       bookings.length = 0;
       sessions.clear();
       channels.clear();
+      const u = me();
+      if (u) backups.delete(u.id);
+      saveBackups();
       save();
       await delay(null);
     },
@@ -321,6 +390,8 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       const u = mustUser();
       for (const [k, p] of pages) if (p.owner === u.id) pages.delete(k);
       users.delete(u.email);
+      backups.delete(u.id);
+      saveBackups();
       current = null;
       save();
       await delay(null);

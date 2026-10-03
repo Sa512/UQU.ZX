@@ -62,6 +62,13 @@ export type Settings = {
   lockPromptDismissed: boolean;
   /** بلاغات الأعطال المجهولة (نص الخطأ فقط بعد تنقيته) — يمكن إيقافها من الإعدادات. */
   crashReports: boolean;
+  /** نسخة سحابية مشفّرة تلقائية (يومياً عند التغيير) — تحتاج كلمة مرور محفوظة في خزنة الجوال. */
+  cloudBackup: boolean;
+  lastCloudBackupAt: number | null;
+  /** بصمة آخر بيانات رُفعت (لا نرفع إن لم يتغير شيء). */
+  lastCloudBackupHash: string;
+  /** أخفى المستخدم اقتراح الاستعادة من النسخة السحابية على هذا الجهاز. */
+  restorePromptDismissed: boolean;
 };
 
 export type Course = {
@@ -279,6 +286,10 @@ const defaultSettings: Settings = {
   lastAccountId: null,
   lockPromptDismissed: false,
   crashReports: true,
+  cloudBackup: false,
+  lastCloudBackupAt: null,
+  lastCloudBackupHash: '',
+  restorePromptDismissed: false,
 };
 
 const initialState: State = {
@@ -699,7 +710,18 @@ export const useStore = create<State & Actions>()(
 
       restoreBackup: (d) =>
         set((s) => ({
-          settings: { ...defaultSettings, ...d.settings, onboarded: true },
+          // إعدادات هذا الجهاز (الحساب، القفل، النسخ السحابي) تبقى كما هي، ولا تأتي من النسخة
+          settings: {
+            ...defaultSettings,
+            ...d.settings,
+            onboarded: true,
+            lastAccountId: s.settings.lastAccountId,
+            appLock: s.settings.appLock,
+            cloudBackup: s.settings.cloudBackup,
+            lastCloudBackupAt: s.settings.lastCloudBackupAt,
+            lastCloudBackupHash: s.settings.lastCloudBackupHash,
+            restorePromptDismissed: true,
+          },
           courses: d.courses,
           slots: d.slots,
           tasks: d.tasks,

@@ -7,6 +7,7 @@ import { AppText } from '@/components/AppText';
 import { weeklyMeetings } from '@/components/AbsenceCard';
 import { Button } from '@/components/Button';
 import { CancelNotice } from '@/components/CancelNotice';
+import { RestoreOffer } from '@/components/RestoreOffer';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -19,6 +20,7 @@ import { formatHijri } from '@/lib/hijri';
 import { minutesOn, streak } from '@/lib/stats';
 import { ar, DAYS } from '@/lib/plural';
 import { remindersSupported } from '@/lib/notifications';
+import { useLayout } from '@/lib/useLayout';
 import { useNow } from '@/lib/useNow';
 import { riyadhDay } from '@/lib/officeHours';
 import { wrappedReady } from '@/lib/wrapped';
@@ -97,10 +99,11 @@ export default function Home() {
     .sort((a, b) => a.due.localeCompare(b.due))[0];
   const examIn = nextExam ? diffDays(now, fromDateKey(nextExam.due)) : 0;
   const hasPlan = !!nextExam && tasks.some((t) => t.title.startsWith(`مراجعة ${nextExam.title} (`));
+  const { twoColumns } = useLayout();
   const firstName = shortName(settings.name) || (isProf ? 'دكتور' : 'بطل');
 
   return (
-    <Screen inTabs contentStyle={{ paddingTop: spacing.sm }}>
+    <Screen inTabs contentStyle={{ paddingTop: spacing.sm, ...(twoColumns ? { maxWidth: 1180 } : null) }}>
       {/* الترحيب */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flex: 1 }}>
@@ -144,6 +147,7 @@ export default function Home() {
         </Card>
       )}
 
+      <RestoreOffer />
       <CancelNotice now={nowMs} />
 
       {nextBooking && (
@@ -331,58 +335,64 @@ export default function Home() {
         </Card>
       )}
 
-      {/* محاضرات اليوم */}
-      <SectionHeader title={isProf ? 'محاضراتك اليوم' : 'محاضرات اليوم'} action="الجدول" onAction={() => router.push('/schedule')} />
-      {todaySlots.length === 0 ? (
-        <Card>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-            <Ionicons name="cafe-outline" size={28} color={colors.textMuted} />
-            <View style={{ flex: 1 }}>
-              <AppText variant="h3">لا محاضرات اليوم</AppText>
-              <AppText variant="caption" muted>
-                فرصة ممتازة للمراجعة أو إنجاز الواجبات.
-              </AppText>
-            </View>
-          </View>
-        </Card>
-      ) : (
-        <View style={{ gap: spacing.sm }}>
-          {todaySlots
-            .filter((s) => s.end > nowMin)
-            .slice(0, 3)
-            .map((s) => (
-              <SlotRow key={s.id} slot={s} highlight={s === current ? 'now' : s === next ? 'next' : undefined} />
-            ))}
-          {isProf && attendSlot?.sectionId && (
-            <Button
-              title={`تحضير ${current === attendSlot ? 'المحاضرة الحالية' : 'المحاضرة التالية'}`}
-              icon="checkmark-done"
-              onPress={() => router.push({ pathname: '/attendance/[id]', params: { id: attendSlot.sectionId! } })}
-            />
-          )}
-          {todaySlots.every((s) => s.end <= nowMin) && (
+      {/* على الآيباد الأفقي: محاضرات اليوم والمواعيد القادمة جنباً إلى جنب */}
+      <View style={twoColumns ? { flexDirection: 'row', gap: spacing.xl, alignItems: 'flex-start' } : { gap: spacing.lg }}>
+        <View style={{ flex: twoColumns ? 1 : undefined, gap: spacing.lg }}>
+          {/* محاضرات اليوم */}
+          <SectionHeader title={isProf ? 'محاضراتك اليوم' : 'محاضرات اليوم'} action="الجدول" onAction={() => router.push('/schedule')} />
+          {todaySlots.length === 0 ? (
             <Card>
-              <AppText variant="label" muted center>
-                انتهت محاضرات اليوم ✨
-              </AppText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                <Ionicons name="cafe-outline" size={28} color={colors.textMuted} />
+                <View style={{ flex: 1 }}>
+                  <AppText variant="h3">لا محاضرات اليوم</AppText>
+                  <AppText variant="caption" muted>
+                    فرصة ممتازة للمراجعة أو إنجاز الواجبات.
+                  </AppText>
+                </View>
+              </View>
             </Card>
+          ) : (
+            <View style={{ gap: spacing.sm }}>
+              {todaySlots
+                .filter((s) => s.end > nowMin)
+                .slice(0, 3)
+                .map((s) => (
+                  <SlotRow key={s.id} slot={s} highlight={s === current ? 'now' : s === next ? 'next' : undefined} />
+                ))}
+              {isProf && attendSlot?.sectionId && (
+                <Button
+                  title={`تحضير ${current === attendSlot ? 'المحاضرة الحالية' : 'المحاضرة التالية'}`}
+                  icon="checkmark-done"
+                  onPress={() => router.push({ pathname: '/attendance/[id]', params: { id: attendSlot.sectionId! } })}
+                />
+              )}
+              {todaySlots.every((s) => s.end <= nowMin) && (
+                <Card>
+                  <AppText variant="label" muted center>
+                    انتهت محاضرات اليوم ✨
+                  </AppText>
+                </Card>
+              )}
+            </View>
           )}
         </View>
-      )}
-
-      {/* المواعيد القادمة */}
-      <SectionHeader title={isProf ? 'مهام قادمة' : 'المواعيد القادمة'} action="عرض الكل" onAction={() => router.push('/tasks')} />
-      {upcoming.length === 0 ? (
-        <Card padded={false}>
-          <EmptyState icon="checkmark-done-outline" title="لا مهام مفتوحة" message="أضف واجباتك واختباراتك لتذكّرك بها." action={{ title: 'إضافة مهمة', onPress: () => router.push('/task/new') }} />
-        </Card>
-      ) : (
-        <View style={{ gap: spacing.sm }}>
-          {upcoming.map((t) => (
-            <TaskRow key={t.id} task={t} />
-          ))}
+        <View style={{ flex: twoColumns ? 1 : undefined, gap: spacing.lg }}>
+          {/* المواعيد القادمة */}
+          <SectionHeader title={isProf ? 'مهام قادمة' : 'المواعيد القادمة'} action="عرض الكل" onAction={() => router.push('/tasks')} />
+          {upcoming.length === 0 ? (
+            <Card padded={false}>
+              <EmptyState icon="checkmark-done-outline" title="لا مهام مفتوحة" message="أضف واجباتك واختباراتك لتذكّرك بها." action={{ title: 'إضافة مهمة', onPress: () => router.push('/task/new') }} />
+            </Card>
+          ) : (
+            <View style={{ gap: spacing.sm }}>
+              {upcoming.map((t) => (
+                <TaskRow key={t.id} task={t} />
+              ))}
+            </View>
+          )}
         </View>
-      )}
+      </View>
 
       {!isPro(sub) && (
         <Card onPress={() => router.push('/pro')} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.warningSoft, borderColor: colors.warning + '55' }}>

@@ -68,7 +68,7 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    - Authentication ← Emails ← **SMTP Settings**: اربط مزوّد إرسال خاص (مثل Resend أو Amazon SES أو Brevo) باسم نطاقك. مزوّد Supabase الافتراضي محدود جداً ولا يصلح للإطلاق، وبعض إيميلات الجامعات ترفض الرسائل غير الموثّقة.
    - Authentication ← Attack Protection: فعّل **CAPTCHA** وراجع **Rate Limits** للتسجيل وإرسال الرموز.
    - Authentication ← Providers ← Email: اجعل **Minimum password length = 8** (مثل التطبيق)، وفعّل **Secure email change**. الخادم يرفض أي إيميل غير مؤكَّد حتى لو عُطّل التأكيد خطأً.
-3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql` ثم `20260929000000_accounts.sql` ثم `20260930000000_security.sql` ثم `20261001000000_hardening2.sql` ثم `20261002000000_booking_push.sql` ثم `20261003000000_cancel_notice.sql`) ← Run.
+3. SQL Editor ← الصق محتوى ملفات `supabase/migrations/` بالترتيب (`20260923000000_cloud.sql` ثم `20260925000000_sections.sql` ثم `20260926000000_privacy.sql` ثم `20260927000000_hardening.sql` ثم `20260928000000_push.sql` ثم `20260929000000_accounts.sql` ثم `20260930000000_security.sql` ثم `20261001000000_hardening2.sql` ثم `20261002000000_booking_push.sql` ثم `20261003000000_cancel_notice.sql` ثم `20261004000000_backup_report.sql`) ← Run.
    - الهجرة الأخيرة تجعل `asd1911147@gmail.com` مشرفاً (سجّل به من التطبيق لتظهر لك «لوحة المشرف» في المزيد). لإضافة مشرف آخر: من اللوحة ← استثناءات الإيميل ← مشرف.
 4. التنظيف التلقائي: Database ← Extensions ← فعّل `pg_cron`، ثم نفّذ:
    ```sql
@@ -96,6 +96,13 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    npx eas-cli@latest env:create --name EXPO_PUBLIC_REQUIRE_LOGIN --value "false" --environment production --visibility plaintext
    ```
 
+## 5.6) الآيباد والويدجت (2.1)
+
+- التطبيق صار يدعم الآيباد (`supportsTablet`) ويدور بكل الاتجاهات على الآيباد فقط، والآيفون يبقى عمودياً.
+- الويدجت امتداد iOS مستقل (`sa.mudhaker.app.widgets`) يشارك التطبيق عبر App Group `group.sa.mudhaker.app`. عند أول `eas build` اقبل إنشاء معرّف الامتداد وتفعيل App Groups للمعرّفين (EAS يعرض ذلك تلقائياً)، أو فعّلها يدوياً من Apple Developer ← Identifiers.
+- الويدجت لا يعمل في Expo Go؛ جرّبه في نسخة TestFlight: اضغط مطولاً على الشاشة الرئيسية ← + ← «مذاكر».
+- **App Store يطلب صور آيباد 13 بوصة** (2048×2732): جاهزة في `store/screenshots/ipad/`.
+
 ## 6) البناء والتجربة ثم الإرسال
 
 ```bash
@@ -109,6 +116,9 @@ npx eas-cli@latest submit --platform android   # يرفع إلى Internal testin
 ### قائمة الاختبار قبل الإرسال
 
 - [ ] التهيئة: اختيار الدور، الاسم، «ابدأ بجدول تجريبي»
+- [ ] النسخة السحابية: «انسخ الآن» بكلمة مرور ← احذف التطبيق ← ثبّته وسجّل دخولك ← «استعادة نسختي السحابية» ترجع كل شيء
+- [ ] الآيباد: عمودي وأفقي، الشريط الجانبي، وتقسيم الشاشة (Split View)
+- [ ] الويدجت: الأحجام كلها وشاشة القفل، ويتغير بعد انتهاء المحاضرة دون فتح التطبيق
 - [ ] الاتجاه من اليمين لليسار في كل الشاشات
 - [ ] إضافة مقرر وحصة ومهمة وتعديلها وحذفها
 - [ ] المؤقت: ابدأ ← إيقاف مؤقت ← إنهاء؛ الجلسة تظهر في «جلسات اليوم»

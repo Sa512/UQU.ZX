@@ -17,7 +17,8 @@ import { Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { APP_INFO } from '@/content/app';
 import { ROLE_LABEL, STATUS_LABEL } from '@/lib/accounts';
-import { buildBackup, parseBackup, type ParseResult } from '@/lib/backup';
+import { forgetPassword } from '@/lib/backupKey';
+import { backupDataFrom, buildBackup, parseBackup, type ParseResult } from '@/lib/backup';
 import { cloud } from '@/lib/cloud';
 import { lockAvailable, unlock } from '@/lib/appLock';
 import { backupSupported, pickBackup, secureRandom, shareBackup } from '@/lib/backupIO';
@@ -113,6 +114,7 @@ export default function Settings() {
               onPress={() =>
                 confirm('تسجيل الخروج؟', 'بيانات جهازك تبقى، وتحتاج تسجيل الدخول لاستخدام التطبيق.', async () => {
                   await cloud.signOut();
+                  if (account) await forgetPassword(account.id);
                   setAccount(null);
                   router.replace('/auth');
                 }, 'تسجيل الخروج')
@@ -289,6 +291,7 @@ export default function Settings() {
           </View>
           <Toggle accessibilityLabel="بلاغات الأعطال" value={settings.crashReports} onValueChange={(v) => update({ crashReports: v })} />
         </View>
+        {account && <Button title="النسخة السحابية المشفّرة" variant="secondary" icon="cloud-done-outline" onPress={() => router.push('/backup')} />}
         {!hasData && <Button title="تحميل جدول تجريبي" variant="secondary" icon="sparkles" onPress={loadSample} />}
         {backupSupported && (
           <>
@@ -309,9 +312,7 @@ export default function Settings() {
               disabled={(hasStudentData || !!backupPw) && backupPw.length < MIN_BACKUP_PASSWORD}
               onPress={async () => {
                 const s = useStore.getState();
-                const text = JSON.stringify(
-                  buildBackup({ settings: s.settings, courses: s.courses, slots: s.slots, tasks: s.tasks, sessions: s.sessions, decks: s.decks, summaries: s.summaries, assessments: s.assessments, sections: s.sections, students: s.students, attendance: s.attendance, gradeItems: s.gradeItems, scores: s.scores, gpa: s.gpa }),
-                );
+                const text = JSON.stringify(buildBackup(backupDataFrom(s)));
                 setBackupBusy(true);
                 try {
                   const out = backupPw ? JSON.stringify(await encryptBackup(text, backupPw, secureRandom)) : text;
@@ -405,6 +406,7 @@ export default function Settings() {
               onPress={() =>
                 confirm('الخروج من كل الأجهزة؟', 'تُنهى جلسات حسابك على كل الأجوال والمتصفحات، بما فيها هذا الجوال. استخدمه إن فقدت جوالاً أو شككت أن أحداً دخل حسابك.', async () => {
                   await cloud.signOut(true);
+                  if (account) await forgetPassword(account.id);
                   setAccount(null);
                   router.replace('/auth');
                 }, 'خروج من الكل')
@@ -421,6 +423,7 @@ export default function Settings() {
               confirm('حذف حسابك نهائياً؟', 'يُحذف حسابك وكل بياناتك على الخادم (حجوزات، صفحات، قنوات)، وتُمسح بيانات هذا الجهاز. لا يمكن التراجع.', async () => {
                 try {
                   await cloud.deleteAccount();
+                  if (account) await forgetPassword(account.id);
                   resetAll();
                   router.replace('/onboarding');
                 } catch (e) {
@@ -438,6 +441,7 @@ export default function Settings() {
             confirm('حذف جميع البيانات؟', 'سيُحذف كل شيء من جهازك ومن الخادم نهائياً ولا يمكن التراجع.', async () => {
               // نحاول الخادم أولاً؛ إن لم يتوفر إنترنت تبقى بيانات الخادم وتُحذف تلقائياً حسب مدد الحفظ
               await cloud.deleteMyData().catch(() => {});
+              if (account) await forgetPassword(account.id);
               await cloud.signOut();
               resetAll();
               router.replace('/onboarding');

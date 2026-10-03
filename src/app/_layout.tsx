@@ -18,6 +18,8 @@ import { ConfirmHost } from '@/components/ConfirmHost';
 import { LockGate } from '@/components/LockGate';
 import { useReminderSync } from '@/lib/useReminderSync';
 import { syncBookings, useAccountSync } from '@/lib/useAccountSync';
+import { useCloudBackup } from '@/lib/useCloudBackup';
+import { useWidgetSync } from '@/lib/useWidgetSync';
 import { useHydrated, useStore } from '@/store/useStore';
 import { AppThemeProvider, useTheme } from '@/theme';
 
@@ -40,6 +42,8 @@ function Navigator() {
   const { colors, isDark } = useTheme();
   useReminderSync();
   useAccountSync();
+  useCloudBackup();
+  useWidgetSync();
   // حالة الاشتراك الحقيقية تأتي من المتجر (عند تفعيل RevenueCat) وتتحدث تلقائياً.
   useEffect(() => initPurchases((status) => useStore.getState().setStoreSubscription(status)), []);
   // الضغط على إشعار إعلان يفتح صفحة المادة

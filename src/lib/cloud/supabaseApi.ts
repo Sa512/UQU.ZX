@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { toCloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { AdminError, AdminLogEntry, AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
+import type { AdminError, AdminReport, BackupInfo, AdminLogEntry, AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
 import { normalizeEmail, type ExportRow, type Profile } from '../accounts';
 
 export function createSupabaseApi(url: string, anonKey: string): CloudApi {
@@ -139,6 +139,22 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     },
     async adminErrors() {
       return (await call(() => sb.rpc('admin_errors'))) as AdminError[];
+    },
+    async saveBackup(encrypted, device) {
+      const r = checked(await call(() => sb.rpc('save_backup', { p_blob: encrypted, p_device: device }))) as { updated_at: string; size: number };
+      return { updated_at: r.updated_at, size: r.size, device };
+    },
+    async backupInfo() {
+      return (await call(() => sb.rpc('backup_info'))) as BackupInfo | null;
+    },
+    async getBackup() {
+      return (await call(() => sb.rpc('get_backup'))) as { blob: string; updated_at: string } | null;
+    },
+    async deleteBackup() {
+      await call(() => sb.rpc('delete_backup'));
+    },
+    async adminReport(month) {
+      return (await call(() => sb.rpc('admin_report', { p_month: `${month}-01` }))) as AdminReport;
     },
     async signUp(email, password) {
       await authCall(() => sb.auth.signUp({ email: normalizeEmail(email), password }));

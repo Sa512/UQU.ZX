@@ -13,7 +13,8 @@ import { Pill } from '@/components/Rows';
 import { HeaderButton, Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { ROLE_LABEL, STATUS_LABEL, usersCsv, type AccountRole, type AccountStatus } from '@/lib/accounts';
-import { cloud, type AdminError, type AdminLogEntry, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
+import { activeRate, monthKey, monthLabel, reportCsv, reportRows } from '@/lib/adminReport';
+import { cloud, type AdminReport, type AdminError, type AdminLogEntry, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
 import { formatShortDate, toDateKey } from '@/lib/dates';
 import { shareCsv } from '@/lib/exportIO';
 import { useStore } from '@/store/useStore';
@@ -30,6 +31,9 @@ export default function Admin() {
   const [rules, setRules] = useState<AdminRules | null>(null);
   const [log, setLog] = useState<AdminLogEntry[]>([]);
   const [errors, setErrors] = useState<AdminError[]>([]);
+  const [month, setMonth] = useState<0 | -1>(0);
+  const [report, setReport] = useState<AdminReport | null>(null);
+  const [reportBusy, setReportBusy] = useState(false);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [open, setOpen] = useState<string | null>(null);
@@ -143,6 +147,72 @@ export default function Admin() {
           ))}
         </Card>
       )}
+
+      <SectionHeader title="التقرير الشهري" />
+      <Card style={{ gap: spacing.md }}>
+        <Segmented<0 | -1>
+          value={month}
+          onChange={(m) => {
+            setMonth(m);
+            setReport(null);
+          }}
+          options={[
+            { value: 0, label: monthLabel(monthKey(new Date(), 0)) },
+            { value: -1, label: monthLabel(monthKey(new Date(), -1)) },
+          ]}
+        />
+        {report ? (
+          <>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {reportRows(report).map(([label, n]) => (
+                <View key={label} style={{ width: '31%', alignItems: 'center', paddingVertical: 6 }}>
+                  <AppText variant="h3">{n}</AppText>
+                  <AppText variant="tiny" muted center>
+                    {label}
+                  </AppText>
+                </View>
+              ))}
+              <View style={{ width: '31%', alignItems: 'center', paddingVertical: 6 }}>
+                <AppText variant="h3" color={colors.primary}>
+                  {activeRate(report)}%
+                </AppText>
+                <AppText variant="tiny" muted center>
+                  نسبة النشطين
+                </AppText>
+              </View>
+            </View>
+            <Button
+              title="تصدير التقرير إلى Excel"
+              variant="secondary"
+              icon="document-text-outline"
+              onPress={() =>
+                act(async () => {
+                  const r = await shareCsv(`mudhaker-report-${report.month}.csv`, reportCsv(report));
+                  if (!r.ok) throw new Error(r.message);
+                }, 'جهّزنا ملف التقرير ✓')
+              }
+            />
+          </>
+        ) : (
+          <Button
+            title="عرض التقرير"
+            icon="bar-chart-outline"
+            loading={reportBusy}
+            onPress={async () => {
+              setReportBusy(true);
+              try {
+                setReport(await cloud.adminReport(monthKey(new Date(), month)));
+                // الاطلاع يُسجَّل؛ نحدّث السجل ليظهر فوراً
+                refresh();
+              } catch (e) {
+                setMsg({ ok: false, text: (e as Error).message });
+              } finally {
+                setReportBusy(false);
+              }
+            }}
+          />
+        )}
+      </Card>
 
       <SectionHeader title="المستخدمون" />
       <Field placeholder="ابحث بالاسم أو الإيميل أو الجامعة…" value={q} onChangeText={setQ} autoCapitalize="none" />
@@ -316,6 +386,7 @@ export default function Admin() {
 /** وصف عربي لرمز الإجراء في السجل. */
 function actionLabel(a: string): string {
   if (a === 'export') return 'تصدير Excel';
+  if (a === 'report') return 'عرض التقرير الشهري';
   if (a === 'rule_delete') return 'حذف نطاق';
   if (a.startsWith('rule:')) return 'حفظ نطاق';
   if (a === 'override_delete') return 'إزالة استثناء';

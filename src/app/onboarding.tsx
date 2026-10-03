@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { useBackupInfo } from '@/lib/useBackupInfo';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
@@ -70,6 +71,8 @@ export default function Onboarding() {
   const loadSample = useStore((s) => s.loadSampleData);
   const current = useStore((s) => s.settings);
   const account = useStore((s) => s.account);
+  // حساب عنده نسخة سحابية (جوال جديد): نعرض الاستعادة أولاً
+  const backup = useBackupInfo(!!account);
   const params = useLocalSearchParams<{ step?: string }>();
   // بعد تسجيل الدخول نكمل من صفحة «عرّفنا بنفسك»؛ الدور والاسم والجامعة من الحساب
   const [step, setStep] = useState(account && params.step === '2' ? 2 : 0);
@@ -196,9 +199,21 @@ export default function Onboarding() {
           <Button title="التالي" size="lg" icon="arrow-back" onPress={() => setStep(2)} />
         ) : (
           <>
+            {backup && (
+              <Button
+                title="استعادة نسختي السحابية"
+                size="lg"
+                icon="cloud-download"
+                onPress={() => {
+                  finish(false);
+                  router.push('/backup');
+                }}
+              />
+            )}
             <Button
               title="ابدأ بجدول تجريبي"
               size="lg"
+              variant={backup ? 'secondary' : undefined}
               icon="sparkles"
               onPress={() => (!account && name.trim().length < 2 ? setNameError('اكتب اسمك (حرفان على الأقل)') : finish(true))}
             />

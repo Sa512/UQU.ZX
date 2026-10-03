@@ -28,6 +28,26 @@ export type AdminOverview = { students: number; professors: number; pending: num
 export type AdminRules = { domains: { domain: string; university: string; kind: 'student' | 'staff' }[]; overrides: { email: string; role: AccountRole | null; is_admin: boolean; note: string }[] };
 
 export type AdminLogEntry = { admin_email: string; action: string; target: string; at: string };
+/** معلومات النسخة السحابية (دون محتواها). */
+export type BackupInfo = { updated_at: string; size: number; device: string };
+export type BackupDevice = '' | 'iPhone' | 'iPad' | 'Android' | 'web';
+/** التقرير الشهري للمشرف. */
+export type AdminReport = {
+  month: string;
+  new_students: number;
+  new_professors: number;
+  total_users: number;
+  active_users: number;
+  bookings: number;
+  cancelled_by_host: number;
+  cancelled_by_student: number;
+  checkins: number;
+  posts: number;
+  backups: number;
+  errors: number;
+  universities: { university: string; users: number }[];
+  weeks: { week: string; signups: number }[];
+};
 /** عطل متكرر (مجمّع، بلا هوية المستخدم). */
 export type AdminError = { message: string; screen: string; app_version: string; count: number; last_at: string };
 
@@ -86,4 +106,12 @@ export interface CloudApi {
   /** بلاغ عطل مجهول الهوية (النص منقّى مسبقاً). */
   reportError(version: string, platform: 'ios' | 'android' | 'web', screen: string, message: string): Promise<void>;
   adminErrors(): Promise<AdminError[]>;
+  // ——— النسخة السحابية المشفّرة (الخادم يقبل الملف المشفّر فقط) ———
+  saveBackup(encrypted: string, device: BackupDevice): Promise<BackupInfo>;
+  backupInfo(): Promise<BackupInfo | null>;
+  /** النص المشفّر كما رُفع، أو null. */
+  getBackup(): Promise<{ blob: string; updated_at: string } | null>;
+  deleteBackup(): Promise<void>;
+  /** month بصيغة YYYY-MM. */
+  adminReport(month: string): Promise<AdminReport>;
 }

@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '@/store/useStore';
 import { REQUIRE_LOGIN } from '@/lib/config';
+import { useLayout } from '@/lib/useLayout';
 import { fonts, useTheme } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -19,6 +20,7 @@ const tabs: { name: string; title: string; icon: IconName; active: IconName }[] 
 export default function TabsLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { wide } = useLayout();
   const onboarded = useStore((s) => s.settings.onboarded);
   const signedIn = useStore((s) => !!s.account);
   // الدخول بالإيميل الجامعي إجباري: المستخدم الجديد يبدأ بالترحيب ثم الحساب، ومن حدّث التطبيق يسجّل دخوله مباشرة
@@ -32,14 +34,21 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {
-          backgroundColor: colors.tabBar,
-          borderTopColor: colors.border,
-          height: 64 + bottom,
-          paddingTop: 6,
-          paddingBottom: bottom,
-        },
-        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 11, lineHeight: 16 },
+        // الآيباد: شريط جانبي (على اليمين مع الاتجاه العربي) بدل الشريط السفلي
+        tabBarPosition: wide ? 'left' : 'bottom',
+        tabBarVariant: wide ? 'material' : 'uikit',
+        // العنوان تحت الأيقونة: شريط نحيف بدل عمود عريض
+        tabBarLabelPosition: wide ? 'below-icon' : undefined,
+        tabBarStyle: wide
+          ? { backgroundColor: colors.tabBar, borderColor: colors.border, paddingTop: insets.top + 12, width: 96 }
+          : {
+              backgroundColor: colors.tabBar,
+              borderTopColor: colors.border,
+              height: 64 + bottom,
+              paddingTop: 6,
+              paddingBottom: bottom,
+            },
+        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: wide ? 12 : 11, lineHeight: 16 },
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >
