@@ -47,6 +47,52 @@ export const UNIVERSITY_DOMAINS: Record<string, string> = {
   'ubt.edu.sa': 'جامعة الأعمال والتكنولوجيا',
 };
 
+/** نطاقات بريد الطلاب المعروفة لدينا يقيناً (غيرها نقترح النطاق الأساسي فقط). */
+const STUDENT_DOMAIN: Record<string, string> = { 'uqu.edu.sa': 'st.uqu.edu.sa' };
+
+export type EmailHint = { email: string; university: string };
+
+/**
+ * اقتراحات إكمال الإيميل أثناء الكتابة: بعد «@» يكفي اختصار الجامعة
+ * (s441@uq ← s441@st.uqu.edu.sa · جامعة أم القرى). لا اقتراح لنطاق مكتمل.
+ */
+export function emailSuggestions(raw: string, role: AccountRole | 'any' = 'any', limit = 3): EmailHint[] {
+  const e = normalizeEmail(raw);
+  const at = e.indexOf('@');
+  if (at < 1 || e.includes('@', at + 1)) return [];
+  const local = e.slice(0, at);
+  const typed = e.slice(at + 1);
+  if (typed.length < 2 || /\s/.test(typed)) return [];
+  const hits: (EmailHint & { rank: number })[] = [];
+  for (const [base, university] of Object.entries(UNIVERSITY_DOMAINS)) {
+    const abbr = base.split('.')[0];
+    const domains = role !== 'professor' && STUDENT_DOMAIN[base] ? [STUDENT_DOMAIN[base], base] : [base];
+    domains.forEach((d, i) => {
+      if (d === typed) return;
+      const byOrder = d.startsWith(typed);
+      const byAbbr = !typed.includes('.') && abbr.startsWith(typed);
+      if (!byOrder && !byAbbr) return;
+      // الاختصار المطابق تماماً أولاً، ثم نطاق الطلاب للطالب، ثم الأقصر
+      const exact = typed.replace(/^(st|stu|std|student)\./, '').split('.')[0] === abbr;
+      hits.push({ email: `${local}@${d}`, university, rank: (exact ? 0 : 10) + (role === 'student' ? i : 0) + abbr.length / 100 });
+    });
+  }
+  return hits
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, limit)
+    .map(({ email, university }) => ({ email, university }));
+}
+
+/** اسم الجامعة من نطاق لم يكتمل بعد (s441@st.uqu ← جامعة أم القرى)، حين يكون واضحاً. */
+export function universityFromPartial(raw: string): string | undefined {
+  const e = normalizeEmail(raw);
+  const at = e.indexOf('@');
+  if (at < 1) return undefined;
+  const labels = e.slice(at + 1).split('.').filter(Boolean);
+  const found = Object.entries(UNIVERSITY_DOMAINS).filter(([base]) => labels.includes(base.split('.')[0]));
+  return found.length === 1 ? found[0][1] : undefined;
+}
+
 /** مطابق للاستثناء المزروع في الهجرة 20260929. */
 export const OWNER_EMAILS = ['asd1911147@gmail.com'];
 

@@ -219,7 +219,7 @@ export default function Pro() {
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.lg }}>
         <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })}>
           <AppText variant="caption" color={colors.primary}>
-            شروط الاستخدام
+            الشروط والأحكام
           </AppText>
         </Pressable>
         <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push({ pathname: '/legal', params: { doc: 'privacy' } })}>

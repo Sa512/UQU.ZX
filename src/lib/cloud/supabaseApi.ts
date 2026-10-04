@@ -183,6 +183,9 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     async signUp(email, password) {
       await authCall(() => sb.auth.signUp({ email: normalizeEmail(email), password }));
     },
+    async resendSignupCode(email) {
+      await authCall(() => sb.auth.resend({ type: 'signup', email: normalizeEmail(email) }));
+    },
     async verifyEmail(email, code) {
       await authCall(() => sb.auth.verifyOtp({ email: normalizeEmail(email), token: code.trim(), type: 'signup' }));
     },

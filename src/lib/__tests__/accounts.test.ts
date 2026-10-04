@@ -1,5 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
-import { emailKind, sameName, signupProblem, usersCsv } from '../accounts';
+import { emailKind, emailSuggestions, sameName, signupProblem, universityFromPartial, usersCsv } from '../accounts';
+import { searchUniversities } from '../universities';
 import { createDemoApi, DEMO_ADMIN, DEMO_CODE } from '../cloud/demoApi';
 
 describe('university emails', () => {
@@ -83,5 +84,40 @@ describe('matching instructors to professors', () => {
     expect(sameName('د. سارة الحربي', 'د. سارة العتيبي')).toBe(false);
     expect(sameName('د. سارة', 'سارة الحربي')).toBe(false); // كلمة واحدة لا تكفي
     expect(sameName('', 'سارة')).toBe(false);
+  });
+});
+
+describe('quick email completion', () => {
+  it('completes from the university abbreviation after @', () => {
+    const s = emailSuggestions('s441012345@uq', 'student');
+    expect(s[0]).toEqual({ email: 's441012345@st.uqu.edu.sa', university: 'جامعة أم القرى' });
+    expect(s.map((h) => h.email)).toContain('s441012345@uqu.edu.sa');
+    // الدكتور لا يُقترح له نطاق الطلاب
+    expect(emailSuggestions('sm.harbi@uqu', 'professor')).toEqual([{ email: 'sm.harbi@uqu.edu.sa', university: 'جامعة أم القرى' }]);
+    expect(emailSuggestions('n@ksu', 'student')[0]).toEqual({ email: 'n@ksu.edu.sa', university: 'جامعة الملك سعود' });
+  });
+
+  it('follows what is typed in order, and stops when complete', () => {
+    expect(emailSuggestions('s441@st.uqu.e', 'student').map((h) => h.email)).toEqual(['s441@st.uqu.edu.sa']);
+    expect(emailSuggestions('s441@st.uqu.edu.sa', 'student')).toEqual([]);
+    expect(emailSuggestions('s441@u', 'student')).toEqual([]); // حرف واحد غامض
+    expect(emailSuggestions('no-at-sign', 'student')).toEqual([]);
+    expect(emailSuggestions('a@b@uq', 'student')).toEqual([]);
+    // الاختصار المطابق تماماً قبل الأطول منه (kfu قبل kfupm)
+    expect(emailSuggestions('x@kfu', 'professor').map((h) => h.university)).toEqual(['جامعة الملك فيصل', 'جامعة الملك فهد للبترول والمعادن']);
+  });
+
+  it('names the university before the email is complete', () => {
+    expect(universityFromPartial('s441@st.uqu')).toBe('جامعة أم القرى');
+    expect(universityFromPartial('s441@kau.edu')).toBe('جامعة الملك عبدالعزيز');
+    expect(universityFromPartial('s441@st.uq')).toBeUndefined();
+    expect(universityFromPartial('s441')).toBeUndefined();
+  });
+
+  it('finds universities by their English abbreviation', () => {
+    expect(searchUniversities('UQU')).toEqual(['جامعة أم القرى']);
+    expect(searchUniversities('kfu')).toEqual(['جامعة الملك فيصل', 'جامعة الملك فهد للبترول والمعادن']);
+    expect(searchUniversities('imsiu')).toEqual(['جامعة الإمام محمد بن سعود الإسلامية']);
+    expect(searchUniversities('أم القرى')).toEqual(['جامعة أم القرى']);
   });
 });

@@ -373,7 +373,7 @@ export default function Settings() {
         )}
         <Button title="الاشتراك والمدفوعات" variant="ghost" icon="diamond-outline" onPress={() => router.push('/pro')} />
         <Button title="سياسة الخصوصية" variant="ghost" icon="shield-checkmark-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'privacy' } })} />
-        <Button title="شروط الاستخدام" variant="ghost" icon="document-text-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })} />
+        <Button title="الشروط والأحكام" variant="ghost" icon="document-text-outline" onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })} />
         <Button title="تواصل مع الدعم" variant="ghost" icon="mail-outline" onPress={() => Linking.openURL(`mailto:${APP_INFO.supportEmail}?subject=${encodeURIComponent('دعم تطبيق مذاكر')}`)} />
         <Button
           title="حذف بياناتي من الخادم"

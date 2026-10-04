@@ -3,6 +3,7 @@
  * الربط يتم عبر «رابط التقويم» الذي يعطيه النظام نفسه للطالب (iCal)، فيعمل مع أي جامعة تستخدم
  * Blackboard أو Moodle أو Canvas أو D2L Brightspace، دون كلمة مرور ودون اتفاقية مع الجامعة.
  */
+import { UNIVERSITY_DOMAINS } from './accounts';
 
 export type Lms = 'blackboard' | 'moodle' | 'canvas' | 'd2l' | 'other';
 
@@ -106,11 +107,24 @@ const norm = (s: string) =>
     .trim()
     .toLowerCase();
 
-/** اقتراحات الجامعات لما يكتبه المستخدم (تتجاهل «جامعة» و«ال» والهمزات). */
+/** اختصارات إنجليزية شائعة غير ظاهرة في النطاق. */
+const EXTRA_ABBR: Record<string, string> = { imsiu: 'جامعة الإمام محمد بن سعود الإسلامية', iu: 'الجامعة الإسلامية بالمدينة المنورة' };
+
+/** اقتراحات الجامعات لما يكتبه المستخدم (تتجاهل «جامعة» و«ال» والهمزات، وتقبل الاختصار: UQU، KSU، KFUPM). */
 export function searchUniversities(q: string, limit = 4): string[] {
   const n = norm(q);
   if (n.length < 2) return [];
   if (UNIVERSITIES.includes(q.trim())) return [];
+  if (/^[a-z-]+$/.test(n)) {
+    const byAbbr = [
+      ...Object.entries(UNIVERSITY_DOMAINS).map(([d, u]) => [d.split('.')[0], u] as const),
+      ...Object.entries(EXTRA_ABBR),
+    ]
+      .filter(([a]) => a.startsWith(n))
+      .sort((a, b) => a[0].length - b[0].length)
+      .map(([, u]) => u);
+    return [...new Set(byAbbr)].slice(0, limit);
+  }
   const words = n.split(' ');
   // كل كلمة مكتوبة تطابق بداية كلمة في اسم الجامعة («نوره» لا تطابق «المنورة»)
   return UNIVERSITIES.filter((u) => {

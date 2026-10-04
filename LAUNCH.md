@@ -56,6 +56,20 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
 
 بمجرد وجود المفاتيح يتحول التطبيق تلقائياً من الدفع التجريبي إلى الدفع الحقيقي عبر المتجر.
 
+## 5.4) إرسال رمز التحقق بالإيميل (ضروري قبل الإطلاق)
+
+بدونه يعمل التطبيق بالرمز التجريبي `123456` فقط. الإرسال الحقيقي يحتاج 4 أشياء:
+
+1. **نطاق باسمك** (مثل `mudhaker.app`، حوالي 50–80 ريالاً سنوياً). لا يصلح إيميل Gmail مرسلاً لأن مزوّدي الإرسال لا يوثّقونه.
+2. **مزوّد إرسال** (موصى به: [Resend](https://resend.com)؛ خطته المجانية محدودة يومياً، فراجع الحد ورقّ الخطة قبل يوم الإطلاق): أضف النطاق، وانسخ سجلات DNS التي يعطيك إياها (SPF وDKIM) عند مسجّل النطاق، وأضف سجل DMARC: `v=DMARC1; p=none; rua=mailto:asd1911147@gmail.com`. انتظر حتى تظهر «Verified».
+3. **ربطه بـ Supabase:** Authentication ← Emails ← SMTP Settings ← Enable custom SMTP:
+   - Host `smtp.resend.com` · Port `465` · Username `resend` · Password = مفتاح API من Resend
+   - Sender email `no-reply@mudhaker.app` (بنطاقك) · Sender name `مذاكر`
+   - Authentication ← Rate Limits: ارفع «emails sent per hour» إلى 100 أو أكثر (الافتراضي صغير جداً يوم الإطلاق).
+4. **القوالب:** انسخ `supabase/templates/confirm-signup.html` و`reset-password.html` (العناوين في `supabase/templates/README.md`)، واضبط Email OTP Length = 6 و Expiration = 900.
+
+**اختبر قبل الإطلاق** بإيميلات جامعية حقيقية من 3–4 جامعات (كثير منها على Microsoft 365): سجّل، تأكد أن الرمز وصل خلال دقيقة إلى «الوارد» لا «غير المرغوب»، وجرّب «إعادة الإرسال» (مرة كل 60 ثانية) و«نسيت كلمة المرور». إن ذهبت للمهملات: تأكد من DKIM وDMARC، وأرسل من نطاق فرعي مثل `mail.mudhaker.app`.
+
 ## 5.5) الخادم: حجز الساعات المكتبية والتحضير بالـ QR (15 دقيقة)
 
 بدون هذه الخطوة تعمل الميزتان بوضع تجريبي على جهاز واحد فقط.
@@ -64,7 +78,7 @@ npx eas-cli@latest env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value 
    - **المنطقة:** اختر الأقرب للمملكة. بيانات الطلاب (الاسم والرقم الجامعي) بيانات شخصية؛ راجع مع جامعتك متطلبات نظام حماية البيانات الشخصية لنقلها خارج المملكة.
 2. **الدخول بالإيميل الجامعي (من الإصدار 1.6):**
    - Authentication ← Sign In / Providers ← **Email**: فعّل Email و**Confirm email**، وأوقف **Anonymous sign-ins** (لم تعد مستخدمة).
-   - Authentication ← Emails ← Templates: في قالبي **Confirm signup** و**Reset password** ضع الرمز بدل الرابط، مثلاً: `رمز تأكيد حسابك في مذاكر: {{ .Token }}` (التطبيق يطلب الرمز المكوّن من 6 أرقام).
+   - Authentication ← Emails ← Templates: قالبا **Confirm signup** و**Reset password** جاهزان بالعربي في `supabase/templates/` (فيهما `{{ .Token }}`، والتطبيق يطلب رمزاً من 6 أرقام). التفاصيل في القسم 5.4 أدناه.
    - Authentication ← Emails ← **SMTP Settings**: اربط مزوّد إرسال خاص (مثل Resend أو Amazon SES أو Brevo) باسم نطاقك. مزوّد Supabase الافتراضي محدود جداً ولا يصلح للإطلاق، وبعض إيميلات الجامعات ترفض الرسائل غير الموثّقة.
    - Authentication ← Attack Protection: فعّل **CAPTCHA** وراجع **Rate Limits** للتسجيل وإرسال الرموز.
    - Authentication ← Providers ← Email: اجعل **Minimum password length = 8** (مثل التطبيق)، وفعّل **Secure email change**. الخادم يرفض أي إيميل غير مؤكَّد حتى لو عُطّل التأكيد خطأً.

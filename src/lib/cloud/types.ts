@@ -91,6 +91,8 @@ export interface CloudApi {
   signUp(email: string, password: string): Promise<void>;
   /** يؤكد الإيميل بالرمز المرسل (6 أرقام) ويفتح الجلسة. */
   verifyEmail(email: string, code: string): Promise<void>;
+  /** يعيد إرسال رمز تأكيد التسجيل (لحساب لم يتأكد بعد). */
+  resendSignupCode(email: string): Promise<void>;
   signIn(email: string, password: string): Promise<void>;
   sendReset(email: string): Promise<void>;
   resetPassword(email: string, code: string, password: string): Promise<void>;

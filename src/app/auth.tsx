@@ -5,6 +5,7 @@ import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { EmailField } from '@/components/EmailField';
 import { Field } from '@/components/Field';
 import { haptic } from '@/components/haptics';
 import { Screen } from '@/components/Screen';
@@ -13,12 +14,15 @@ import { UniversityField } from '@/components/UniversityField';
 import { emailKind, isEmail, signupProblem, type AccountRole, type Profile } from '@/lib/accounts';
 import { cloud } from '@/lib/cloud';
 import { DEMO_CODE } from '@/lib/cloud/demoApi';
+import { useNow } from '@/lib/useNow';
 import { useStore } from '@/store/useStore';
 import { spacing, useTheme } from '@/theme';
 
 type Mode = 'signin' | 'signup' | 'verify' | 'forgot' | 'reset' | 'profile';
 
 /** بوابة الدخول: حساب بالإيميل الجامعي للطالب وعضو هيئة التدريس. */
+const RESEND_EVERY = 60_000;
+
 export default function Auth() {
   const { colors } = useTheme();
   const settings = useStore((s) => s.settings);
@@ -26,6 +30,10 @@ export default function Auth() {
   // «تغيير كلمة المرور» من الإعدادات يفتح هنا على الاستعادة بالإيميل نفسه
   const params = useLocalSearchParams<{ mode?: string; email?: string }>();
   const [mode, setMode] = useState<Mode>(params.mode === 'forgot' ? 'forgot' : 'signup');
+  // الخادم يسمح بإعادة إرسال الرمز مرة كل 60 ثانية: نعرض العد بدل خطأ غامض
+  const [sentAt, setSentAt] = useState(0);
+  const now = useNow(1000);
+  const wait = Math.max(0, Math.ceil((sentAt + RESEND_EVERY - now) / 1000));
   const [email, setEmail] = useState(params.email ?? '');
   const [password, setPassword] = useState('');
   const [name, setName] = useState(settings.name);
@@ -70,6 +78,7 @@ export default function Auth() {
       if (problem) throw new Error(problem);
       await cloud.signUp(email, password);
       setCode('');
+      setSentAt(Date.now());
       setMode('verify');
     });
 
@@ -102,7 +111,7 @@ export default function Auth() {
             />
           </View>
           <Field label="الاسم الكامل" placeholder={role === 'professor' ? 'مثال: د. سارة الحربي' : 'مثال: نورة العتيبي'} value={name} onChangeText={setName} />
-          <Field label="الإيميل الجامعي" placeholder={role === 'professor' ? 'name@uqu.edu.sa' : 's44xxxxxxx@st.uqu.edu.sa'} value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" ltr />
+          <EmailField value={email} onChange={setEmail} role={role} placeholder={role === 'professor' ? 'name@uqu.edu.sa' : 's44xxxxxxx@st.uqu.edu.sa'} />
           {isEmail(email) && detected.kind !== 'not_university' && (
             <AppText variant="caption" color={role === 'professor' && detected.kind === 'student' ? colors.danger : colors.success}>
               {detected.kind === 'student' ? '✓ إيميل طالب' : detected.kind === 'staff' ? '✓ إيميل منسوبين' : '✓ إيميل جامعي'}
@@ -117,12 +126,23 @@ export default function Auth() {
           <AppText variant="tiny" muted>
             نحفظ اسمك وإيميلك الجامعي وجامعتك ودورك فقط. لا نطلب تاريخ ميلادك ولا كلمة مرور بوابة الجامعة.
           </AppText>
+          <AppText variant="tiny" muted>
+            بإنشاء الحساب توافق على{' '}
+            <AppText variant="tiny" color={colors.primary} accessibilityRole="link" onPress={() => router.push({ pathname: '/legal', params: { doc: 'terms' } })}>
+              الشروط والأحكام
+            </AppText>{' '}
+            و
+            <AppText variant="tiny" color={colors.primary} accessibilityRole="link" onPress={() => router.push({ pathname: '/legal', params: { doc: 'privacy' } })}>
+              سياسة الخصوصية
+            </AppText>
+            ، ومنها الالتزام بالنزاهة الأكاديمية ولوائح جامعتك.
+          </AppText>
         </Card>
       )}
 
       {mode === 'signin' && (
         <Card style={{ gap: spacing.md }}>
-          <Field label="الإيميل الجامعي" value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" ltr />
+          <EmailField value={email} onChange={setEmail} />
           <Field label="كلمة المرور" value={password} onChangeText={setPassword} secureTextEntry={!showPw} ltr />
           <ShowPassword on={showPw} onToggle={() => setShowPw(!showPw)} />
           <Button title="دخول" icon="log-in" loading={busy} onPress={() => run(async () => { await cloud.signIn(email, password); await afterSession(false); })} />
@@ -141,7 +161,19 @@ export default function Auth() {
           </View>
           <Field label="رمز التأكيد" placeholder="••••••" value={code} onChangeText={(t) => setCode(t.replace(/\D/g, ''))} keyboardType="number-pad" maxLength={6} ltr />
           <Button title="تأكيد" icon="checkmark-circle" loading={busy} disabled={code.length !== 6} onPress={() => run(async () => { await cloud.verifyEmail(email, code); await afterSession(true); })} />
-          <Button title="إعادة إرسال الرمز" variant="ghost" size="sm" onPress={() => run(async () => { await cloud.signUp(email, password); setMsg({ ok: true, text: 'أرسلنا رمزاً جديداً ✓' }); })} />
+          <Button
+            title={wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : 'إعادة إرسال الرمز'}
+            variant="ghost"
+            size="sm"
+            disabled={wait > 0}
+            onPress={() =>
+              run(async () => {
+                await cloud.resendSignupCode(email);
+                setSentAt(Date.now());
+                setMsg({ ok: true, text: 'أرسلنا رمزاً جديداً ✓ افحص أيضاً مجلد الرسائل غير المرغوبة.' });
+              })
+            }
+          />
           <Button title="تعديل الإيميل" variant="ghost" size="sm" onPress={() => setMode('signup')} />
         </Card>
       )}

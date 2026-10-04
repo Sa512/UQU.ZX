@@ -340,6 +340,10 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       save();
       await delay(null);
     },
+    async resendSignupCode() {
+      // الوضع التجريبي: الرمز ثابت (DEMO_CODE) ولا يُرسل بريد
+      await delay(null);
+    },
     async verifyEmail(email, c) {
       await ready;
       const u = users.get(normalizeEmail(email));
