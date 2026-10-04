@@ -36,7 +36,7 @@ export function buildBackup(data: BackupData, now = new Date()): BackupFile {
 }
 
 /** إعدادات تخص هذا الجهاز فقط ولا تنتقل في النسخة (الحساب، القفل، النسخ السحابي). */
-const DEVICE_ONLY = ['lastAccountId', 'appLock', 'cloudBackup', 'lastCloudBackupAt', 'lastCloudBackupHash', 'restorePromptDismissed'] as const;
+const DEVICE_ONLY = ['lastAccountId', 'appLock', 'cloudBackup', 'lastCloudBackupAt', 'lastCloudBackupHash', 'restorePromptDismissed', 'dismissedBanner'] as const;
 
 type StoreLike = Omit<BackupData, 'settings' | 'summaries'> & { settings: Settings; summaries: Summary[] };
 

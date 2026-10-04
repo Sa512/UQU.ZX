@@ -199,7 +199,7 @@ function ChannelScreenInner() {
 /** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
 export default function ChannelScreen() {
   return (
-    <SignInNeeded title="قناة الشعبة">
+    <SignInNeeded title="قناة الشعبة" feature="channels">
       <ChannelScreenInner />
     </SignInNeeded>
   );

@@ -130,7 +130,7 @@ function JoinInner() {
 /** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
 export default function Join() {
   return (
-    <SignInNeeded title="انضم لشعبة">
+    <SignInNeeded title="انضم لشعبة" feature="channels">
       <JoinInner />
     </SignInNeeded>
   );

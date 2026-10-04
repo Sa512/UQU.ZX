@@ -102,7 +102,7 @@ function StudentCheckinInner() {
 /** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
 export default function StudentCheckin() {
   return (
-    <SignInNeeded title="التحضير بالـ QR">
+    <SignInNeeded title="التحضير بالـ QR" feature="checkin">
       <StudentCheckinInner />
     </SignInNeeded>
   );

@@ -15,7 +15,7 @@ import type { ImportedSlot } from '@/lib/scheduleImport';
 import { uid } from '@/lib/id';
 import type { PaymentMethod, PlanId } from '@/lib/payments';
 import { review } from '@/lib/srs';
-import type { ChannelPost, SectionChannel } from '@/lib/cloud/types';
+import type { AppConfig, ChannelPost, SectionChannel } from '@/lib/cloud/types';
 import { syncChannel, type SyncResult } from '@/lib/sectionChannel';
 import { mergeIcs, type IcsEvent } from '@/lib/ical';
 import { detectLms, LMS_INFO } from '@/lib/universities';
@@ -69,6 +69,8 @@ export type Settings = {
   lastCloudBackupHash: string;
   /** أخفى المستخدم اقتراح الاستعادة من النسخة السحابية على هذا الجهاز. */
   restorePromptDismissed: boolean;
+  /** آخر إعلان عام أخفاه المستخدم (بصمته)؛ إعلان جديد يظهر من جديد. */
+  dismissedBanner: string;
 };
 
 export type Course = {
@@ -184,6 +186,8 @@ type State = {
   scores: Scores;
   officePage: OfficePage | null;
   myBookings: MyBooking[];
+  /** التحكم الطارئ من الخادم (آخر نسخة معروفة، تعمل دون اتصال). */
+  remoteConfig: AppConfig | null;
   feeds: CalendarFeed[];
   summaries: Summary[];
   /** حساب المستخدم على الخادم (الإيميل الجامعي). null = لم يسجّل دخوله. */
@@ -250,6 +254,7 @@ type Actions = {
   setBookingStatus: (id: string, status: MyBooking['status']) => void;
   replaceMyBookings: (list: MyBooking[]) => void;
   dismissBookingNotice: (id: string) => void;
+  setRemoteConfig: (c: AppConfig) => void;
   startNewSemester: (o: { mergeGpa: boolean; clearSchedule: boolean; clearTasks: boolean; clearCourses: boolean }) => void;
   updateAssessment: (id: string, p: Partial<Assessment>) => void;
   deleteAssessment: (id: string) => void;
@@ -290,6 +295,7 @@ const defaultSettings: Settings = {
   lastCloudBackupAt: null,
   lastCloudBackupHash: '',
   restorePromptDismissed: false,
+  dismissedBanner: '',
 };
 
 const initialState: State = {
@@ -307,6 +313,7 @@ const initialState: State = {
   scores: {},
   officePage: null,
   myBookings: [],
+  remoteConfig: null,
   feeds: [],
   summaries: [],
   account: null,
@@ -599,6 +606,7 @@ export const useStore = create<State & Actions>()(
       saveMyBooking: (b) => set((s) => ({ myBookings: [...s.myBookings.filter((x) => x.id !== b.id), b].sort((a, c) => a.startsAt.localeCompare(c.startsAt)) })),
       setBookingStatus: (id, status) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, status, ...(status === 'cancelled' ? { cancelledBy: 'student' as const, noticeSeen: true } : {}) } : x)) })),
       replaceMyBookings: (list) => set({ myBookings: list }),
+      setRemoteConfig: (c) => set({ remoteConfig: c }),
       dismissBookingNotice: (id) => set((s) => ({ myBookings: s.myBookings.map((x) => (x.id === id ? { ...x, noticeSeen: true } : x)) })),
       addTasks: (list) =>
         set((s) => ({ tasks: [...s.tasks, ...list.map((t) => ({ ...t, id: uid(), done: false, createdAt: Date.now() }))] })),

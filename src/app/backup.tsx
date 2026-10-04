@@ -193,7 +193,7 @@ function BackupInner() {
 
 export default function Backup() {
   return (
-    <SignInNeeded title="النسخة السحابية">
+    <SignInNeeded title="النسخة السحابية" feature="backup">
       <BackupInner />
     </SignInNeeded>
   );

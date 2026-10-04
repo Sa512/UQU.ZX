@@ -48,6 +48,19 @@ export type AdminReport = {
   universities: { university: string; users: number }[];
   weeks: { week: string; signups: number }[];
 };
+/** التحكم الطارئ عن بُعد (يقرؤه التطبيق قبل الدخول أيضاً). */
+export type AppFeature = 'booking' | 'checkin' | 'channels' | 'backup';
+export type AppConfig = {
+  min_version: string;
+  latest_version: string;
+  maintenance: boolean;
+  maintenance_message: string;
+  banner: string;
+  banner_level: 'info' | 'warning';
+  disabled_features: AppFeature[];
+  ios_url: string;
+  updated_at: string;
+};
 /** عطل متكرر (مجمّع، بلا هوية المستخدم). */
 export type AdminError = { message: string; screen: string; app_version: string; count: number; last_at: string };
 
@@ -114,4 +127,7 @@ export interface CloudApi {
   deleteBackup(): Promise<void>;
   /** month بصيغة YYYY-MM. */
   adminReport(month: string): Promise<AdminReport>;
+  // ——— التحكم الطارئ ———
+  getAppConfig(): Promise<AppConfig | null>;
+  adminSetAppConfig(c: Omit<AppConfig, 'updated_at'>): Promise<AppConfig>;
 }

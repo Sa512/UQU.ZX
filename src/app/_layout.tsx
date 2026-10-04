@@ -20,6 +20,10 @@ import { useReminderSync } from '@/lib/useReminderSync';
 import { syncBookings, useAccountSync } from '@/lib/useAccountSync';
 import { useCloudBackup } from '@/lib/useCloudBackup';
 import { useWidgetSync } from '@/lib/useWidgetSync';
+import { useAppConfigSync } from '@/lib/useAppConfigSync';
+import { updateGate } from '@/lib/appConfig';
+import { APP_VERSION } from '@/lib/appVersion';
+import { ForceUpdate } from '@/components/ForceUpdate';
 import { useHydrated, useStore } from '@/store/useStore';
 import { AppThemeProvider, useTheme } from '@/theme';
 
@@ -44,6 +48,9 @@ function Navigator() {
   useAccountSync();
   useCloudBackup();
   useWidgetSync();
+  useAppConfigSync();
+  const remoteConfig = useStore((s) => s.remoteConfig);
+  const forced = !!remoteConfig && updateGate(remoteConfig, APP_VERSION)?.force;
   // حالة الاشتراك الحقيقية تأتي من المتجر (عند تفعيل RevenueCat) وتتحدث تلقائياً.
   useEffect(() => initPurchases((status) => useStore.getState().setStoreSubscription(status)), []);
   // الضغط على إشعار إعلان يفتح صفحة المادة
@@ -63,6 +70,15 @@ function Navigator() {
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(colors.bg).catch(() => {});
   }, [colors.bg]);
+  // إصدار أقدم من الأدنى المسموح: لا يكمل إلا بالتحديث (التحكم الطارئ من لوحة المشرف)
+  if (forced && remoteConfig) {
+    return (
+      <>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <ForceUpdate config={remoteConfig} />
+      </>
+    );
+  }
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />

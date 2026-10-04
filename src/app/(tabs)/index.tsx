@@ -8,6 +8,7 @@ import { weeklyMeetings } from '@/components/AbsenceCard';
 import { Button } from '@/components/Button';
 import { CancelNotice } from '@/components/CancelNotice';
 import { RestoreOffer } from '@/components/RestoreOffer';
+import { AppBanner } from '@/components/AppBanner';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -147,6 +148,7 @@ export default function Home() {
         </Card>
       )}
 
+      <AppBanner />
       <RestoreOffer />
       <CancelNotice now={nowMs} />
 

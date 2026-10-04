@@ -256,7 +256,7 @@ function OfficeHoursInner() {
 /** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
 export default function OfficeHours() {
   return (
-    <SignInNeeded title="حجز الساعات المكتبية">
+    <SignInNeeded title="حجز الساعات المكتبية" feature="booking">
       <OfficeHoursInner />
     </SignInNeeded>
   );

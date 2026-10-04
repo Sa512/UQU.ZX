@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { toCloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
-import type { AdminError, AdminReport, BackupInfo, AdminLogEntry, AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
+import type { AdminError, AdminReport, AppConfig, BackupInfo, AdminLogEntry, AdminOverview, AdminRules, AdminUser, Booking, CheckIn, CloudApi, OfficeHost, PageInfo, Session } from './types';
 import { normalizeEmail, type ExportRow, type Profile } from '../accounts';
 
 export function createSupabaseApi(url: string, anonKey: string): CloudApi {
@@ -152,6 +152,30 @@ export function createSupabaseApi(url: string, anonKey: string): CloudApi {
     },
     async deleteBackup() {
       await call(() => sb.rpc('delete_backup'));
+    },
+    async getAppConfig() {
+      // بلا جلسة: يُقرأ قبل تسجيل الدخول (مثلاً لإجبار التحديث)
+      try {
+        const { data, error } = await sb.rpc('get_app_config');
+        if (error) throw error;
+        return data as AppConfig | null;
+      } catch (e) {
+        throw toCloudError(e);
+      }
+    },
+    async adminSetAppConfig(c) {
+      return (await call(() =>
+        sb.rpc('admin_set_app_config', {
+          p_min_version: c.min_version,
+          p_latest_version: c.latest_version,
+          p_maintenance: c.maintenance,
+          p_maintenance_message: c.maintenance_message,
+          p_banner: c.banner,
+          p_banner_level: c.banner_level,
+          p_disabled: c.disabled_features,
+          p_ios_url: c.ios_url,
+        }),
+      )) as AppConfig;
     },
     async adminReport(month) {
       return (await call(() => sb.rpc('admin_report', { p_month: `${month}-01` }))) as AdminReport;

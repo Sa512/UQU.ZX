@@ -14,7 +14,10 @@ import { HeaderButton, Screen, SectionHeader } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { ROLE_LABEL, STATUS_LABEL, usersCsv, type AccountRole, type AccountStatus } from '@/lib/accounts';
 import { activeRate, monthKey, monthLabel, reportCsv, reportRows } from '@/lib/adminReport';
-import { cloud, type AdminReport, type AdminError, type AdminLogEntry, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
+import { cleanConfig, compareVersions, FEATURES } from '@/lib/appConfig';
+import { APP_VERSION } from '@/lib/appVersion';
+import { Toggle } from '@/components/Toggle';
+import { cloud, CloudError, type AppConfig, type AdminReport, type AdminError, type AdminLogEntry, type AdminOverview, type AdminRules, type AdminUser } from '@/lib/cloud';
 import { formatShortDate, toDateKey } from '@/lib/dates';
 import { shareCsv } from '@/lib/exportIO';
 import { useStore } from '@/store/useStore';
@@ -44,6 +47,9 @@ export default function Admin() {
   const [dom, setDom] = useState('');
   const [domUni, setDomUni] = useState('');
   const [domKind, setDomKind] = useState<'staff' | 'student'>('staff');
+  // التحكم الطارئ: نسخة قابلة للتعديل من إعدادات الخادم
+  const [cfg, setCfg] = useState<Omit<AppConfig, 'updated_at'> | null>(null);
+  const setRemoteConfig = useStore((s) => s.setRemoteConfig);
 
   const loadUsers = useCallback(async (query: string, f: Filter) => {
     const role = f === 'student' || f === 'professor' ? f : null;
@@ -52,7 +58,11 @@ export default function Admin() {
   }, []);
   const refresh = useCallback(async () => {
     try {
-      const [o, r, l, e] = await Promise.all([cloud.adminOverview(), cloud.adminRules(), cloud.adminLog(), cloud.adminErrors()]);
+      const [o, r, l, e, c] = await Promise.all([cloud.adminOverview(), cloud.adminRules(), cloud.adminLog(), cloud.adminErrors(), cloud.getAppConfig()]);
+      if (c) {
+        const { updated_at: _u, ...rest } = c;
+        setCfg(rest);
+      }
       setOv(o);
       setRules(r);
       setLog(l);
@@ -145,6 +155,81 @@ export default function Admin() {
               </AppText>
             </View>
           ))}
+        </Card>
+      )}
+
+      <SectionHeader title="التحكم الطارئ" />
+      {cfg && (
+        <Card style={{ gap: spacing.md }}>
+          <AppText variant="caption" muted>
+            يصل كل المستخدمين خلال دقائق دون إصدار نسخة جديدة، ويُسجَّل في سجل الإجراءات. هذا الجوال على الإصدار {APP_VERSION}.
+          </AppText>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <View style={{ flex: 1 }}>
+              <Field label="أقل إصدار مسموح" value={cfg.min_version} onChangeText={(v) => setCfg({ ...cfg, min_version: v })} ltr hint="الأقدم منه يُجبر على التحديث" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Field label="أحدث إصدار" value={cfg.latest_version} onChangeText={(v) => setCfg({ ...cfg, latest_version: v })} ltr hint="الأقدم منه يُقترح عليه التحديث" />
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <View style={{ flex: 1 }}>
+              <AppText variant="label">وضع الصيانة</AppText>
+              <AppText variant="caption" muted>
+                يوقف كل الميزات السحابية مؤقتاً، والباقي يعمل على الجوال.
+              </AppText>
+            </View>
+            <Toggle accessibilityLabel="وضع الصيانة" value={cfg.maintenance} onValueChange={(v) => setCfg({ ...cfg, maintenance: v })} />
+          </View>
+          {cfg.maintenance && <Field label="رسالة الصيانة" value={cfg.maintenance_message} onChangeText={(v) => setCfg({ ...cfg, maintenance_message: v })} maxLength={300} placeholder="مثال: نحدّث الخادم حتى الساعة 2 ص" />}
+          <AppText variant="label">إيقاف ميزة مؤقتاً</AppText>
+          <ChipRow>
+            {FEATURES.map((f) => (
+              <Chip
+                key={f.key}
+                label={f.label}
+                selected={cfg.disabled_features.includes(f.key)}
+                onPress={() =>
+                  setCfg({ ...cfg, disabled_features: cfg.disabled_features.includes(f.key) ? cfg.disabled_features.filter((x) => x !== f.key) : [...cfg.disabled_features, f.key] })
+                }
+              />
+            ))}
+          </ChipRow>
+          <Field label="إعلان لكل المستخدمين (اختياري)" value={cfg.banner} onChangeText={(v) => setCfg({ ...cfg, banner: v })} maxLength={200} placeholder="يظهر أعلى الرئيسية" />
+          <Segmented<'info' | 'warning'>
+            value={cfg.banner_level}
+            onChange={(v) => setCfg({ ...cfg, banner_level: v })}
+            options={[
+              { value: 'info', label: 'معلومة' },
+              { value: 'warning', label: 'تنبيه' },
+            ]}
+          />
+          <Field label="رابط التطبيق في App Store" value={cfg.ios_url} onChangeText={(v) => setCfg({ ...cfg, ios_url: v })} ltr placeholder="https://apps.apple.com/sa/app/…" />
+          <Button
+            title="تطبيق على كل المستخدمين"
+            icon="radio-outline"
+            loading={busy}
+            onPress={() => {
+              let clean: Omit<AppConfig, 'updated_at'>;
+              try {
+                clean = cleanConfig(cfg);
+              } catch (e) {
+                return setMsg({ ok: false, text: new CloudError((e as Error).message).message });
+              }
+              const lockSelf = compareVersions(APP_VERSION, clean.min_version) < 0;
+              confirm(
+                'تطبيق التحكم الطارئ؟',
+                lockSelf
+                  ? `انتبه: أقل إصدار (${clean.min_version}) أعلى من إصدار جوالك (${APP_VERSION})، فسيُطلب منك التحديث أنت أيضاً.`
+                  : 'يصل كل المستخدمين عند فتح التطبيق أو خلال 15 دقيقة.',
+                () =>
+                  act(async () => {
+                    setRemoteConfig(await cloud.adminSetAppConfig(clean));
+                  }, 'طُبّق على كل المستخدمين ✓'),
+                'تطبيق',
+              );
+            }}
+          />
         </Card>
       )}
 
@@ -387,6 +472,7 @@ export default function Admin() {
 function actionLabel(a: string): string {
   if (a === 'export') return 'تصدير Excel';
   if (a === 'report') return 'عرض التقرير الشهري';
+  if (a === 'app_config') return 'تحكم طارئ';
   if (a === 'rule_delete') return 'حذف نطاق';
   if (a.startsWith('rule:')) return 'حفظ نطاق';
   if (a === 'override_delete') return 'إزالة استثناء';

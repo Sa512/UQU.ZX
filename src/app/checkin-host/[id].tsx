@@ -245,7 +245,7 @@ function CheckinHostInner() {
 /** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
 export default function CheckinHost() {
   return (
-    <SignInNeeded title="التحضير">
+    <SignInNeeded title="التحضير" feature="checkin">
       <CheckinHostInner />
     </SignInNeeded>
   );

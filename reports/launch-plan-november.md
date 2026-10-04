@@ -40,7 +40,7 @@
 
 ## 4) قائمة ما قبل الإرسال
 
-- [ ] الهجرات الإحدى عشرة شغّالة على Supabase بالترتيب، وجدولة `cleanup_old_data` بـ pg_cron
+- [ ] الهجرات الاثنتا عشرة شغّالة على Supabase بالترتيب، وجدولة `cleanup_old_data` بـ pg_cron
 - [ ] Email: Confirm email ✓ · Secure email change ✓ · Min password 8 ✓ · CAPTCHA ✓ · Anonymous sign-ins ✗
 - [ ] قوالب الإيميل فيها `{{ .Token }}` ومرسلة من نطاقك (جرّب إيميل جامعة فعلي)
 - [ ] `EXPO_PUBLIC_SUPABASE_URL` و`ANON_KEY` في EAS **production** (بدونهما يعمل التطبيق بالوضع التجريبي)

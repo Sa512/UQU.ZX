@@ -7,7 +7,8 @@ import { generateSlots, type Window } from '../officeHours';
 import { CloudError } from './errors';
 import { sanitizeChannel } from '../sectionChannel';
 import { CLOUD_BACKUP_MAX, CLOUD_BACKUP_RE } from '../backupCrypto';
-import type { AdminError, AdminReport, BackupInfo, AdminLogEntry, AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
+import { cleanConfig, DEFAULT_CONFIG } from '../appConfig';
+import type { AdminError, AdminReport, AppConfig, BackupInfo, AdminLogEntry, AdminUser, Booking, ChannelInput, ChannelPost, CheckIn, CloudApi, OfficeHost, PageInfo } from './types';
 import { emailKind, normalizeEmail, type AccountRole, type Profile } from '../accounts';
 
 /** رمز التحقق في الوضع التجريبي (لا يُرسل إيميل فعلي). */
@@ -43,6 +44,7 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
   const users = new Map<string, User>();
   const adminLog: AdminLogEntry[] = [];
   const errors: AdminError[] = [];
+  let appConfig: AppConfig = { ...DEFAULT_CONFIG, updated_at: new Date(now()).toISOString() };
   // النسخ السحابية: مفتاح منفصل (قد تكون كبيرة) — فشل الحفظ لا يمس باقي البيانات التجريبية
   const backups = new Map<string, { blob: string; updated_at: string; device: string }>();
   const BKEY = 'mudhaker-demo-backups';
@@ -62,16 +64,17 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
         .getItem(KEY)
         .then((raw) => {
           if (!raw) return;
-          const d = JSON.parse(raw) as { pages: Page[]; bookings: (Booking & { student: string })[]; channels?: Channel[]; users?: User[]; current?: string | null };
+          const d = JSON.parse(raw) as { pages: Page[]; bookings: (Booking & { student: string })[]; channels?: Channel[]; users?: User[]; current?: string | null; appConfig?: AppConfig };
           d.pages.forEach((p) => pages.set(p.id, p));
           d.users?.forEach((u) => users.set(u.email, u));
           current = d.current ?? null;
+          if (d.appConfig) appConfig = d.appConfig;
           bookings.push(...d.bookings);
           d.channels?.forEach((c) => channels.set(c.id, c));
         })
         .catch(() => {})
     : Promise.resolve();
-  const save = () => storage?.setItem(KEY, JSON.stringify({ pages: [...pages.values()], bookings, channels: [...channels.values()], users: [...users.values()], current })).catch(() => {});
+  const save = () => storage?.setItem(KEY, JSON.stringify({ pages: [...pages.values()], bookings, channels: [...channels.values()], users: [...users.values()], current, appConfig })).catch(() => {});
   const me = () => (current ? users.get(current) : undefined);
   const mustUser = () => {
     const u = me();
@@ -269,6 +272,24 @@ export function createDemoApi(now: () => number = Date.now, device = 'this-devic
       backups.delete(mustUser().id);
       saveBackups();
       await delay(null);
+    },
+    async getAppConfig() {
+      await ready;
+      return delay({ ...appConfig });
+    },
+    async adminSetAppConfig(c) {
+      await ready;
+      admin();
+      let clean: Omit<AppConfig, 'updated_at'>;
+      try {
+        clean = cleanConfig(c);
+      } catch (e) {
+        throw new CloudError((e as Error).message);
+      }
+      appConfig = { ...clean, updated_at: stamp() };
+      save();
+      logAdmin('app_config', `min ${clean.min_version} · latest ${clean.latest_version}${clean.maintenance ? ' · maintenance' : ''}`);
+      return delay({ ...appConfig });
     },
     async adminReport(month) {
       await ready;

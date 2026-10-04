@@ -313,7 +313,7 @@ function BookInner() {
 /** يحتاج حساباً (في وضع الاستخدام بلا حساب يظهر طلب تسجيل الدخول). */
 export default function Book() {
   return (
-    <SignInNeeded title="حجز ساعة مكتبية">
+    <SignInNeeded title="حجز ساعة مكتبية" feature="booking">
       <BookInner />
     </SignInNeeded>
   );
