@@ -227,6 +227,17 @@ export default function Home() {
         <QuickAction icon="calculator" label="المعدل" color="#F59E0B" href="/gpa" />
       </Card>
 
+      {!isProf && (
+        <Card onPress={() => router.push('/jobs')} accessibilityLabel="وظّفني: أرسل سيرتك للشركات القريبة" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <Ionicons name="briefcase" size={24} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <AppText variant="h3">وظّفني</AppText>
+            <AppText variant="caption" muted>حدد مكاناً على الخريطة وأرسل سيرتك للشركات القريبة</AppText>
+          </View>
+          <Ionicons name="chevron-back" size={20} color={colors.textMuted} />
+        </Card>
+      )}
+
       {settings.lastSeenVersion !== WHATS_NEW.version && (
         <Card style={{ gap: spacing.sm, borderColor: colors.primary + '55', backgroundColor: colors.primarySoft }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>

@@ -104,6 +104,17 @@
             }
           ]
         }
+      ],
+      "expo-mail-composer",
+      "expo-maps",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "يستخدم مذاكر موقعك في «وظّفني» للبحث عن الشركات القريبة منك.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": false
+        }
       ]
     ],
     "experiments": {
