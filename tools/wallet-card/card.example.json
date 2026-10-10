@@ -1,0 +1,17 @@
+{
+  "nameAr": "عبدالله محمد",
+  "nameEn": "Abdullah Mohammed",
+  "titleAr": "خريج علوم حاسب",
+  "titleEn": "Computer Science Graduate",
+  "phone": "+966500000000",
+  "email": "you@example.com",
+  "city": "مكة المكرمة",
+  "linkedin": "https://www.linkedin.com/in/your-name",
+  "cvUrl": "https://drive.google.com/your-cv-link",
+  "about": "خريج جامعة أم القرى، مهتم بتطوير التطبيقات وتحليل البيانات. أبحث عن فرصة أبدأ فيها وأتعلم وأضيف قيمة للفريق.",
+  "skills": "React Native · Python · SQL · العمل الجماعي · اللغة الإنجليزية",
+  "color": "#1E293B",
+
+  "passTypeIdentifier": "pass.sa.mudhaker.card",
+  "teamIdentifier": "XXXXXXXXXX"
+}

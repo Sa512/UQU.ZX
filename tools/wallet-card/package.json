@@ -1,0 +1,11 @@
+{
+  "name": "wallet-card",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "make": "node make-card.mjs"
+  },
+  "dependencies": {
+    "passkit-generator": "3.6.1"
+  }
+}
