@@ -130,9 +130,12 @@
         </li>
         <li>افتح <a href="https://developer.apple.com/account/resources/identifiers/add/passTypeId" target="_blank">تسجيل Pass Type ID</a>: الوصف <code>Wallet Card</code> والمعرّف <code>pass.sa.mudhaker.card</code> ← Continue ← Register.</li>
         <li>افتح <a href="https://developer.apple.com/account/resources/certificates/add" target="_blank">إنشاء شهادة</a>: اختر <b>Pass Type ID Certificate</b> ← اختر المعرّف ← ارفع <b>pass.csr</b> ← Download.</li>
-        <li><div class="file btn ghost">اختر الشهادة pass.cer<input id="cer" type="file"></div></li>
         <li>
-          نزّل <a href="https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer">شهادة Apple WWDR</a> ثم:
+          <p class="hint" style="margin-bottom:8px">⚠️ في Safari لا تضغط Download مباشرة (يروح للإعدادات). <b>اضغط مطولاً</b> على Download ← <b>«تنزيل الملف المرتبط»</b>، فينحفظ في «الملفات».</p>
+          <div class="file btn ghost">اختر الشهادة pass.cer<input id="cer" type="file"></div>
+        </li>
+        <li>
+          <b>اضغط مطولاً</b> على <a href="https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer">شهادة Apple WWDR</a> ← «تنزيل الملف المرتبط»، ثم:
           <div class="file btn ghost" style="margin-top:8px">اختر AppleWWDRCAG4.cer<input id="wwdr" type="file"></div>
         </li>
       </ol>
