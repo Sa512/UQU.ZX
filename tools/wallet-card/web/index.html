@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>بطاقتي في Wallet</title>
+<style>
+  :root {
+    --bg: #f5f6fb; --surface: #fff; --border: #e3e6f0; --text: #0f172a; --muted: #5b6478;
+    --primary: #4f46e5; --primary-soft: #eef0ff; --ok: #059669; --ok-soft: #e7f8f1; --danger: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0b1020; --surface: #141a2e; --border: #262e48; --text: #eef1fb; --muted: #9aa3bd;
+      --primary: #8b85ff; --primary-soft: #1d2246; --ok: #34d399; --ok-soft: #10261f; --danger: #f87171; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  code { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 -apple-system, "SF Arabic", "Geeza Pro", system-ui, sans-serif; -webkit-text-size-adjust: 100%; }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 16px calc(40px + env(safe-area-inset-bottom)); }
+  h1 { font-size: 26px; margin: 8px 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; margin-bottom: 14px; overflow: hidden; }
+  summary { list-style: none; cursor: pointer; padding: 16px; display: flex; gap: 12px; align-items: center; font-weight: 700; font-size: 17px; }
+  summary::-webkit-details-marker { display: none; }
+  .num { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-size: 15px; flex: none; }
+  .done .num { background: var(--ok-soft); color: var(--ok); }
+  .body { padding: 0 16px 16px; display: grid; gap: 12px; }
+  label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+  input, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; }
+  textarea { min-height: 96px; resize: vertical; }
+  input[dir=ltr] { text-align: left; }
+  input[type=color] { height: 48px; padding: 4px; }
+  button, .btn { appearance: none; border: 0; font: inherit; font-weight: 700; border-radius: 14px; padding: 14px; background: var(--primary); color: #fff; width: 100%; cursor: pointer; text-align: center; text-decoration: none; display: block; }
+  button.ghost, .btn.ghost { background: var(--primary-soft); color: var(--primary); }
+  button:disabled { opacity: .5; }
+  .wallet { background: #000; color: #fff; font-size: 17px; padding: 16px; }
+  .file { position: relative; }
+  .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .status { font-size: 14px; color: var(--muted); }
+  .status.ok { color: var(--ok); } .status.err { color: var(--danger); }
+  ol { margin: 0; padding-inline-start: 20px; display: grid; gap: 8px; }
+  a { color: var(--primary); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>بطاقتي في Wallet</h1>
+  <p class="sub">بطاقة تعريف تفتحها في أي شركة، وفيها رمز QR يحفظ بياناتك في جوال الموظف.</p>
+
+  <!-- 1) الشهادة -->
+  <details id="s1">
+    <summary><span class="num">١</span> شهادة Apple (مرة وحدة)</summary>
+    <div class="body">
+      <ol>
+        <li>
+          <button id="genCsr" class="ghost">أنشئ طلب الشهادة</button>
+          <a id="csrLink" class="btn" hidden download="pass.csr" style="margin-top:8px">نزّل pass.csr</a>
+          <p class="hint">بعدها نزّل ملف <b>pass.csr</b> واحفظه في «الملفات».</p>
+        </li>
+        <li>افتح <a href="https://developer.apple.com/account/resources/identifiers/add/passTypeId" target="_blank">تسجيل Pass Type ID</a>: الوصف <code>Wallet Card</code> والمعرّف <code dir="ltr">pass.sa.mudhaker.card</code> ← Continue ← Register.</li>
+        <li>افتح <a href="https://developer.apple.com/account/resources/certificates/add" target="_blank">إنشاء شهادة</a>: اختر <b>Pass Type ID Certificate</b> ← اختر المعرّف ← ارفع <b>pass.csr</b> ← Download.</li>
+        <li>
+          <div class="file btn ghost">اختر الشهادة pass.cer<input id="cer" type="file"></div>
+        </li>
+        <li>
+          نزّل <a href="https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer">شهادة Apple WWDR</a> ثم:
+          <div class="file btn ghost" style="margin-top:8px">اختر AppleWWDRCAG4.cer<input id="wwdr" type="file"></div>
+        </li>
+      </ol>
+      <p id="certStatus" class="status"></p>
+      <div class="row">
+        <button id="backup" class="ghost">نسخة احتياطية</button>
+        <div class="file btn ghost">استرجاع نسخة<input id="restore" type="file"></div>
+      </div>
+      <p class="hint">الشهادة ومفتاحها يبقون في متصفح جوالك فقط، ولا يرسلون لأي مكان.</p>
+    </div>
+  </details>
+
+  <!-- 2) البيانات -->
+  <details id="s2">
+    <summary><span class="num">٢</span> بياناتك</summary>
+    <div class="body">
+      <label>الاسم<input data-k="nameAr"></label>
+      <label>الاسم بالإنجليزي (للـ QR)<input data-k="nameEn" dir="ltr"></label>
+      <label>التخصص<input data-k="titleAr"></label>
+      <label>التخصص بالإنجليزي<input data-k="titleEn" dir="ltr"></label>
+      <label>الجوال<input data-k="phone" type="tel" dir="ltr" placeholder="+9665XXXXXXXX"></label>
+      <label>الإيميل<input data-k="email" type="email" dir="ltr"></label>
+      <label>المدينة<input data-k="city"></label>
+      <label>رابط LinkedIn (اختياري)<input data-k="linkedin" type="url" dir="ltr"></label>
+      <label>رابط السيرة الذاتية (اختياري)<input data-k="cvUrl" type="url" dir="ltr"></label>
+      <label>نبذة عني<textarea data-k="about"></textarea></label>
+      <label>المهارات<textarea data-k="skills"></textarea></label>
+      <div class="row">
+        <label>لون البطاقة<input data-k="color" type="color"></label>
+        <label>صورتك (اختياري)<div class="file btn ghost" id="photoBtn">اختر صورة<input id="photo" type="file" accept="image/*"></div></label>
+      </div>
+    </div>
+  </details>
+
+  <!-- 3) الإضافة -->
+  <details id="s3" open>
+    <summary><span class="num">٣</span> أضفها إلى Wallet</summary>
+    <div class="body">
+      <button id="make" class="wallet"> أضف إلى Apple Wallet</button>
+      <a id="dl" class="btn ghost" hidden download="my-card.pkpass">تنزيل الملف (إذا ما انفتحت)</a>
+      <p id="makeStatus" class="status"></p>
+    </div>
+  </details>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('wc.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('wc.' + k, JSON.stringify(v)); } catch {} },
+};
+
+const DEFAULTS = {
+  nameAr: 'فيصل صويلح الفهمي',
+  nameEn: 'Faisal Suwailih Alfahmi',
+  titleAr: 'طالب إدارة أعمال',
+  titleEn: 'Business Administration Student',
+  phone: '', email: '', city: '', linkedin: '', cvUrl: '',
+  about: 'طالب إدارة أعمال شغوف بتوظيف الذكاء الاصطناعي في العمل اليومي، أستخدمه بشكل مكثف لتحليل المشكلات وتسريع الإنجاز والوصول لحلول عملية. أتميز بالتفكير التحليلي وسرعة التعلم، وأبحث عن فرصة أضيف فيها قيمة حقيقية للفريق وأتطور مهنياً.',
+  skills: 'توظيف أدوات الذكاء الاصطناعي (ChatGPT · Claude) · حل المشكلات · التفكير التحليلي · التواصل الفعّال · العمل الجماعي · إدارة الوقت · سرعة التعلم والتكيّف · Excel',
+  color: '#1e293b',
+};
+
+// ── البيانات: تنحفظ تلقائياً ──
+const card = { ...DEFAULTS, ...store.get('card', {}) };
+document.querySelectorAll('[data-k]').forEach((el) => {
+  el.value = card[el.dataset.k] || '';
+  el.addEventListener('input', () => { card[el.dataset.k] = el.value.trim(); store.set('card', card); });
+});
+let photo = store.get('photo', null); // dataURL مصغّرة
+if (photo) $('photoBtn').firstChild.textContent = 'تم اختيار صورة ✓';
+$('photo').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = await loadImage(URL.createObjectURL(f));
+  photo = drawPng(180, (ctx, s) => {
+    const m = Math.min(img.width, img.height);
+    ctx.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s);
+  }).url;
+  store.set('photo', photo);
+  $('photoBtn').firstChild.textContent = 'تم اختيار صورة ✓';
+};
+
+// ── الشهادات ──
+let keyPem = store.get('key', null), cerPem = store.get('cer', null), wwdrPem = store.get('wwdr', null);
+
+function readFile(file) {
+  return new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(new Uint8Array(r.result)); r.onerror = bad; r.readAsArrayBuffer(file); });
+}
+const raw = (bytes) => forge.util.binary.raw.encode(bytes);
+function certFromBytes(bytes) {
+  const s = raw(bytes);
+  if (s.includes('-----BEGIN')) return forge.pki.certificateFromPem(s);
+  return forge.pki.certificateFromAsn1(forge.asn1.fromDer(s));
+}
+function download(name, data, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], { type }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function passInfo() {
+  if (!cerPem) return null;
+  const c = forge.pki.certificateFromPem(cerPem);
+  const field = (t) => (c.subject.getField(t) || {}).value;
+  return { passType: field({ type: '0.9.2342.19200300.100.1.1' }), team: field('OU'), expires: c.validity.notAfter };
+}
+function refreshCert() {
+  const s = $('certStatus'); const info = passInfo();
+  const ready = keyPem && cerPem && wwdrPem;
+  s.className = 'status' + (ready ? ' ok' : '');
+  s.textContent = ready
+    ? `✓ الشهادة جاهزة: ${info.passType} · الفريق ${info.team} · تنتهي ${info.expires.toLocaleDateString('ar-SA-u-ca-gregory')}`
+    : [keyPem ? '✓ طلب الشهادة' : '✗ طلب الشهادة', cerPem ? '✓ pass.cer' : '✗ pass.cer', wwdrPem ? '✓ WWDR' : '✗ WWDR'].join(' · ');
+  $('s1').classList.toggle('done', !!ready);
+  $('s1').open = !ready;
+  $('s2').open = ready && !(card.phone && card.email);
+}
+
+$('genCsr').onclick = () => {
+  if (keyPem && !confirm('عندك طلب شهادة سابق. إنشاء طلب جديد يلغي الشهادة القديمة على هذا الجوال. أكمل؟')) return;
+  const b = $('genCsr'); b.disabled = true; b.textContent = 'جاري الإنشاء… (ثواني)';
+  setTimeout(() => forge.pki.rsa.generateKeyPair({ bits: 2048 }, (err, keys) => {
+    b.disabled = false; b.textContent = 'أنشئ طلب الشهادة';
+    if (err) return alert('تعذر الإنشاء: ' + err.message);
+    const csr = forge.pki.createCertificationRequest();
+    csr.publicKey = keys.publicKey;
+    csr.setSubject([{ name: 'commonName', value: 'Wallet Card' }]);
+    csr.sign(keys.privateKey, forge.md.sha256.create());
+    keyPem = forge.pki.privateKeyToPem(keys.privateKey); store.set('key', keyPem);
+    cerPem = null; store.set('cer', null);
+    const link = $('csrLink');
+    link.href = URL.createObjectURL(new Blob([forge.pki.certificationRequestToPem(csr)], { type: 'application/octet-stream' }));
+    link.hidden = false;
+    refreshCert();
+  }), 50);
+};
+
+$('cer').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const c = certFromBytes(await readFile(f));
+    if (!keyPem) throw new Error('أنشئ طلب الشهادة من هذا الجوال أولاً (الخطوة ١).');
+    const pub = forge.pki.privateKeyFromPem(keyPem);
+    if (c.publicKey.n.compareTo(pub.n) !== 0) throw new Error('هذي الشهادة ما تطابق طلب الشهادة اللي على هذا الجوال. أنشئ شهادة جديدة من الطلب الأخير.');
+    cerPem = forge.pki.certificateToPem(c); store.set('cer', cerPem);
+  } catch (err) { alert(err.message || 'ملف غير صالح'); }
+  refreshCert();
+};
+$('wwdr').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try { wwdrPem = forge.pki.certificateToPem(certFromBytes(await readFile(f))); store.set('wwdr', wwdrPem); }
+  catch { alert('ملف غير صالح، اختر AppleWWDRCAG4.cer'); }
+  refreshCert();
+};
+$('backup').onclick = () => {
+  if (!keyPem) return alert('ما فيه شهادة محفوظة بعد.');
+  download('wallet-card-backup.json', JSON.stringify({ keyPem, cerPem, wwdrPem, card, photo }), 'application/json');
+};
+$('restore').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const b = JSON.parse(new TextDecoder().decode(await readFile(f)));
+    ({ keyPem, cerPem, wwdrPem } = b);
+    store.set('key', keyPem); store.set('cer', cerPem); store.set('wwdr', wwdrPem);
+    if (b.card) { Object.assign(card, b.card); store.set('card', card); document.querySelectorAll('[data-k]').forEach((el) => (el.value = card[el.dataset.k] || '')); }
+    if (b.photo) { photo = b.photo; store.set('photo', photo); }
+  } catch { alert('ملف النسخة غير صالح'); }
+  refreshCert();
+};
+
+// ── الصور ──
+function loadImage(src) { return new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = src; }); }
+function drawPng(size, paint) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  paint(c.getContext('2d'), size);
+  const url = c.toDataURL('image/png');
+  return { url, bytes: Uint8Array.from(atob(url.split(',')[1]), (ch) => ch.charCodeAt(0)) };
+}
+const dataUrlBytes = (url) => Uint8Array.from(atob(url.split(',')[1]), (ch) => ch.charCodeAt(0));
+function icon(size) {
+  return drawPng(size, (ctx, s) => {
+    ctx.fillStyle = card.color || '#1e293b'; ctx.fillRect(0, 0, s, s);
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${s * 0.55}px -apple-system, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText((card.nameAr || '؟').trim()[0], s / 2, s / 2 + s * 0.04);
+  }).bytes;
+}
+const rgb = (hex) => { const h = (hex || '#1e293b').replace('#', ''); return `rgb(${[0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)).join(', ')})`; };
+
+// ── صنع البطاقة وتوقيعها ──
+function passJson(info) {
+  const right = 'PKTextAlignmentRight';
+  const f = (key, label, value, extra) => (value ? [{ key, label, value, textAlignment: right, ...extra }] : []);
+  const vcard = ['BEGIN:VCARD', 'VERSION:3.0', `N:;${card.nameEn};;;`, `FN:${card.nameEn}`,
+    card.titleEn && `TITLE:${card.titleEn}`, card.phone && `TEL;TYPE=CELL:${card.phone}`,
+    card.email && `EMAIL:${card.email}`, card.linkedin && `URL:${card.linkedin}`, 'END:VCARD'].filter(Boolean).join('\r\n');
+  return {
+    formatVersion: 1,
+    passTypeIdentifier: info.passType,
+    teamIdentifier: info.team,
+    serialNumber: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    organizationName: card.nameAr,
+    description: `بطاقة تعريف ${card.nameAr}`,
+    logoText: 'بطاقة تعريف',
+    backgroundColor: rgb(card.color),
+    foregroundColor: 'rgb(255, 255, 255)',
+    labelColor: 'rgb(203, 213, 225)',
+    barcodes: [{ format: 'PKBarcodeFormatQR', message: vcard, messageEncoding: 'iso-8859-1', altText: 'امسح الرمز لحفظ بياناتي' }],
+    generic: {
+      primaryFields: [{ key: 'name', label: card.titleAr, value: card.nameAr }],
+      secondaryFields: f('phone', 'الجوال', card.phone),
+      auxiliaryFields: [...f('email', 'الإيميل', card.email), ...f('city', 'المدينة', card.city)],
+      backFields: [...f('about', 'نبذة عني', card.about), ...f('skills', 'المهارات', card.skills), ...f('phone2', 'الجوال', card.phone),
+        ...f('email2', 'الإيميل', card.email), ...f('linkedin', 'LinkedIn', card.linkedin), ...f('cv', 'السيرة الذاتية', card.cvUrl)],
+    },
+  };
+}
+
+function sign(manifest) {
+  const p7 = forge.pkcs7.createSignedData();
+  p7.content = forge.util.createBuffer(manifest, 'raw');
+  const signer = forge.pki.certificateFromPem(cerPem);
+  p7.addCertificate(forge.pki.certificateFromPem(wwdrPem));
+  p7.addCertificate(signer);
+  p7.addSigner({
+    key: forge.pki.privateKeyFromPem(keyPem),
+    certificate: signer,
+    digestAlgorithm: forge.pki.oids.sha1,
+    authenticatedAttributes: [
+      { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
+      { type: forge.pki.oids.messageDigest },
+      { type: forge.pki.oids.signingTime, value: new Date() },
+    ],
+  });
+  p7.sign({ detached: true });
+  return forge.util.binary.raw.decode(forge.asn1.toDer(p7.toAsn1()).getBytes());
+}
+
+async function buildPass() {
+  const info = passInfo();
+  const files = {
+    'pass.json': new TextEncoder().encode(JSON.stringify(passJson(info))),
+    'icon.png': icon(29), 'icon@2x.png': icon(58), 'icon@3x.png': icon(87),
+  };
+  if (photo) files['thumbnail.png'] = files['thumbnail@2x.png'] = dataUrlBytes(photo);
+  const manifest = {};
+  for (const [name, bytes] of Object.entries(files)) manifest[name] = forge.md.sha1.create().update(raw(bytes)).digest().toHex();
+  const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest));
+  const zip = new JSZip();
+  for (const [name, bytes] of Object.entries(files)) zip.file(name, bytes);
+  zip.file('manifest.json', manifestBytes);
+  zip.file('signature', sign(raw(manifestBytes)));
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.apple.pkpass', compression: 'DEFLATE' });
+}
+
+$('make').onclick = async () => {
+  const s = $('makeStatus');
+  if (!(keyPem && cerPem && wwdrPem)) { $('s1').open = true; s.className = 'status err'; s.textContent = 'كمّل الخطوة ١ (الشهادة) أولاً.'; return; }
+  if (!card.nameAr || !card.nameEn) { $('s2').open = true; s.className = 'status err'; s.textContent = 'اكتب اسمك بالعربي والإنجليزي.'; return; }
+  try {
+    s.className = 'status'; s.textContent = 'جاري التجهيز…';
+    const blob = await buildPass();
+    const url = URL.createObjectURL(blob);
+    const dl = $('dl'); dl.href = url; dl.hidden = false;
+    s.className = 'status ok'; s.textContent = '✓ جاهزة. اضغط «إضافة» في الشاشة اللي تطلع.';
+    location.href = url;
+  } catch (err) {
+    s.className = 'status err'; s.textContent = 'صار خطأ: ' + (err.message || err);
+  }
+};
+
+refreshCert();
+</script>
+</body>
+</html>
